@@ -1,0 +1,7 @@
+---
+layout: page
+title: All OIPs
+---
+
+{% assign oips=site.pages|where_exp:"page","page.oip > -1" %} {% include
+oiptable.html oips=oips %}

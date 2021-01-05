@@ -1,0 +1,28 @@
+<style type="text/css">
+  .oiptable .title {
+    width: 67%;
+  }
+
+  .oiptable .author {
+    width: 33%;
+  }
+</style>
+{% for status in site.data.statuses %}
+  {% assign oips = include.oips|where:"status",status|sort:"oip" %}
+  {% assign count = oips|size %}
+  {% if count > 0 %}
+    <h2>{{status}}</h2>
+    <table class="oiptable">
+      <thead>
+        <tr><th class="oipnum">Number</th><th class="title">Title</th><th class="author">Author</th></tr>
+      </thead>
+      {% for page in oips %}
+        <tr>
+          <td class="oipnum"><a href="{{page.url|relative_url}}">{{page.oip|xml_escape}}</a></td>
+          <td class="title">{{page.title|xml_escape}}</td>
+          <td class="author">{% include authorlist.html authors=page.author %}</td>
+        </tr>
+      {% endfor %}
+    </table>
+  {% endif %}
+{% endfor %}
