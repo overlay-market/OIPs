@@ -22,7 +22,7 @@ repository: overlay-market/OIPs
 twitter_username: OverlayProtocol
 github_username: overlay-market
 header_pages:
-  - all-OIP.html
+  - all-oip.html
 twitter:
   card: summary
   username: OverlayProtocol
