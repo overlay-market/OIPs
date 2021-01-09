@@ -1,26 +1,20 @@
 ---
-oip: <to be assigned>
-title: <OIP title>
+oip: 1
+title: Monetary Policy and Pricing Model
 status: WIP
-author: <a list of the author's or authors' name(s) and/or username(s), or name(s) and email(s), e.g. (use with the parentheses or triangular brackets): FirstName LastName (@GitHubUsername), FirstName LastName <foo@bar.com>, FirstName (@GitHubUsername) and GitHubUsername (@GitHubUsername)>
+author: Michael Feldman (@mikeyrf), Michael Nowotny (@michaelnowotny), Adam Kay (@mcillkay)
 discussions-to: <Create a new thread on https://gov.overlay.market/ and drop the link here>
-
-created: <date created on, in ISO 8601 (yyyy-mm-dd) format>
-requires (*optional): <OIP number(s)>
-implementation (*optional): <Added if OIP passes>
+created: 2021-01-09
+updated: N/A
 ---
-
-<!--You can leave these HTML comments in your merged OIP and delete the visible duplicate text guides, they will not appear and may be helpful to refer to if you edit it again. This is the suggested template for new OIPs. Note that an OIP number will be assigned by an editor. When opening a pull request to submit your OIP, please use an abbreviated title in the filename, `OIP-draft_title_abbrev.md`. The title should be 44 characters or less.-->
-
-This is the suggested template for new OIPs. Note that an OIP number will be assigned by an editor. When opening a pull request to submit your OIP, please use an abbreviated title in the filename, `OIP-draft_title_abbrev.md`. The title should be 44 characters or less.
 
 ## Simple Summary
 <!--"If you can't explain it simply, you don't understand it well enough." Simply describe the outcome the proposed changes intends to achieve. This should be non-technical and accessible to a casual community member.-->
-"If you can't explain it simply, you don't understand it well enough." Simply describe the outcome the proposed change intends to achieve. This should be non-technical and accessible to a casual community member.
+Provides incentives for core supporters of the protocol via pass-through trading fees. Floats the market price for all feeds offered to enable price discovery.
 
 ## Abstract
 <!--A short (~200 word) description of the proposed change, the abstract should clearly describe the proposed change. This is what *will* be done if the OIP is implemented, not *why* it should be done or *how* it will be done. If the OIP proposes deploying a new contract, write, "we propose to deploy a new contract that will do x".-->
-A short (~200 word) description of the proposed change, the abstract should clearly describe the proposed change. This is what *will* be done if the OIP is implemented, not *why* it should be done or *how* it will be done. If the OIP proposes deploying a new contract, write, "we propose to deploy a new contract that will do x".
+Updates to the monetary policy and pricing model for each Overlay-offered market are suggested to ensure the long-term stability and robustness of the system. Pricing of each trading position entered or exited on a market would be determined by a constant function market maker (CFMM) with periodic minting and burning to track the underlying oracle feed. To incentivize liquidity for OVL, a portion of protocol trading fees would be allocated to spot market liquidity providers through a community governed treasury. We also propose an incentivized insurance fund as a fail-safe to curb excessive expansion of the OVL currency supply.
 
 ## Motivation
 <!--This is the problem statement. This is the *why* of the OIP. It should clearly explain *why* the current state of the protocol is inadequate.  It is critical that you explain *why* the change is needed, if the OIP proposes changing how something is calculated, you must address *why* the current calculation is innaccurate or wrong. This is not the place to describe how the OIP will address the issue!-->

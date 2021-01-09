@@ -37,9 +37,9 @@ permalink: /:slug
 
 defaults:
   - scope:
-      path: "OIPs"
+      path: "OIPS"
     values:
-      layout: "OIP"
+      layout: "oip"
 
 exclude:
   - Gemfile
@@ -49,4 +49,4 @@ exclude:
   - vendor/cache/
   - vendor/gems/
   - vendor/ruby/
-  - OIP-X.md
+  - oip-X.md

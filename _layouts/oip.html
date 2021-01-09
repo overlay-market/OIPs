@@ -5,7 +5,7 @@ layout: default
 <link rel="stylesheet" href="/assets/additional-styles.css">
 <div class="home">
   <h1 class="page-heading">
-    YIP {{ page.yip | xml_escape }}: {{ page.title | xml_escape }}
+    OIP {{ page.oip | xml_escape }}: {{ page.title | xml_escape }}
     <a href="{{site.github.repository_url}}/blob/master/{{page.path}}"><svg role="img" aria-label="Source" xmlns="https://www.w3.org/2000/svg" width="14" height="16" viewBox="0 0 14 16"><title>Source</title><path fill-rule="evenodd" d="M9.5 3L8 4.5 11.5 8 8 11.5 9.5 13 14 8 9.5 3zm-5 0L0 8l4.5 5L6 11.5 2.5 8 6 4.5 4.5 3z"/></svg></a>
   </h1>
   <table>
@@ -23,16 +23,16 @@ layout: default
     {% endif %}
     <tr><th>Created</th><td>{{ page.created | xml_escape }}</td></tr>
     {% if page.implementation != undefined %}
-      <tr><th>Implementation</th><td>{% include yipnums.html yips=page.implementation %}</td></tr>
+      <tr><th>Implementation</th><td>{% include oipnums.html oips=page.implementation %}</td></tr>
     {% endif %}
     {% if page.requires != undefined %}
-      <tr><th>Requires</th><td>{% include yipnums.html yips=page.requires %}</td></tr>
+      <tr><th>Requires</th><td>{% include oipnums.html oips=page.requires %}</td></tr>
     {% endif %}
     {% if page.replaces != undefined %}
-      <tr><th>Replaces</th><td>{% include yipnums.html yips=page.replaces %}</td></tr>
+      <tr><th>Replaces</th><td>{% include oipnums.html oips=page.replaces %}</td></tr>
     {% endif %}
     {% if page["superseded-by"] != undefined %}
-      <tr><th>Superseded by</th><td>{% include yipnums.html yips=page.superseded-by %}</td></tr>
+      <tr><th>Superseded by</th><td>{% include oipnums.html oips=page.superseded-by %}</td></tr>
     {% endif %}
     {% if page.resolution != undefined %}
       <tr><th>Resolution</th><td><a href="{{page.resolution | uri_escape }}">{{ page.resolution | xml_escape }}</a></td></tr>
@@ -46,4 +46,3 @@ layout: default
     src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js">
   </script>
 </div>
-
