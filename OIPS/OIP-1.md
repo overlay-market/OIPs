@@ -61,7 +61,7 @@ Given the complexity of the design changes, the rationale and trade-offs are add
 <!--The technical specification should outline the public API of the changes proposed. That is, changes to any of the interfaces Overlay currently exposes or the creations of new ones.-->
 
 #### Monetary Policy
-Overlay's monetary policy relies on revenues from trading fees charged when a user of the protocol builds or unwinds a position on a data stream. A portion of these fees are burned upon trade execution to help manage currency supply. The rest would be sent to a community governed treasury.
+Overlay's monetary policy relies on revenues from trading fees charged when a user of the protocol builds or unwinds a position on a data stream. A portion of these fees would be burned upon trade execution to help manage currency supply. The rest would be sent to a community governed treasury.
 
 Overlay’s community governed treasury would pass through these trading fees to incentivize spot market liquidity providers (LPs), governance participants, and insurance fund providers as compensation for each of their services.
 
