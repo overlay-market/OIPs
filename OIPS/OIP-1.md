@@ -20,7 +20,11 @@ Updates to the monetary policy and pricing model for each Overlay-offered market
 <!--This is the problem statement. This is the *why* of the OIP. It should clearly explain *why* the current state of the protocol is inadequate.  It is critical that you explain *why* the change is needed, if the OIP proposes changing how something is calculated, you must address *why* the current calculation is innaccurate or wrong. This is not the place to describe how the OIP will address the issue!-->
 To recap, the Overlay protocol offers users the ability to trade scalar, non-manipulable and unpredictable data streams. For v1, we focus on DeFi price feeds.
 
-The Overlay mechanism is relatively simple: traders enter positions by locking up tokens native to the protocol (OVL) in long or short positions on various data streams. Data streams are assumed to be obtained via manipulation-resistant oracles. When a trader exits that same position, the protocol dynamically mints/burns OVL based on their net profit/loss for the trade. The contract then credits/removes OVL tokens from the trader's balance and adds/subtracts from the total existing supply of OVL. One can think of this as the protocol fronting credits in the system to successful traders to compensate them for their profits in the hopes of eventually burning a similar amount of credits from unsuccessful traders in the future, or socializing the losses.
+The Overlay mechanism is relatively simple: traders enter positions by locking up tokens native to the protocol (OVL) in long or short positions on various data streams. When a trader exits that same position, the protocol dynamically mints/burns OVL based on their net profit/loss for the trade:
+
+\\[ \mathrm{PnL} = \mathrm{O}\_{s} \cdot (\pm)\_{s} \cdot \frac{P_{exit} - P_{entry}}{P_{entry}} \\]
+
+where \\( \mathrm{O}_s \\) is the size in OVL of their position, \\( (\pm)\_{s} = 1 \\) for longs and \\( (\pm)\_{s} = -1 \\) for shorts, and \\( P\_{entry}, P\_{exit} \\) are entry and exit prices of the position. The contract mints/burns \\( \mathrm{PnL} \\) amount from the total existing supply of OVL (i.e., mints if \\( \mathrm{PnL} > 0 \\) and burns if \\( \mathrm{PnL} < 0 \\)) and returns \\( \mathrm{O}\_{s} + \mathrm{PnL} \\) amount of OVL tokens to the trader's address. One can think of this as the protocol fronting credits in the system to successful traders to compensate them for their profits in the hopes of eventually burning a similar amount of credits from unsuccessful traders in the future, or socializing the losses.
 
 Prior work in [[1]](#kay-2018) had shown the potential for burning of trading fees to curb large minting shocks to the currency supply, by introducing a downward drift in supply over time. However, some key questions still remained:
 
@@ -81,7 +85,7 @@ High-level implementation details are below:
 
 And contracts:
 
-- `OVLToken (ERC-20):` Base token with public ``mint()``, ``burn()`` functions through ``AccessControl`` privileges given to each OVLPosition contract. Allows holders to participate in long/short trading of data streams. Gives holders governance stake in proposed data feeds and tuning of their risk parameters. Gives holders governance control over treasury parameters: allocations of trading fee pass-through revenues.
+- `OVLToken (ERC-20):` Base token with public ``mint()``, ``burn()`` functions through ``AccessControl`` privileges given to each `OVLPosition` contract. Allows holders to participate in long/short trading of data streams. Gives holders governance stake in proposed data feeds and tuning of their risk parameters. Gives holders governance control over treasury parameters: allocations of trading fee pass-through revenues.
 
 - `OVLPosition (ERC-1155):` Represents a trader's position, received upon locking up OVL in a trade on a data stream. Unique identifiers are attributes of the position: Lock price, long/short side, leverage. Tradeable and transferrable on secondary markets given ERC-1155 standard. Liquidatable if fails to meet margin requirements, with liquidation incentives for keepers through a reward of a portion of the total OVL locked.
 
