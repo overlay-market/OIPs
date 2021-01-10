@@ -139,13 +139,13 @@ Bootstrap via liquidity mining phase, with phased transition between rewards fro
 
 Suggested market feeds to launch with:
 
-- **WBTC/ETH:** weighted TWAP from UNI + SUSHI
-- **YFI/ETH:** weighted TWAP from UNI + SUSHI
-- **UNI/ETH:** weighted TWAP from UNI + SUSHI
-- **SUSHI/ETH:** weighted TWAP from UNI + SUSHI
-- **SNX/ETH:** weighted TWAP from UNI + SUSHI
-- **AAVE/ETH:** weighted TWAP from UNI + SUSHI
-- **OVL/ETH:** weighted TWAP from UNI + SUSHI
+- **WBTC/ETH:** weighted TWAP from Uniswap + SushiSwap
+- **YFI/ETH:** weighted TWAP from Uniswap + SushiSwap
+- **UNI/ETH:** weighted TWAP from Uniswap + SushiSwap
+- **SUSHI/ETH:** weighted TWAP from Uniswap + SushiSwap
+- **SNX/ETH:** weighted TWAP from Uniswap + SushiSwap
+- **AAVE/ETH:** weighted TWAP from Uniswap + SushiSwap
+- **OVL/ETH:** weighted TWAP from Uniswap + SushiSwap
 
 *NOTE on UNI + SUSHI weighted TWAP: should be liquidity weighted ... TODO: how in a manipulation resistant manner? `getReserves()` can likely be gamed. Could always have governance control to begin with and periodically update*
 
