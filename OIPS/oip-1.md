@@ -54,6 +54,7 @@ There are a number of high level components required to implement these changes 
 - [Monetary Policy](#monetary-policy)
 - [Pricing Mechanism](#pricing-mechanism)
 - [Liquidity Constraints](#liquidity-constraints)
+- [Feeds on Launch](#feeds-on-launch)
 
 Details are given in the following technical specification.
 
@@ -132,9 +133,28 @@ where \\(\mathrm{TWAO}\_{i, s}\\) is the time weighted average of the aggregate 
 
 *TODO: ... dynamic k. how the protocol itself dynamically sets this to scale the system up/down to prevent large players from blowing out the currency supply prior to when the system can handle large trades*
 
+#### Feeds on Launch
+
+Bootstrap via liquidity mining phase, with phased transition between rewards from initial distribution and trading fee rewards from volume on the platform. Timing on this will depend on liquidity that builds in the base OVL-ETH spot pool.
+
+Suggested market feeds to launch with:
+
+- **WBTC/ETH:** weighted TWAP from UNI + SUSHI
+- **YFI/ETH:** weighted TWAP from UNI + SUSHI
+- **UNI/ETH:** weighted TWAP from UNI + SUSHI
+- **SUSHI/ETH:** weighted TWAP from UNI + SUSHI
+- **SNX/ETH:** weighted TWAP from UNI + SUSHI
+- **AAVE/ETH:** weighted TWAP from UNI + SUSHI
+- **OVL/ETH:** weighted TWAP from UNI + SUSHI
+
+*NOTE on UNI + SUSHI weighted TWAP: should be liquidity weighted ... TODO: how in a manipulation resistant manner? `getReserves()` can likely be gamed. Could always have governance control to begin with and periodically update*
+
 ### Test Cases
 <!--Test cases for an implementation are mandatory for OIPs but can be included with the implementation..-->
 Test cases for an implementation are mandatory for OIPs but can be included with the implementation.
+
+## Acknowledgments
+Daniel Wasserman (@dwasse) for the insurance fund's collateralization and auction mechanisms, and Cam Harvey for comments, edits, and review.
 
 ## References
 <a id="kay-2018">[1]</a> Adam Kay. *Overlay*. URL: [http://overlay.market/pdfs/WPv3.pdf](http://overlay.market/pdfs/WPv3.pdf).
