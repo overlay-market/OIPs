@@ -68,15 +68,17 @@ Given the complexity of the design changes, the rationale and trade-offs are add
 #### Monetary Policy
 Overlay's monetary policy relies on revenues from trading fees charged when a user of the protocol builds or unwinds a position on a data stream. A portion of these fees would be burned upon trade execution to help manage currency supply. The rest would be sent to a community governed treasury.
 
-Overlay’s community governed treasury would pass through these trading fees to incentivize spot market liquidity providers (LPs), governance participants, and insurance fund providers as compensation for each of their services.
+Overlay’s community governed treasury would pass through these trading fees to incentivize spot market liquidity providers (LPs), insurance fund providers, and a community operations fund as compensation for each of their services.
 
-The following is a high-level overview for each of the roles:
+The following is a high-level overview for the roles of each of the core participants supporting the protocol:
 
 - **Spot Market LPs:** enable traders to swap OVL for ETH to enter/exit the Overlay system. LPs stake their spot OVL-ETH LP tokens in the treasury contract to earn yield in OVL.
 
-- **Governance Participants:** determine the risk/reward parameters of and markets offered by the protocol to ensure the Overlay system remains useful over time. Governance participants stake OVL or OVL-ETH LP tokens in the treasury contract to earn yield in OVL.
+- **Governance Participants:** determine the risk/reward parameters of and markets offered by the protocol to ensure the Overlay system remains useful over time. Governance participants will vote off-chain at launch with 1:1 votes for every OVL held and 2:1 votes for every OVL-ETH LP token held.
 
 - **Insurance Fund Providers:** backstop the protocol by locking up collateral for a governance-determined set amount of time, with an auction-and-burn mechanism in the event of any unanticipated excessive increase in the currency supply. Insurance fund providers can stake e.g., ETH, DAI, YFI, AAVE-ETH LP, OVL-ETH LP, etc. in the treasury contract to earn yield in OVL, with downside risk of collateral loss. They also receive rights to a portion of the margin from liquidated positions to compensate them for the additional risk taken.
+
+- **Community Operations Fund:** develop the protocol (e.g. build new contracts, admin, community services) and help it grow sustainably. A portion of pass-through trading fees in OVL would be sent to this community multi-sig with governance votes determining how best to spend funds to promote the growth of the Overlay protocol and its ecosystem.
 
 OVL would act as a governance token for all decisions to adjust the system itself, giving even more weight and "skin in the game" to successful traders and liquidity providers.
 
@@ -84,7 +86,7 @@ High-level implementation details are below:
 
 ![Block Diagram](../assets/oip-1/block_diagram.png)
 
-And contracts:
+And base exchange contracts:
 
 - `OVLToken (ERC-20):` Base token with public ``mint()``, ``burn()`` functions through ``AccessControl`` privileges given to each `OVLPosition` contract. Allows holders to participate in long/short trading of data streams. Gives holders governance stake in proposed data feeds and tuning of their risk parameters. Gives holders governance control over treasury parameters: allocations of trading fee pass-through revenues.
 
@@ -98,23 +100,23 @@ The rewards for each treasury participant supporting the protocol would be rathe
 
 where \\(\sum_{i=1}^{N}{V_{i}}\\) is the volume over all \\(N\\) markets offered by the Overlay protocol during the period between funding payments. \\(f_{i}\\) is the average trading fee during that period on market \\(i\\). \\(r_{b}\\) is the portion of trading fees that are burned to manage currency supply. \\(r_{p}\\) is the portion of pass-through trading fee revenue for the associated capital pool. Spot market liquidity for the OVL token would be enabled by this continuous stream of Overlay trading fees to staking OVL-ETH spot LPs, as long as trading volume remains substantial enough to warrant staking. An initial liquidity mining token distribution phase would bootstrap the process. This spot market liquidity incentive creates a feedback loop to offer a price feed for OVL-ETH on the Overlay trading platform, that traders can then use to hedge out a portion of their OVL risk for their positions in other Overlay markets, given all trades are settled in OVL.
 
-To handle unanticipated extreme wins that significantly increase the currency supply beyond the accumulated fee burn mechanism, we propose an insurance fund that is similar in nature to the Aave safety module [[2]](#aave-2020). Insurance providers stake collateral in the form of ETH, DAI, YFI, AAVE-ETH LP, OVL-ETH LP, etc. to earn yield in OVL via pass-through trading fees to the treasury. Additionally, insurance providers receive margin inflows (less keeper and burn fees) from liquidated positions on the platform, to appropriately compensate them for the significant risk taken to backstop the protocol. This insurance staked ERC-20 collateral would be locked for a governance-determined set amount of time within the treasury contract. To backstop the system in the event the currency supply increases beyond a governance-set threshold value (e.g., 20% beyond initial distribution), the treasury begins auctioning off the staked collateral in exchange for OVL at a rate of \\(n_c = (n_{OVL} / S_{OVL}) \cdot S_{c} \\) received collateral tokens for \\(n_{OVL}\\) bid OVL tokens. \\(S_{OVL}\\) is total circulating supply of OVL and \\(S_c\\) is total collateral of a particular ERC-20 token remaining in the insurance pool. The treasury then burns the received OVL tokens to drive the supply back down. The offering window remains open until the supply threshold is no longer breached either by supply burns or by governance raising the supply threshold.
+To handle unanticipated extreme wins that significantly increase the currency supply beyond the accumulated fee burn mechanism, we propose an insurance fund that is similar in nature to the Aave safety module [[2]](#aave-2020). Insurance providers stake collateral in the form of ETH, DAI, YFI, AAVE-ETH LP, OVL-ETH LP, etc. to earn yield in OVL via pass-through trading fees to the treasury. Additionally, insurance providers receive margin inflows (less keeper and burn fees) from liquidated positions on the platform, to appropriately compensate them for the significant risk taken to backstop the protocol. This insurance staked ERC-20 collateral would be locked for a set amount of time within the treasury contract. To backstop the system in the event the currency supply increases beyond a governance-set threshold value (e.g., 20% beyond initial distribution), the treasury begins auctioning off the staked collateral in exchange for OVL at a rate of \\(n_c = (n_{OVL} / S_{OVL}) \cdot S_{c} \\) received collateral tokens for \\(n_{OVL}\\) bid OVL tokens. \\(S_{OVL}\\) is total circulating supply of OVL and \\(S_c\\) is total collateral of a particular ERC-20 token remaining in the insurance pool. The treasury then burns the received OVL tokens to drive the supply back down. The offering window remains open until the supply threshold is no longer breached either by supply burns or by governance raising the supply threshold.
 
 These mechanisms for managing currency supply would offer alternatives to requiring a ceiling to the total supply and caps on individual trades, although it is still uncertain how supply will behave in practice. In summary, the revenue model for the protocol would be fees (in OVL) of 0.30% per trade, adjustable by governance on a feed-by-feed basis:
 
 - 50% is burned
 
-- 50% is sent to a community governed treasury with incentives for spot market OVL-ETH LPs, governance participants, and insurance fund providers
+- 50% is sent to a community governed treasury with incentives for spot market OVL-ETH LPs and insurance fund providers
 
-To incentivize OVL-ETH liquidity providers, governance contributors, and insurance providers in perpetuity, the pass-through revenues to the Overlay treasury would be split:
+To incentivize OVL-ETH liquidity providers, insurance providers, and development within the community in perpetuity, the suggested pass-through fees to the Overlay treasury would be split at launch:
 
-- 33.33% to OVL-ETH LPs staking
+- 60.00% to OVL-ETH LPs staking
 
-- 33.33% to governance OVL stakers that vote
+- 30.00% to ERC-20 stakers in insurance fund
 
-- 33.33% to ERC-20 stakers in insurance fund
+- 10.00% to the community fund
 
-The weighting factors for each actor, fee rates, and fee burn can be adjusted by governance. OVL-ETH LPs will be able to use their LP tokens to participate in governance for \\(r_{LP} + r_{gov}\\) of the rewards (i.e., acting as both roles). Further, they can earn \\(r_{LP} + r_{gov} + r_{insurance} = 100\% \\) of the pass-through fee rewards plus a pro-rata share of rights to insurance fund inflows from position liquidations by additionally risking their LP collateral in the insurance fund itself. Eventually the Overlay protocol could lend out the locked OVL from positions for capital efficiency and additional revenue.
+The weighting factors for each actor, fee rates, and fee burn can be adjusted by governance. Further, OVL-ETH LPs can also earn \\(r_{LP} + r_{insurance} = 90\% \\) of the pass-through fee rewards plus a pro-rata share of rights to insurance fund inflows from position liquidations by additionally risking their LP collateral in the insurance fund itself. Eventually the Overlay protocol could lend out the locked OVL from positions for capital efficiency and additional revenue.
 
 #### Pricing Mechanism
 Overlay's pricing mechanism would be updated to float the current price on each market offered by the protocol. Price discovery would occur on each Overlay market separate from the underlying feed itself, and thus information associated with each trade on Overlay would enter the market price offered to traders.
