@@ -141,6 +141,8 @@ The current OIP editors are:
 
 ` * Daniel Wasserman (@dwasse)`
 
+` * Jack Sun (@hhjacksun)`
+
 ## OIP Editor Responsibilities
 
 For each new OIP that comes in, an editor does the following:
@@ -169,8 +171,8 @@ The OIP document was derived heavily from the YIP yEarn Improvement Proposal doc
 
 ### Bibliography
 
-[the Overlay Discord]: https://discord.com/invite/
-[the Overlay Telegram]: https://t.me/
+[the Overlay Discord]: https://discord.com/invite/vrFWguPf5R
+[the Overlay Telegram]: https://t.me/joinchat/Vh4ghKJQq5Fkxt5y
 [pull request]: https://github.com/overlay-market/OIPs/pulls
 [markdown]: https://github.com/adam-p/markdown-here/wiki/Markdown-Cheatsheet
 
