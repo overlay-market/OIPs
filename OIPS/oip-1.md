@@ -123,7 +123,7 @@ This solves issues with front-running of the oracle query that would otherwise o
 
 For v1, the pricing curve used by each market's CFMM [[3]](#angeris-2020) will be a standard constant product formula, adopted from Uniswap: \\(\psi(R, R', \Delta, \Delta') = (R-\Delta)(R'+\Delta')\\), where \\(k=RR'\\). In contrast with two asset spot models, \\(R\\) and \\(R'\\) represent virtual OVL reserves for long and short positions on a particular market, with reserve values dynamically scaled (and thus constrained) by the underlying liquidity in the OVL-ETH spot market.
 
-Because the market price offered by the Overlay protocol can now deviate from the underlying, one must include a periodic payment mechanism to incentivize convergence to the underlying value of the data stream. The time-weighted average price (TWAP) is used in the determination of these periodic payment amounts to protect the Overlay protocol against manipulation of the underlying spot and Overlay market prices [[4]](#uniswap-2020). Funding payments (i.e. difference between Overlay market price and spot price) are made between longs and shorts on each sampling of the underlying oracle feed. This mechanism effectively encourages arbitrageurs, who are also buying and selling the spot, to take the other side of the trade and balance the set of active positions on an Overlay market. Given the nature of the OVL token, these payments are relatively easy to accomplish, as the protocol simply mints the appropriate amount of tokens to the OVL pool on a market belonging to the shorts and burns from the longs (vice versa depending on the sign of the difference between Overlay market price and spot). Funding to be paid by a particular side, \\(\mathrm{F}_{i,s}\\), is given by
+Because the market price offered by the Overlay protocol can now deviate from the underlying, one must include a periodic payment mechanism to incentivize convergence to the underlying value of the data stream. The time-weighted average price (TWAP) is used in the determination of these periodic payment amounts to protect the Overlay protocol against manipulation of the underlying spot and Overlay market prices [[4]](#uniswap-2020). Funding payments (i.e. difference between Overlay market price and spot price) are made between longs and shorts on each sampling of the underlying oracle feed. This mechanism effectively encourages arbitrageurs, who are also buying and selling the spot, to take the other side of any speculative trade that deviates the market price from the ref feed value, potentially balancing the set of active positions on an Overlay market. Given the nature of the OVL token, these payments are relatively easy to accomplish, as the protocol simply mints the appropriate amount of tokens to the OVL pool on a market belonging to the shorts and burns from the longs (vice versa depending on the sign of the difference between Overlay market price and spot). Funding to be paid by a particular side, \\(\mathrm{F}_{i,s}\\), is given by
 
 \\[ \mathrm{F}\_{i,s} = \mathrm{TWAO}\_{i, s} \cdot (\pm)\_{s} \cdot \frac{\mathrm{TWAP}\_{i} - \mathrm{TWAP}\_{spot}}{\mathrm{TWAP}_{spot}} \\]
 
@@ -139,19 +139,33 @@ Bootstrap via liquidity mining phase, with phased transition between rewards fro
 
 Suggested market feeds to launch with:
 
-- **WBTC/ETH:** weighted TWAP from Uniswap + SushiSwap
-- **YFI/ETH:** weighted TWAP from Uniswap + SushiSwap
-- **UNI/ETH:** weighted TWAP from Uniswap + SushiSwap
-- **SUSHI/ETH:** weighted TWAP from Uniswap + SushiSwap
-- **SNX/ETH:** weighted TWAP from Uniswap + SushiSwap
-- **AAVE/ETH:** weighted TWAP from Uniswap + SushiSwap
-- **OVL/ETH:** weighted TWAP from Uniswap + SushiSwap
+- **WBTC-ETH:** weighted TWAP from Uniswap + SushiSwap
+- **YFI-ETH:** weighted TWAP from Uniswap + SushiSwap
+- **UNI-ETH:** weighted TWAP from Uniswap + SushiSwap
+- **SUSHI-ETH:** weighted TWAP from Uniswap + SushiSwap
+- **SNX-ETH:** weighted TWAP from Uniswap + SushiSwap
+- **AAVE-ETH:** weighted TWAP from Uniswap + SushiSwap
+- **OVL-ETH:** weighted TWAP from Uniswap + SushiSwap
+
+*TODO: Guidelines for feeds to launch with. Underlying liquidity amount?*
 
 *NOTE on UNI + SUSHI weighted TWAP: should be liquidity weighted ... TODO: how in a manipulation resistant manner? `getReserves()` can likely be gamed. Could always have governance control to begin with and periodically update*
 
 ### Test Cases
 <!--Test cases for an implementation are mandatory for OIPs but can be included with the implementation..-->
 Test cases for an implementation are mandatory for OIPs but can be included with the implementation.
+
+### Risks
+
+The following are some significant risks associated with this approach that need to be considered:
+
+- Informed traders could cause excessive minting without other traders willing to take the other side of their trade (even arbitrageurs). In other words, the market knows something Overlay CFMMs won't be able to know, and there isn't another trader willing to take on the risk to balance the active positions on a market.
+
+- Manipulation of the underlying TWAPs for funding, particularly on the OVL-ETH feed if liquidity is low or not averaged over a long enough period of time. For OVL-ETH, there are freshness concerns associated with price sensitivity constants that need to be balanced here (~ 1 hour TWAP would be ideal).
+
+- Multiple breaches of the insurance fund threshold leading to an unwillingness from insurance providers to stake collateral. Burns of margin would still be possible here to attempt to stabilize the currency supply over time, but likely not enough.
+
+- Lack of trading volume on the platform causing insignificant rewards for OVL-ETH spot liquidity providers to compensate them for their role in the system. Potentially causes a run on the system in anticipation of the liquidity entry/exit way into and out of the platform drying up.
 
 ## Acknowledgments
 Daniel Wasserman (@dwasse) for the insurance fund's collateralization and auction mechanisms, and Cam Harvey for comments, edits, and review.
