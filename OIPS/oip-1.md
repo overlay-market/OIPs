@@ -3,7 +3,7 @@ oip: 1
 title: Monetary Policy and Pricing Model
 status: WIP
 author: Michael Feldman (@mikeyrf), Michael Nowotny (@michaelnowotny), Adam Kay (@mcillkay)
-discussions-to: <Create a new thread on https://gov.overlay.market/ and drop the link here>
+discussions-to:
 created: 2021-01-09
 updated: N/A
 ---

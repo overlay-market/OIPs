@@ -3,7 +3,7 @@ oip: 0
 title: OIP Purpose and Guidelines
 status: Implemented
 author: Michael Feldman (@mikeyrf)
-discussions-to: https://gov.overlay.market/
+discussions-to: 
 created: 2021-01-05
 updated: N/A
 ---
@@ -54,7 +54,7 @@ Each status change is requested by the OIP author and reviewed by the OIP editor
 Each OIP should have the following parts:
 
 - Preamble - RFC 822 style headers containing metadata about the OIP, including the OIP number, a short descriptive title (limited to a maximum of 44 characters), and the author details.
-- Simple Summary - “If you can’t explain it simply, you don’t understand it well enough.” Provide a simplified and layman-accessible explanation of the OIP.
+- Simple Summary - “If you can’t explain it simply, you don’t understand it well enough.” In other words, be like [the 🐐](https://twitter.com/ProfFeynman/status/955081219108061185?s=20). Provide a simplified and layman-accessible explanation of the OIP.
 - Abstract - a short (~200 word) description of the technical issue being addressed.
 - Motivation (*optional) - The motivation is critical for OIPs that want to change Overlay. It should clearly explain why the existing specification is inadequate to address the problem that the OIP solves. OIP submissions without sufficient motivation may be rejected outright.
 - Specification - The technical specification should describe the syntax and semantics of any new feature.
