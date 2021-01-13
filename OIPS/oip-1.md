@@ -24,7 +24,7 @@ The Overlay mechanism is relatively simple: traders enter positions by locking u
 
 \\[ \mathrm{PnL} = \mathrm{O}\_{s} \cdot (\pm)\_{s} \cdot \frac{P_{exit} - P_{entry}}{P_{entry}} \\]
 
-where \\( \mathrm{O}_s \\) is the size in OVL of their position, \\( (\pm)\_{s} = 1 \\) for longs and \\( (\pm)\_{s} = -1 \\) for shorts, and \\( P\_{entry}, P\_{exit} \\) are entry and exit prices of the position. The contract mints/burns \\( \mathrm{PnL} \\) amount from the total existing supply of OVL (i.e., mints if \\( \mathrm{PnL} > 0 \\) and burns if \\( \mathrm{PnL} < 0 \\)) and returns \\( \mathrm{O}\_{s} + \mathrm{PnL} \\) amount of OVL tokens to the trader's address. One can think of this as the protocol fronting credits in the system to successful traders to compensate them for their profits in the hopes of eventually burning a similar amount of credits from unsuccessful traders in the future, or socializing the losses.
+where \\( \mathrm{O}_s \\) is the size in OVL of their position, \\( (\pm)\_{s} = 1 \\) for longs and \\( (\pm)\_{s} = -1 \\) for shorts, and \\( P\_{entry}, P\_{exit} \\) are entry and exit prices of the position. The contract mints/burns \\( \mathrm{PnL} \\) amount from the total existing supply of OVL (i.e. mints if \\( \mathrm{PnL} > 0 \\) and burns if \\( \mathrm{PnL} < 0 \\)) and returns \\( \mathrm{O}\_{s} + \mathrm{PnL} \\) amount of OVL tokens to the trader's address. One can think of this as the protocol fronting credits in the system to successful traders to compensate them for their profits in the hopes of eventually burning a similar amount of credits from unsuccessful traders in the future, or socializing the losses.
 
 Prior work in [[1]](#kay-2018) had shown the potential for burning of trading fees to curb large minting shocks to the currency supply, by introducing a downward drift in supply over time. However, some key questions still remained:
 
@@ -104,7 +104,7 @@ Spot market liquidity for the OVL token would be enabled by this continuous stre
 
 To handle unanticipated extreme wins that significantly increase the currency supply beyond the accumulated fee burn mechanism, we propose an insurance fund that is similar in nature to the Aave safety module [[2]](#aave-2020). Insurance providers stake collateral in the form of ETH, DAI, YFI, AAVE-ETH LP, OVL-ETH LP, etc. to earn yield in OVL via pass-through trading fees to the treasury. Additionally, insurance providers receive margin inflows (less keeper and burn fees) from liquidated positions on the platform, to appropriately compensate them for the significant risk taken to backstop the protocol. This insurance staked ERC-20 collateral would be locked for a set amount of time within the treasury contract.
 
-To backstop the system in the event the currency supply increases beyond a governance-set threshold value (e.g., 20% beyond initial distribution), the treasury begins auctioning off the staked collateral in exchange for OVL at a rate of \\(n_c = (n_{OVL} / S_{OVL}) \cdot S_{c} \\) received collateral tokens for \\(n_{OVL}\\) bid OVL tokens. \\(S_{OVL}\\) is total circulating supply of OVL and \\(S_c\\) is total collateral of a particular ERC-20 token remaining in the insurance pool. The treasury then burns the received OVL tokens to drive the supply back down. The offering window remains open until the supply threshold is no longer breached either by supply burns or by governance raising the supply threshold.
+To backstop the system in the event the currency supply increases beyond a governance-set threshold value (e.g. 20% beyond initial distribution), the treasury begins auctioning off the staked collateral in exchange for OVL at a rate of \\(n_c = (n_{OVL} / S_{OVL}) \cdot S_{c} \\) received collateral tokens for \\(n_{OVL}\\) bid OVL tokens. \\(S_{OVL}\\) is total circulating supply of OVL and \\(S_c\\) is total collateral of a particular ERC-20 token remaining in the insurance pool. The treasury then burns the received OVL tokens to drive the supply back down. The offering window remains open until the supply threshold is no longer breached either by supply burns or by governance raising the supply threshold.
 
 These mechanisms for managing currency supply would offer alternatives to requiring a ceiling to the total supply and caps on individual trades, although it is still uncertain how supply will behave in practice. In summary, the revenue model for the protocol would be fees (in OVL) of 0.30% per trade, adjustable by governance on a feed-by-feed basis:
 
@@ -135,7 +135,7 @@ Given the nature of the OVL token, these payments are relatively easy to accompl
 
 \\[ \mathrm{F}\_{i,s} = \mathrm{TWAO}\_{i, s} \cdot (\pm)\_{s} \cdot \frac{\mathrm{TWAP}\_{i} - \mathrm{TWAP}\_{spot}}{\mathrm{TWAP}_{spot}} \\]
 
-where \\(\mathrm{TWAO}\_{i, s}\\) is the time weighted average of the aggregate position size on side \\(s\\) of an Overlay-offered market \\(i\\) over the period between successive funding payments, \\( (\pm)\_{s} = 1 \\) for longs and \\( (\pm)\_{s} = -1 \\) for shorts, \\(\mathrm{TWAP}_{spot}\\) is the TWAP fetched from the spot oracle at the sampling time (e.g., once per hour), and \\(\mathrm{TWAP}_i\\) is the TWAP of the Overlay market price \\(P_i\\) for market \\(i\\) over the same sampling time. Positions on an Overlay market track the pro-rata share of the open interest a user has on a particular side. Time lengths to average over are determined by governance whenever a new market is added to the protocol, taking into account the underlying spot liquidity of the feed.
+where \\(\mathrm{TWAO}\_{i, s}\\) is the time weighted average of the aggregate position size on side \\(s\\) of an Overlay-offered market \\(i\\) over the period between successive funding payments, \\( (\pm)\_{s} = 1 \\) for longs and \\( (\pm)\_{s} = -1 \\) for shorts, \\(\mathrm{TWAP}_{spot}\\) is the TWAP fetched from the spot oracle at the sampling time (e.g. once per hour), and \\(\mathrm{TWAP}_i\\) is the TWAP of the Overlay market price \\(P_i\\) for market \\(i\\) over the same sampling time. Positions on an Overlay market track the pro-rata share of the open interest a user has on a particular side. Time lengths to average over are determined by governance whenever a new market is added to the protocol, taking into account the underlying spot liquidity of the feed.
 
 Considerations for TWAPs to use in funding require estimating the expected amount needed to significantly influence the underlying spot price. For oracles fetching from a spot CFMM built on Uniswap V2 core, *TODO: ... partial deriv breakdown of liquidity required*
 
@@ -150,11 +150,14 @@ Bootstrap via liquidity mining phase, with phased transition between rewards fro
 Suggested market feeds to launch with:
 
 - **WBTC-ETH:** weighted TWAP from Uniswap + SushiSwap
-- **YFI-ETH:** weighted TWAP from Uniswap + SushiSwap
-- **UNI-ETH:** weighted TWAP from Uniswap + SushiSwap
+- **DAI-ETH:** weighted TWAP from Uniswap + SushiSwap
+- **AAVE-ETH:** weighted TWAP from Uniswap + SushiSwap
 - **SUSHI-ETH:** weighted TWAP from Uniswap + SushiSwap
 - **SNX-ETH:** weighted TWAP from Uniswap + SushiSwap
-- **AAVE-ETH:** weighted TWAP from Uniswap + SushiSwap
+- **YFI-ETH:** weighted TWAP from Uniswap + SushiSwap
+- **COMP-ETH:** weighted TWAP from Uniswap + SushiSwap
+- **UNI-ETH:** weighted TWAP from Uniswap + SushiSwap
+- **MKR-ETH:** weighted TWAP from Uniswap + SushiSwap
 - **OVL-ETH:** weighted TWAP from Uniswap + SushiSwap
 
 *TODO: Guidelines for feeds to launch with. Underlying liquidity amount?*
@@ -169,7 +172,7 @@ Test cases for an implementation are mandatory for OIPs but can be included with
 
 The following are some significant risks associated with this approach that need to be considered:
 
-- Informed traders could cause excessive minting without other traders willing to take the other side of their trade (even arbitrageurs). In other words, the market knows something Overlay CFMMs won't be able to know, and there isn't another trader willing to take on the risk to balance the active positions on a market.
+- Informed traders could cause excessive minting without other traders willing to take the other side of their trade (even arbitrageurs). In other words, the market knows something Overlay CFMMs won't be able to know, and there isn't another trader willing to take on the risk to balance the active positions on a feed.
 
 - Manipulation of the underlying TWAPs for funding, particularly on the OVL-ETH feed if liquidity is low or not averaged over a long enough period of time. For OVL-ETH, there are freshness concerns associated with price sensitivity constants that need to be balanced here (~ 1 hour TWAP would be ideal).
 
