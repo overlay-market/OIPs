@@ -149,6 +149,7 @@ Bootstrap via liquidity mining phase, with phased transition between rewards fro
 
 Suggested market feeds to launch with:
 
+- **OVL-ETH:** weighted TWAP from Uniswap + SushiSwap
 - **WBTC-ETH:** weighted TWAP from Uniswap + SushiSwap
 - **DAI-ETH:** weighted TWAP from Uniswap + SushiSwap
 - **AAVE-ETH:** weighted TWAP from Uniswap + SushiSwap
@@ -158,7 +159,8 @@ Suggested market feeds to launch with:
 - **COMP-ETH:** weighted TWAP from Uniswap + SushiSwap
 - **UNI-ETH:** weighted TWAP from Uniswap + SushiSwap
 - **MKR-ETH:** weighted TWAP from Uniswap + SushiSwap
-- **OVL-ETH:** weighted TWAP from Uniswap + SushiSwap
+
+Once enough liquidity builds in the base OVL-ETH spot pool to offer a manipulation-resistant TWAP for the OVL-ETH funding rate, a phased launch of markets is suggested to test out demand for each feed and the `OVLPosition` contract itself. It will likely be best to start with only the OVL-ETH feed first so traders can become accustomed to settling in OVL, then introduce the additional markets listed above.
 
 *TODO: Guidelines for feeds to launch with. Underlying liquidity amount?*
 
@@ -178,7 +180,7 @@ The following are some significant risks associated with this approach that need
 
 - Multiple breaches of the insurance fund threshold leading to an unwillingness from insurance providers to stake collateral. Burns of margin would still be possible here to attempt to stabilize the currency supply over time, but likely not enough.
 
-- Lack of trading volume on the platform causing insignificant rewards for OVL-ETH spot liquidity providers to compensate them for their role in the system. Potentially causes a run on the system in anticipation of the liquidity entry/exit way into and out of the platform drying up. This could happen due to a number of reasons including an unwillingness to settle in OVL (versus e.g., ETH).
+- Lack of trading volume on the platform causing insignificant rewards for OVL-ETH spot liquidity providers to compensate them for their role in the system. Potentially causes a run on the system in anticipation of the liquidity entry/exit way drying up. This could happen due to a number of reasons including an unwillingness to settle in OVL (versus e.g., ETH).
 
 ## Acknowledgments
 Daniel Wasserman (@dwasse) for the insurance fund's collateralization and auction mechanisms, and Cam Harvey for comments, edits, and review.
