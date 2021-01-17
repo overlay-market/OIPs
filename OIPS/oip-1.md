@@ -164,7 +164,7 @@ Once enough liquidity builds in the base OVL-ETH spot pool to offer a manipulati
 
 *TODO: Guidelines for feeds to launch with. Underlying liquidity amount?*
 
-*NOTE on UNI + SUSHI weighted TWAP: should be liquidity weighted ... TODO: how in a manipulation resistant manner? `getReserves()` can likely be gamed. Could always have governance control to begin with and periodically update*
+*NOTE on UNI + SUSHI weighted TWAP: should be liquidity weighted ... TODO: how in a manipulation resistant manner? `getReserves()` can be gamed. Could always have governance control to begin with and periodically update, or use Alpha Finance ['fair pricing' approach](https://blog.alphafinance.io/fair-lp-token-pricing/) (although can this still be gamed with [`k` value calculation]()?; think about it more deeply). Could just have a cumulative value of this calc to eventually time average at lower frequency interval than the TWAP itself (e.g. every 24 hours v.s. 1 hour TWAP) to make it more resistant and get the liquidity reserve value we need for index weighting and for dynamic k adjustments through OVL-ETH liquidity*
 
 ### Test Cases
 <!--Test cases for an implementation are mandatory for OIPs but can be included with the implementation..-->
