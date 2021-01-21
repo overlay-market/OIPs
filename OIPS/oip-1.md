@@ -117,9 +117,9 @@ Overlay's pricing mechanism would be updated to float the current price on each 
 
 This solves issues with front-running of the oracle query that would otherwise occur if one were to simply use scalars fetched directly from the oracle feed for position lock prices, as, in practice, manipulation-resistant oracles report values far less frequently than the actual spot market. As a design tradeoff, one could instead choose to queue orders prior to the next oracle update and lock queued order prices at the next oracle fetch value. However, there are significant benefits to market price discovery and the arbitrage opportunities associated with concurrently buying/selling the spot.
 
-For v1, the pricing curve used by each market's CFMM [[3]](#angeris-2020) would be a standard constant product formula: \\(\psi(R, R', \Delta, \Delta') = (R-\Delta)(R'+\Delta')\\), where \\(k=RR'\\). \\(R\\) and \\(R'\\) represent long and short positions on a feed, locked in OVL, in addition to adjustable virtual OVL reserves for a dynamic \\(k\\) value.
+For v1, the pricing curve used by each market's CFMM [[2]](#angeris-2020) would be a standard constant product formula: \\(\psi(R, R', \Delta, \Delta') = (R-\Delta)(R'+\Delta')\\), where \\(k=RR'\\). \\(R\\) and \\(R'\\) represent long and short positions on a feed, locked in OVL, in addition to adjustable virtual OVL reserves for a dynamic \\(k\\) value.
 
-Because the market price offered by the Overlay protocol can now deviate from the underlying, one must include a periodic payment mechanism to incentivize convergence to the underlying value of the data stream. The time-weighted average price (TWAP) is used in the determination of these periodic payment amounts to protect the Overlay protocol against manipulation of the underlying spot and Overlay market prices [[4]](#uniswap-2020). Funding payments (i.e. difference between Overlay market price and spot price) are made between longs and shorts on each sampling of the underlying oracle feed. This mechanism effectively encourages arbitrageurs, who are also buying and selling the spot, to take the other side of any speculative trade that deviates the market price from the ref feed value, potentially balancing the set of active positions on an Overlay market.
+Because the market price offered by the Overlay protocol can now deviate from the underlying, one must include a periodic payment mechanism to incentivize convergence to the underlying value of the data stream. The time-weighted average price (TWAP) is used in the determination of these periodic payment amounts to protect the Overlay protocol against manipulation of the underlying spot and Overlay market prices [[3]](#uniswap-2020). Funding payments (i.e. difference between Overlay market price and spot price) are made between longs and shorts on each sampling of the underlying oracle feed. This mechanism effectively encourages arbitrageurs, who are also buying and selling the spot, to take the other side of any speculative trade that deviates the market price from the ref feed value, potentially balancing the set of active positions on an Overlay market.
 
 Given the nature of the OVL token, these payments are relatively easy to accomplish, as the protocol simply mints the appropriate amount of tokens to the OVL pool on a market belonging to the shorts and burns from the longs (vice versa depending on the sign of the difference between Overlay market price and spot). Funding to be paid by a particular side, \\(\mathrm{F}_{i,s}\\), is given by
 
@@ -180,11 +180,9 @@ Daniel Wasserman (@dwasse) for contributions to [`overlay-monetary`](https://git
 ## References
 <a id="kay-2018">[1]</a> Adam Kay. *Overlay*. URL: [http://overlay.market/pdfs/WPv3.pdf](http://overlay.market/pdfs/WPv3.pdf).
 
-<a id="aave-2020">[2]</a> Aavenomics: *Safety Module.* URL: [https://docs.aave.com/aavenomics/safety-module](https://docs.aave.com/aavenomics/safety-module).
+<a id="angeris-2020">[2]</a> Guillermo  Angeris,  Alex  Evans,  and  Tarun  Chitra. *When  does  the  tailwag  the  dog?  Curvature  and  market  making.*  2020. [arXiv:2012.08040 [q-fin.TR]](https://arxiv.org/abs/2012.08040)
 
-<a id="angeris-2020">[3]</a> Guillermo  Angeris,  Alex  Evans,  and  Tarun  Chitra. *When  does  the  tailwag  the  dog?  Curvature  and  market  making.*  2020. [arXiv:2012.08040 [q-fin.TR]](https://arxiv.org/abs/2012.08040)
-
-<a id="uniswap-2020">[4]</a> Hayden Adams, Noah Zinsmeister, and Dan Robinson. *Uniswap v2 Core.* URL: [https://uniswap.org/whitepaper.pdf](https://uniswap.org/whitepaper.pdf)
+<a id="uniswap-2020">[3]</a> Hayden Adams, Noah Zinsmeister, and Dan Robinson. *Uniswap v2 Core.* URL: [https://uniswap.org/whitepaper.pdf](https://uniswap.org/whitepaper.pdf)
 
 
 ## Copyright
