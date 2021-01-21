@@ -14,7 +14,7 @@ Provides incentives for core supporters of the protocol via pass-through trading
 
 ## Abstract
 <!--A short (~200 word) description of the proposed change, the abstract should clearly describe the proposed change. This is what *will* be done if the OIP is implemented, not *why* it should be done or *how* it will be done. If the OIP proposes deploying a new contract, write, "we propose to deploy a new contract that will do x".-->
-Updates to the monetary policy and pricing model for each Overlay-offered market are suggested to attempt to ensure the long-term stability and robustness of the system. Pricing of each trading position entered or exited on a market would be determined by a constant function market maker (CFMM) with periodic minting and burning to track the underlying oracle feed. To incentivize liquidity for OVL, a portion of protocol trading fees would be allocated to spot market liquidity providers through a community governed treasury. We also propose an incentivized insurance fund as a fail-safe to curb excessive expansion of the OVL currency supply.
+Updates to the monetary policy and pricing model for each Overlay-offered market are suggested to attempt to ensure the long-term stability and robustness of the system. Pricing of each trading position entered or exited on a market would be determined by a constant function market maker (CFMM) with periodic minting and burning to track the underlying oracle feed. To incentivize liquidity for OVL, a portion of protocol trading fees would be allocated to spot market liquidity providers through a community governed treasury.
 
 ## Motivation
 <!--This is the problem statement. This is the *why* of the OIP. It should clearly explain *why* the current state of the protocol is inadequate.  It is critical that you explain *why* the change is needed, if the OIP proposes changing how something is calculated, you must address *why* the current calculation is innaccurate or wrong. This is not the place to describe how the OIP will address the issue!-->
@@ -29,8 +29,6 @@ where \\( \mathrm{O}_s \\) is the size in OVL of their position, \\( (\pm)\_{s} 
 Prior work in [[1]](#kay-2018) had shown the potential for burning of trading fees to curb large minting shocks to the currency supply, by introducing a downward drift in supply over time. However, some key questions still remained:
 
 - Where would spot market liquidity for the OVL token come from?
-
-- How would the protocol handle unanticipated extreme wins that significantly increase the currency supply?
 
 - How would the protocol prevent front-running of the oracle fetch given spot market data is usually much higher frequency than oracle-reported data?
 
@@ -66,17 +64,15 @@ Given the complexity of the design changes, the rationale and trade-offs are add
 <!--The technical specification should outline the public API of the changes proposed. That is, changes to any of the interfaces Overlay currently exposes or the creations of new ones.-->
 
 #### Monetary Policy
-Overlay's monetary policy relies on revenues from trading fees charged when a user of the protocol builds or unwinds a position on a data stream. A portion of these fees would be burned upon trade execution to help manage currency supply. The rest would be sent to a community governed treasury.
+Overlay's monetary policy relies on trading fees charged when a user of the protocol builds or unwinds a position on a data stream. A portion of these fees would be burned upon trade execution to help manage currency supply. The rest would be sent to a community governed treasury.
 
-Overlay’s community governed treasury would pass through these trading fees to incentivize spot market liquidity providers (LPs), insurance fund providers, and a community operations fund as compensation for each of their services.
+Overlay’s community governed treasury would pass through these trading fees to incentivize spot market liquidity providers (LPs) and a community operations fund as compensation for each of their services.
 
 The following is a high-level overview for the roles of each of the core participants supporting the protocol:
 
-- **Spot Market LPs:** enable traders to swap OVL for ETH to enter/exit the Overlay system. LPs stake their spot OVL-ETH LP tokens in the treasury contract to earn yield in OVL.
+- **Spot Market LPs:** enable traders to swap OVL for ETH to enter/exit the Overlay system. LPs would stake their spot OVL-ETH LP tokens in the treasury contract to earn yield in OVL.
 
-- **Governance Participants:** determine the risk/reward parameters of and markets offered by the protocol to ensure the Overlay system remains useful over time. Governance participants will vote off-chain at launch with 1:1 votes for every OVL held and 2:1 votes for every OVL-ETH LP token held.
-
-- **Insurance Fund Providers:** backstop the protocol by locking up collateral for a governance-determined set amount of time, with an auction-and-burn mechanism in the event of any unanticipated excessive increase in the currency supply. Insurance fund providers can stake e.g., ETH, DAI, YFI, AAVE-ETH LP, OVL-ETH LP, etc. in the treasury contract to earn yield in OVL, with downside risk of collateral loss. They also receive rights to a portion of the margin from liquidated positions to compensate them for the additional risk taken.
+- **Governance Participants:** determine the risk/reward parameters of and markets offered by the protocol to ensure the Overlay system remains useful over time. Governance participants would vote off-chain at launch with 1:1 votes for every OVL held and 2:1 votes for every OVL-ETH LP token held.
 
 - **Community Operations Fund:** develop the protocol (e.g. build new contracts, admin, community services) and help it grow sustainably. A portion of pass-through trading fees in OVL would be sent to this community multi-sig with governance votes determining how best to spend funds to promote the growth of the Overlay protocol and its ecosystem.
 
@@ -94,7 +90,7 @@ And base exchange contracts:
 
 - `OVLFeed:` Proxy for the underlying data stream. Deployed in pair with an associated OVLPosition contract for a market offered by the protocol. Governance determines which markets and feeds to offer. Public `fetch()` function called when paying funding to positions in the `OVLPosition` contract.
 
-The rewards for each treasury participant supporting the protocol would be rather similar, although compensation could differ depending on the role. For each treasury participant, the yield from trading fees on the associated pool of capital \\(L_{p}\\) would be given by
+For spot market LPs, the yield from trading fees on the associated pool of capital \\(L_{p}\\) would be
 
 \\[ y_{p} = \frac{\sum_{i=1}^{N}{V_{i}} \cdot f_{i}}{L_{p}} \cdot (1-r_{b}) \cdot r_{p} \\]
 
@@ -102,32 +98,26 @@ where \\(\sum_{i=1}^{N}{V_{i}}\\) is the volume over all \\(N\\) markets offered
 
 Spot market liquidity for the OVL token would be enabled by this continuous stream of Overlay trading fees to staking OVL-ETH spot LPs, as long as trading volume remains substantial enough to warrant staking. An initial liquidity mining token distribution phase would bootstrap the process. This spot market liquidity incentive creates a feedback loop to offer a price feed for OVL-ETH on the Overlay trading platform, that traders can then use to hedge out a portion of their OVL risk for their positions in other Overlay markets, given all trades are settled in OVL.
 
-To handle unanticipated extreme wins that significantly increase the currency supply beyond the accumulated fee burn mechanism, we propose an insurance fund that is similar in nature to the Aave safety module [[2]](#aave-2020). Insurance providers stake collateral in the form of ETH, DAI, YFI, AAVE-ETH LP, OVL-ETH LP, etc. to earn yield in OVL via pass-through trading fees to the treasury. Additionally, insurance providers receive margin inflows (less keeper and burn fees) from liquidated positions on the platform, to appropriately compensate them for the significant risk taken to backstop the protocol. This insurance staked ERC-20 collateral would be locked for a set amount of time within the treasury contract.
-
-To backstop the system in the event the currency supply increases beyond a governance-set threshold value (e.g. 20% beyond initial distribution), the treasury begins auctioning off the staked collateral in exchange for OVL at a rate of \\(n_c = (n_{OVL} / S_{OVL}) \cdot S_{c} \\) received collateral tokens for \\(n_{OVL}\\) bid OVL tokens. \\(S_{OVL}\\) is total circulating supply of OVL and \\(S_c\\) is total collateral of a particular ERC-20 token remaining in the insurance pool. The treasury then burns the received OVL tokens to drive the supply back down. The offering window remains open until the supply threshold is no longer breached either by supply burns or by governance raising the supply threshold.
-
-These mechanisms for managing currency supply would offer alternatives to requiring a ceiling to the total supply and caps on individual trades, although it is still uncertain how supply will behave in practice. In summary, the revenue model for the protocol would be fees (in OVL) of 0.30% per trade, adjustable by governance on a feed-by-feed basis:
+Summarizing, the protocol charges fees (in OVL) of 0.30% per trade, adjustable by governance on a feed-by-feed basis:
 
 - 50% is burned
 
-- 50% is sent to a community governed treasury with incentives for spot market OVL-ETH LPs and insurance fund providers
+- 50% is sent to a community governed treasury with incentives for spot market OVL-ETH LPs
 
-To incentivize OVL-ETH liquidity providers, insurance providers, and development within the community in perpetuity, the suggested pass-through fees to the Overlay treasury would be split at launch:
+To incentivize OVL-ETH liquidity providers and development within the community in perpetuity, the suggested pass-through fees to the Overlay treasury would be split at launch:
 
-- 60.00% to OVL-ETH LPs staking
-
-- 30.00% to ERC-20 stakers in insurance fund
+- 90.00% to OVL-ETH LPs staking
 
 - 10.00% to the community fund
 
-The weighting factors for each actor, fee rates, and fee burn can be adjusted by governance. Further, OVL-ETH LPs can also earn \\(r_{LP} + r_{insurance} = 90\% \\) of the pass-through fee rewards plus a pro-rata share of rights to insurance fund inflows from position liquidations by additionally risking their LP collateral in the insurance fund itself. Eventually the Overlay protocol could lend out the locked OVL from positions for capital efficiency and additional revenue.
+The weighting factors for each actor, fee rates, and fee burn can be adjusted by governance. Eventually the protocol could lend out the locked OVL from positions for capital efficiency and additional revenue.
 
 #### Pricing Mechanism
 Overlay's pricing mechanism would be updated to float the current price on each market offered by the protocol. Price discovery would occur on each Overlay market separate from the underlying feed itself, and thus information associated with each trade on Overlay would enter the market price offered to traders.
 
-This solves issues with front-running of the oracle query that would otherwise occur if one were to simply use scalars fetched directly from the oracle feed for position lock prices, as, in practice, manipulation-resistant oracles report values far less frequently than the actual spot market. As a design tradeoff, one could instead choose to queue orders prior to the next oracle update and lock queued order prices at the next oracle fetch value. However, there are significant benefits to market price discovery and the arbitrage opportunities associated with concurrently buying/selling the spot, which we shall discuss below.
+This solves issues with front-running of the oracle query that would otherwise occur if one were to simply use scalars fetched directly from the oracle feed for position lock prices, as, in practice, manipulation-resistant oracles report values far less frequently than the actual spot market. As a design tradeoff, one could instead choose to queue orders prior to the next oracle update and lock queued order prices at the next oracle fetch value. However, there are significant benefits to market price discovery and the arbitrage opportunities associated with concurrently buying/selling the spot.
 
-For v1, the pricing curve used by each market's CFMM [[3]](#angeris-2020) will be a standard constant product formula, adopted from Uniswap: \\(\psi(R, R', \Delta, \Delta') = (R-\Delta)(R'+\Delta')\\), where \\(k=RR'\\). In contrast with two asset spot models, \\(R\\) and \\(R'\\) represent virtual OVL reserves for long and short positions on a particular market, with reserve values dynamically scaled (and thus constrained) by the underlying liquidity in the OVL-ETH spot market.
+For v1, the pricing curve used by each market's CFMM [[3]](#angeris-2020) would be a standard constant product formula: \\(\psi(R, R', \Delta, \Delta') = (R-\Delta)(R'+\Delta')\\), where \\(k=RR'\\). \\(R\\) and \\(R'\\) represent long and short positions on a feed, locked in OVL, in addition to adjustable virtual OVL reserves for a dynamic \\(k\\) value.
 
 Because the market price offered by the Overlay protocol can now deviate from the underlying, one must include a periodic payment mechanism to incentivize convergence to the underlying value of the data stream. The time-weighted average price (TWAP) is used in the determination of these periodic payment amounts to protect the Overlay protocol against manipulation of the underlying spot and Overlay market prices [[4]](#uniswap-2020). Funding payments (i.e. difference between Overlay market price and spot price) are made between longs and shorts on each sampling of the underlying oracle feed. This mechanism effectively encourages arbitrageurs, who are also buying and selling the spot, to take the other side of any speculative trade that deviates the market price from the ref feed value, potentially balancing the set of active positions on an Overlay market.
 
@@ -139,6 +129,8 @@ where \\(\mathrm{TWAO}\_{i, s}\\) is the time weighted average of the aggregate 
 
 Considerations for TWAPs to use in funding require estimating the expected amount needed to significantly influence the underlying spot price. For oracles fetching from a spot CFMM built on Uniswap V2 core, *TODO: ... partial deriv breakdown of liquidity required*
 
+*TODO: Back to x*y=k and how pricing works here (since introduced TWAP). For an OVL amount \\(n_{x}\\) locked long in a position, the associated ... \\(p_x, p_y\\) as TWAP 1h from OVL-ETH... Put this down below*
+
 #### Liquidity Constraints
 
 *TODO: ... dynamic k. how the protocol itself dynamically sets this to scale the system up/down to prevent large players from blowing out the currency supply prior to when the system can handle large trades*
@@ -149,26 +141,26 @@ Bootstrap via liquidity mining phase, with phased transition between rewards fro
 
 Suggested market feeds to launch with:
 
-- **OVL-ETH:** weighted TWAP from Uniswap + SushiSwap
-- **WBTC-ETH:** weighted TWAP from Uniswap + SushiSwap
-- **DAI-ETH:** weighted TWAP from Uniswap + SushiSwap
-- **AAVE-ETH:** weighted TWAP from Uniswap + SushiSwap
-- **SUSHI-ETH:** weighted TWAP from Uniswap + SushiSwap
-- **SNX-ETH:** weighted TWAP from Uniswap + SushiSwap
-- **YFI-ETH:** weighted TWAP from Uniswap + SushiSwap
-- **COMP-ETH:** weighted TWAP from Uniswap + SushiSwap
-- **UNI-ETH:** weighted TWAP from Uniswap + SushiSwap
-- **MKR-ETH:** weighted TWAP from Uniswap + SushiSwap
+- **OVL-ETH:** TWAP from SushiSwap
+- **WBTC-ETH:** TWAP from SushiSwap
+- **DAI-ETH:** TWAP from SushiSwap
+- **AAVE-ETH:** TWAP from SushiSwap
+- **SUSHI-ETH:** TWAP from SushiSwap
+- **SNX-ETH:** TWAP from SushiSwap
+- **YFI-ETH:** TWAP from SushiSwap
+- **COMP-ETH:** TWAP from SushiSwap
+- **UNI-ETH:** TWAP from SushiSwap
+- **MKR-ETH:** TWAP from SushiSwap
 
 Once enough liquidity builds in the base OVL-ETH spot pool to offer a manipulation-resistant TWAP for the OVL-ETH funding rate, a phased launch of markets is suggested to test out demand for each feed and the `OVLPosition` contract itself. It will likely be best to start with only the OVL-ETH feed first so traders can become accustomed to settling in OVL, then introduce the additional markets listed above.
 
 *TODO: Guidelines for feeds to launch with. Underlying liquidity amount?*
 
-*NOTE on UNI + SUSHI weighted TWAP: should be liquidity weighted ... TODO: how in a manipulation resistant manner? `getReserves()` can be gamed. Could always have governance control to begin with and periodically update, or use Alpha Finance ['fair pricing' approach](https://blog.alphafinance.io/fair-lp-token-pricing/) (although can this still be gamed with [`k` value calculation]()?; think about it more deeply). Could just have a cumulative value of this calc to eventually time average at lower frequency interval than the TWAP itself (e.g. every 24 hours v.s. 1 hour TWAP) to make it more resistant and get the liquidity reserve value we need for index weighting and for dynamic k adjustments through OVL-ETH liquidity*
-
 ### Test Cases
 <!--Test cases for an implementation are mandatory for OIPs but can be included with the implementation..-->
 Test cases for an implementation are mandatory for OIPs but can be included with the implementation.
+
+*TODO: [`overlay-monetary`](https://github.com/overlay-market/overlay-monetary/) results and plots*
 
 ### Risks
 
@@ -178,12 +170,12 @@ The following are some significant risks associated with this approach that need
 
 - Manipulation of the underlying TWAPs for funding, particularly on the OVL-ETH feed if liquidity is low or not averaged over a long enough period of time. For OVL-ETH, there are freshness concerns associated with price sensitivity constants that need to be balanced here (~ 1 hour TWAP would be ideal).
 
-- Multiple breaches of the insurance fund threshold leading to an unwillingness from insurance providers to stake collateral. Burns of margin would still be possible here to attempt to stabilize the currency supply over time, but likely not enough.
-
 - Lack of trading volume on the platform causing insignificant rewards for OVL-ETH spot liquidity providers to compensate them for their role in the system. Potentially causes a run on the system in anticipation of the liquidity entry/exit way drying up. This could happen due to a number of reasons including an unwillingness to settle in OVL (versus e.g., ETH).
 
+- *TODO: Risk of run on OVL-ETH pool if excessive minting, particularly given lack of insurance fund. Maintenance margin compensation burns along with pass through to OVL-ETH pool seem to be substantial from sims, but really anyone's guess as to how the supply of OVL will behave in practice*
+
 ## Acknowledgments
-Daniel Wasserman (@dwasse) for the insurance fund's collateralization and auction mechanisms, and Cam Harvey for comments, edits, and review.
+Daniel Wasserman (@dwasse) for contributions to [`overlay-monetary`](https://github.com/overlay-market/overlay-monetary/) as well as consistent critiques & feedback, and Cam Harvey for comments, edits, and review.
 
 ## References
 <a id="kay-2018">[1]</a> Adam Kay. *Overlay*. URL: [http://overlay.market/pdfs/WPv3.pdf](http://overlay.market/pdfs/WPv3.pdf).
