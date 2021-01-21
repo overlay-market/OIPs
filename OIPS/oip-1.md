@@ -143,7 +143,6 @@ Suggested market feeds to launch with:
 
 - **OVL-ETH:** TWAP from SushiSwap
 - **WBTC-ETH:** TWAP from SushiSwap
-- **DAI-ETH:** TWAP from SushiSwap
 - **AAVE-ETH:** TWAP from SushiSwap
 - **SUSHI-ETH:** TWAP from SushiSwap
 - **SNX-ETH:** TWAP from SushiSwap
