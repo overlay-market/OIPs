@@ -34,7 +34,7 @@ Prior work in [[1]](#kay-2018) had shown the potential for burning of trading fe
 
 - How would the protocol incentivize a balanced set of positions on markets?
 
-This OIP addresses each of these concerns.
+This OIP aims to address each of these concerns.
 
 ## Specification
 <!--The specification should describe the syntax and semantics of any new feature, there are five sections
@@ -119,7 +119,7 @@ This solves issues with front-running of the oracle query that would otherwise o
 
 For v1, the pricing curve used by each market's CFMM [[2]](#angeris-2020) would be a standard constant product formula: \\(\psi(R, R', \Delta, \Delta') = (R-\Delta)(R'+\Delta')\\), where \\(k=RR'\\). \\(R\\) and \\(R'\\) represent long and short positions on a feed, locked in OVL, in addition to adjustable virtual OVL reserves for a dynamic \\(k\\) value.
 
-Because the market price offered by the Overlay protocol can now deviate from the underlying, one must include a periodic payment mechanism to incentivize convergence to the underlying value of the data stream. The time-weighted average price (TWAP) is used in the determination of these periodic payment amounts to protect the Overlay protocol against manipulation of the underlying spot and Overlay market prices [[3]](#uniswap-2020). Funding payments (i.e. difference between Overlay market price and spot price) are made between longs and shorts on each sampling of the underlying oracle feed. This mechanism effectively encourages arbitrageurs, who are also buying and selling the spot, to take the other side of any speculative trade that deviates the market price from the ref feed value, potentially balancing the set of active positions on an Overlay market.
+Because the market price offered by the Overlay protocol can now deviate from the underlying, one must include a periodic payment mechanism to incentivize convergence to the underlying value of the data stream. The time-weighted average price (TWAP) is used in the determination of these periodic payment amounts to protect the Overlay protocol against manipulation of the underlying spot and Overlay market prices [[3]](#uniswap-2020). Funding payments (i.e. difference between Overlay market price and spot price) are made between longs and shorts on each sampling of the underlying oracle feed. This mechanism effectively encourages arbitrageurs, who are also buying and selling the spot, to take the other side of any speculative trade that deviates the market price from the reference feed value, potentially balancing the set of active positions on an Overlay market.
 
 Given the nature of the OVL token, these payments are relatively easy to accomplish, as the protocol simply mints the appropriate amount of tokens to the OVL pool on a market belonging to the shorts and burns from the longs (vice versa depending on the sign of the difference between Overlay market price and spot). Funding to be paid by a particular side, \\(\mathrm{F}_{i,s}\\), is given by
 
@@ -167,7 +167,7 @@ The following are some significant risks associated with this approach that need
 
 - Informed traders could cause excessive minting without other traders willing to take the other side of their trade (even arbitrageurs). In other words, the market knows something Overlay CFMMs won't be able to know, and there isn't another trader willing to take on the risk to balance the active positions on a feed.
 
-- Manipulation of the underlying TWAPs for funding, particularly on the OVL-ETH feed if liquidity is low or not averaged over a long enough period of time. For OVL-ETH, there are freshness concerns associated with price sensitivity constants that need to be balanced here (~ 1 hour TWAP would be ideal).
+- Manipulation of the underlying TWAPs for funding, particularly on the OVL-ETH feed if liquidity is low or not averaged over a long enough period of time. For OVL-ETH, there are data freshness concerns associated with price sensitivity constants that need to be balanced here (~ 1 hour TWAP would be ideal).
 
 - Lack of trading volume on the platform causing insignificant rewards for OVL-ETH spot liquidity providers to compensate them for their role in the system. Potentially causes a run on the system in anticipation of the liquidity entry/exit way drying up. This could happen due to a number of reasons including an unwillingness to settle in OVL (versus e.g., ETH).
 
