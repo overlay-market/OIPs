@@ -127,13 +127,13 @@ Given the nature of the OVL token, these payments are relatively easy to accompl
 
 where \\(\mathrm{TWAO}\_{i, s}\\) is the time weighted average of the aggregate position size on side \\(s\\) of an Overlay-offered market \\(i\\) over the period between successive funding payments, \\( (\pm)\_{s} = 1 \\) for longs and \\( (\pm)\_{s} = -1 \\) for shorts, \\(\mathrm{TWAP}_{spot}\\) is the TWAP fetched from the spot oracle at the sampling time (e.g. once per hour), and \\(\mathrm{TWAP}_i\\) is the TWAP of the Overlay market price \\(P_i\\) for market \\(i\\) over the same sampling time. Positions on an Overlay market track the pro-rata share of the open interest a user has on a particular side. Time lengths to average over are determined by governance whenever a new market is added to the protocol, taking into account the underlying spot liquidity of the feed.
 
-Considerations for TWAPs to use in funding require estimating the expected amount needed to significantly influence the underlying spot price. For oracles fetching from a spot CFMM built on Uniswap V2 core, *TODO: ... partial deriv breakdown of liquidity required*
+<!-- *TODO: Considerations for TWAPs to use in funding require estimating the expected amount needed to significantly influence the underlying spot price. For oracles fetching from a spot CFMM built on Uniswap V2 core,  ... partial deriv breakdown of liquidity required*
 
-*TODO: Back to x*y=k and how pricing works here (since introduced TWAP). For an OVL amount \\(n_{x}\\) locked long in a position, the associated ... \\(p_x, p_y\\) as TWAP 1h from OVL-ETH... Put this down below*
+*TODO: Back to x*y=k and how pricing works here (since introduced TWAP). For an OVL amount \\(n_{x}\\) locked long in a position, the associated ... \\(p_x, p_y\\) as TWAP 1h from OVL-ETH... Put this down below* -->
 
 #### Liquidity Constraints
 
-*TODO: ... dynamic k. how the protocol itself dynamically sets this to scale the system up/down to prevent large players from blowing out the currency supply prior to when the system can handle large trades*
+<!-- *TODO: ... dynamic k. how the protocol itself dynamically sets this to scale the system up/down to prevent large players from blowing out the currency supply prior to when the system can handle large trades* -->
 
 #### Feeds on Launch
 
@@ -153,13 +153,11 @@ Suggested market feeds to launch with:
 
 Once enough liquidity builds in the base OVL-ETH spot pool to offer a manipulation-resistant TWAP for the OVL-ETH funding rate, a phased launch of markets is suggested to test out demand for each feed and the `OVLPosition` contract itself. It will likely be best to start with only the OVL-ETH feed first so traders can become accustomed to settling in OVL, then introduce the additional markets listed above.
 
-*TODO: Guidelines for feeds to launch with. Underlying liquidity amount?*
+<!-- *TODO: Guidelines for feeds to launch with. Underlying liquidity amount?* -->
 
 ### Test Cases
 <!--Test cases for an implementation are mandatory for OIPs but can be included with the implementation..-->
-Test cases for an implementation are mandatory for OIPs but can be included with the implementation.
-
-*TODO: [`overlay-monetary`](https://github.com/overlay-market/overlay-monetary/) results and plots*
+*TODO: [`overlay-monetary`](https://github.com/overlay-market/overlay-monetary/) results and plots below*
 
 ### Risks
 
@@ -171,7 +169,8 @@ The following are some significant risks associated with this approach that need
 
 - Lack of trading volume on the platform causing insignificant rewards for OVL-ETH spot liquidity providers to compensate them for their role in the system. Potentially causes a run on the system in anticipation of the liquidity entry/exit way drying up. This could happen due to a number of reasons including an unwillingness to settle in OVL (versus e.g., ETH).
 
-- *TODO: Risk of run on OVL-ETH pool if excessive minting, particularly given lack of insurance fund. Maintenance margin compensation burns along with pass through to OVL-ETH pool seem to be substantial from sims, but really anyone's guess as to how the supply of OVL will behave in practice*
+<!--
+- *TODO: Risk of run on OVL-ETH pool if excessive minting, particularly given lack of insurance fund. Maintenance margin compensation burns along with pass through to OVL-ETH pool seem to be substantial from sims, but really anyone's guess as to how the supply of OVL will behave in practice* -->
 
 ## Acknowledgments
 Daniel Wasserman (@dwasse) for contributions to [`overlay-monetary`](https://github.com/overlay-market/overlay-monetary/) as well as consistent critiques & feedback, and Cam Harvey for comments, edits, and review.
