@@ -24,7 +24,7 @@ The Overlay mechanism is relatively simple: traders enter positions by locking u
 
 \\[ \mathrm{PnL} = \mathrm{O}\_{s} \cdot (\pm)\_{s} \cdot \frac{P_{exit} - P_{entry}}{P_{entry}} \\]
 
-where \\( \mathrm{O}_s \\) is the size in OVL of their position, \\( (\pm)\_{s} = 1 \\) for longs and \\( (\pm)\_{s} = -1 \\) for shorts, and \\( P\_{entry}, P\_{exit} \\) are entry and exit prices of the position. The contract mints/burns \\( \mathrm{PnL} \\) amount from the total existing supply of OVL (i.e. mints if \\( \mathrm{PnL} > 0 \\) and burns if \\( \mathrm{PnL} < 0 \\)) and returns \\( \mathrm{O}\_{s} + \mathrm{PnL} \\) amount of OVL tokens to the trader's address. One can think of this as the protocol fronting credits in the system to successful traders to compensate them for their profits in the hopes of eventually burning a similar amount of credits from unsuccessful traders in the future, or socializing the losses.
+where \\( \mathrm{O}_s \\) is the size in OVL of their position, \\( (\pm)\_{s} = 1 \\) for longs and \\( (\pm)\_{s} = -1 \\) for shorts, and \\( P\_{entry}, P\_{exit} \\) are entry and exit prices of the position. The contract mints/burns \\( \mathrm{PnL} \\) amount from the total existing supply of OVL (i.e. mints if \\( \mathrm{PnL} > 0 \\) and burns if \\( \mathrm{PnL} < 0 \\)) and returns \\( \mathrm{O}\_{s} + \mathrm{PnL} \\) amount of OVL tokens to the trader's address. One can think of this as the protocol fronting credits in the system to successful traders to compensate them for their profits with the goal of eventually burning a similar amount of credits from unsuccessful traders in the future, or socializing the losses.
 
 Prior work in [[1]](#kay-2018) had shown the potential for burning of trading fees to curb large minting shocks to the currency supply, by introducing a downward drift in supply over time. However, some key questions still remained:
 
@@ -152,6 +152,22 @@ Suggested market feeds to launch with:
 - **MKR-ETH:** TWAP from SushiSwap
 
 Once enough liquidity builds in the base OVL-ETH spot pool to offer a manipulation-resistant TWAP for the OVL-ETH funding rate, a phased launch of markets is suggested to test out demand for each feed and the `OVLPosition` contract itself. It will likely be best to start with only the OVL-ETH feed first so traders can become accustomed to settling in OVL, then introduce the additional markets listed above.
+
+Suggested starting parameter values:
+
+| Name     | Value         |  Description |
+| ------------- | ------------- | ------------- |
+| `maxLeverage`  | `10.0`  | Maximum leverage a position is allowed to take on: `initialMargin = 1 / position.leverage` |
+| `maintenanceMargin`  | `0.6 * initialMargin`  |  Required maintenance margin for a leveraged position. Liquidation of a position can be triggered when `openMargin < maintenanceMargin`, where `openMargin = position.value / position.notional` |
+| `liquidationReward`  |  `0.1`  |    |
+| `liquidationMarginToBurn`  | `0.5`  |    |
+| `fees`  | `0.003 * position.notional` | Total amount of fees charged per trade |
+| `feesToBurn`  | `0.5 * fees`  |  Amount of fees burned |
+| `feesToLPs`  | `0.85 * (fees - feesToBurn)`  |  Amount of unburned fees passed through to staking spot LPs  |
+| `feesToCommunity`  | `0.1 * (fees - feesToBurn)`  |  Amount of unburned fees passed through to community multi-sig  |
+| `fundingReward`  | `sum([0.05 * (fees - feesToBurn)])`  |  Amount representing the percentage of the cumulative sum of all the unburned fees during the time between funding payments rewarded to the account that initiates the funding transaction |
+| `samplingInterval`  | `1 hour`  | Time between funding payments to average each TWAP over |
+
 
 <!-- *TODO: Guidelines for feeds to launch with. Underlying liquidity amount?* -->
 
