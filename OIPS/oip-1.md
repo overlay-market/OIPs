@@ -157,15 +157,15 @@ Suggested starting parameter values:
 
 | Name     | Value         |  Description |
 | ------------- | ------------- | ------------- |
-| `maxLeverage`  | `10.0`  | Maximum leverage a position is allowed to take on: `initialMargin = 1 / position.leverage` |
-| `maintenanceMargin`  | `0.6 * initialMargin`  |  Required maintenance margin for a leveraged position. Liquidation of a position can be triggered when `openMargin < maintenanceMargin`, where `openMargin = position.value / position.notional` |
+| `maxLeverage`  | `10.0`  | Maximum leverage a position is allowed to take on |
+| `maintenanceMargin`  | `0.6 * initialMargin = 0.6 / position.leverage`  |  Required maintenance margin for a leveraged position. Liquidation of a position can be triggered when `openMargin < maintenanceMargin`, where `openMargin = positionValue / positionNotional` |
 | `liquidationReward`  |  `0.1`  |    |
 | `liquidationMarginToBurn`  | `0.5`  |    |
-| `fees`  | `0.003 * position.notional` | Total amount of fees charged per trade |
+| `fees`  | `0.003 * positionNotional` | Total amount of fees charged per trade |
 | `feesToBurn`  | `0.5 * fees`  |  Amount of fees burned |
-| `feesToLPs`  | `0.85 * (fees - feesToBurn)`  |  Amount of unburned fees passed through to staking spot LPs  |
+| `feesToLPs`  | `0.89 * (fees - feesToBurn)`  |  Amount of unburned fees passed through to staking spot LPs  |
 | `feesToCommunity`  | `0.1 * (fees - feesToBurn)`  |  Amount of unburned fees passed through to community multi-sig  |
-| `fundingReward`  | `sum([0.05 * (fees - feesToBurn)])`  |  Amount representing the percentage of the cumulative sum of all the unburned fees during the time between funding payments rewarded to the account that initiates the funding transaction |
+| `fundingReward`  | `sum([0.01 * (fees - feesToBurn)])`  |  Amount representing the percentage of the cumulative sum of all the unburned fees during the time between funding payments rewarded to the account that initiates the funding transaction |
 | `samplingInterval`  | `1 hour`  | Time between funding payments to average each TWAP over |
 
 
