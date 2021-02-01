@@ -165,8 +165,8 @@ Suggested starting parameter values:
 | `feesToBurn`  | `0.5 * fees`  |  Amount of fees burned |
 | `feesToLPs`  | `0.89 * (fees - feesToBurn)`  |  Amount of unburned fees passed through to staking spot LPs  |
 | `feesToCommunity`  | `0.1 * (fees - feesToBurn)`  |  Amount of unburned fees passed through to community multi-sig  |
-| `fundingReward`  | `sum([0.01 * (fees - feesToBurn)])`  |  Amount representing the percentage of the cumulative sum of all the unburned fees during the time between funding payments rewarded to the account that initiates the funding transaction |
 | `samplingInterval`  | `1 hour`  | Time between funding payments to average each TWAP over |
+| `fundingReward`  | `sum([0.01 * (fees - feesToBurn)])`  |  Amount of unburned fees, during the time between funding payments, rewarded to the account that initiates the funding transaction. Represents a cumulative sum of fees during `samplingInterval` |
 
 
 <!-- *TODO: Guidelines for feeds to launch with. Underlying liquidity amount?* -->
