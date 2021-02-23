@@ -3,7 +3,7 @@ oip: 0
 title: OIP Purpose and Guidelines
 status: Implemented
 author: Michael Feldman (@mikeyrf)
-discussions-to: 
+discussions-to:
 created: 2021-01-05
 updated: N/A
 ---
@@ -136,8 +136,6 @@ The current OIP editors are:
 ` * Michael Feldman (@mikeyrf)`
 
 ` * Adam Kay (@mcillkay)`
-
-` * Michael Nowotny (@michaelnowotny)`
 
 ` * Daniel Wasserman (@dwasse)`
 
