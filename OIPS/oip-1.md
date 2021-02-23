@@ -2,7 +2,7 @@
 oip: 1
 title: Monetary Policy and Pricing Model
 status: WIP
-author: Michael Feldman (@mikeyrf), Michael Nowotny (@michaelnowotny), Adam Kay (@mcillkay)
+author: Michael Feldman (@mikeyrf), Adam Kay (@mcillkay)
 discussions-to:
 created: 2021-01-09
 updated: N/A
@@ -188,11 +188,8 @@ The following are some significant risks associated with this approach that need
 <!--
 - *TODO: Risk of run on OVL-ETH pool if excessive minting, particularly given lack of insurance fund. Maintenance margin compensation burns along with pass through to OVL-ETH pool seem to be substantial from sims, but really anyone's guess as to how the supply of OVL will behave in practice* -->
 
-## Acknowledgments
-Daniel Wasserman (@dwasse) for contributions to [`overlay-monetary`](https://github.com/overlay-market/overlay-monetary/) as well as consistent critiques & feedback, and Cam Harvey for comments, edits, and review.
-
 ## References
-<a id="kay-2018">[1]</a> Adam Kay. *Overlay*. URL: [http://overlay.market/pdfs/WPv3.pdf](http://overlay.market/pdfs/WPv3.pdf).
+<a id="kay-2018">[1]</a> Adam Kay. *Overlay*. URL: [https://firebasestorage.googleapis.com/v0/b/overlay-landing.appspot.com/o/OverlayWPv3.pdf?alt=media](https://firebasestorage.googleapis.com/v0/b/overlay-landing.appspot.com/o/OverlayWPv3.pdf?alt=media).
 
 <a id="angeris-2020">[2]</a> Guillermo  Angeris,  Alex  Evans,  and  Tarun  Chitra. *When  does  the  tailwag  the  dog?  Curvature  and  market  making.*  2020. [arXiv:2012.08040 [q-fin.TR]](https://arxiv.org/abs/2012.08040)
 
