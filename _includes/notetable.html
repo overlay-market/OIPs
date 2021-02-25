@@ -1,0 +1,28 @@
+<style type="text/css">
+  .notetable .title {
+    width: 67%;
+  }
+
+  .notetable .author {
+    width: 33%;
+  }
+</style>
+{% for status in site.data.statuses %}
+  {% assign notes = include.notes|where:"status",status|sort:"note" %}
+  {% assign count = notes|size %}
+  {% if count > 0 %}
+    <h2>{{status}}</h2>
+    <table class="notetable">
+      <thead>
+        <tr><th class="notenum">Number</th><th class="title">Title</th><th class="author">Author</th></tr>
+      </thead>
+      {% for page in notes %}
+        <tr>
+          <td class="notenum"><a href="{{page.url|relative_url}}">{{page.note|xml_escape}}</a></td>
+          <td class="title">{{page.title|xml_escape}}</td>
+          <td class="author">{% include authorlist.html authors=page.author %}</td>
+        </tr>
+      {% endfor %}
+    </table>
+  {% endif %}
+{% endfor %}

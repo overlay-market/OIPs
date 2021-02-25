@@ -1,0 +1,72 @@
+---
+note: 2
+oip-num: 1
+title: Cost of Attack with TWAPs
+status: WIP
+author: Michael Feldman (@mikeyrf)
+discussions-to: oip-1
+created: 2021-02-25
+updated: N/A
+---
+
+Two issues to address in this note.
+
+1. How much can the value of a Uniswap/SushiSwap **sliding window** TWAP oracle be manipulated within the oracle's update interval (which is much smaller than the time averaged over)?
+
+2. How much capital is needed to **profitably attack** an Overlay market by manipulating the underlying price feed?
+
+## Sliding Window Oracles
+
+### Overview
+
+Addressing the first question relates to using a [sliding window TWAP oracle](https://github.com/Uniswap/uniswap-v2-periphery/blob/master/contracts/examples/ExampleSlidingWindowOracle.sol) and the cost to attack the feed itself when using a `periodSize << windowSize`.
+
+For context, if we fix the price on Overlay to each fetch from the oracle, we encounter issues with [data freshness](https://uniswap.org/docs/v2/smart-contract-integration/building-an-oracle/) if using a fixed window oracle implementation, since we'd be fetching new scalar values every 1-8 hours. From a UX perspective as well, this is horrific since I need to wait the length of the `windowSize` for my trade to settle, which no one will do for a 1-8 hour window.
+
+The alternative would be to use a sliding window TWAP oracle for each of our price feeds. The way it works: every \\( \gamma \\) blocks (`periodSize`), we fetch and store a new [cumulative price value](https://uniswap.org/docs/v2/core-concepts/oracles/) from the Uni/SushiSwap feed. Assume we average our TWAP over \\( \delta \\) blocks (`windowSize`) and \\( \gamma << \delta \\) (e.g. \\( \gamma = 5 \mathrm{min}; \delta = 8 \mathrm{hr} \\) in block time).
+
+We keep track of the trailing index of the \\( int(\delta / \gamma) \\) observation from the feed in our sliding window oracle. To calculate the TWAP value to use for our Overlay market prices during the current update interval \\( t_i < t < t_i + \gamma \\), we simply take the difference in the cumulative price value of the last observation stored with that of the trailing index value and divide by the difference in timestamps of the last and trailing. In Python (in Solidity, maps are used):
+
+```
+sliding_observations = deque([
+    Observation(timestamp=0, cum_price=0.0)
+    for i in range(granularity)
+])
+
+def sliding_twap(self) -> float:
+    oldest_obs = sliding_observations[0]
+    newest_obs = sliding_observations[-1]
+    if oldest_obs.timestamp == 0:
+        return 0.0
+    return (newest_obs.cum_price - oldest_obs.cum_price) / (newest_obs.timestamp - oldest_obs.timestamp)
+```
+
+Explicitly, for a `windowSize` of \\( \delta \\) blocks that we average our prices over, the TWAP at block \\( i \\) for our market feed is
+
+\\[ TWAP_i(\delta) = TWAP_i = ( CP_i - CP_{i-\delta} ) / \delta \\]
+
+where \\( CP_i \\) is the Uni/SushiSwap price accumulator
+
+\\[ CP_i = \sum_{k=0}^{i} t_k * P_k \\]
+
+\\( t_k \\) is the time elapsed between the end of block \\( k \\) and beginning of block \\( k+1 \\). \\( P_k \\) is the price on Uni/SushiSwap at the end of block \\( k \\) and beginning of block \\( k+1 \\).
+
+### TWAP Manipulation
+
+For a `periodSize` of \\( \gamma \\), we want an explicit expression for how much the TWAP can change due to an attacker consistently manipulating the spot from blocks \\( i \\) to \\( i + \gamma \\) within the update interval. See the [Considerations](#Considerations) section below for ways we need to further expand this analysis.
+
+Expression we want to examine is \\( TWAP_{i+\gamma} / TWAP_i - 1 \\), where \\( TWAP_{i+\gamma} = (CP_{i+\gamma} - CP_{i+\gamma - \delta}) / \delta \\), where the value of the price accumulator at block \\( i + \gamma \\) is \\( CP_{i+\gamma} = CP_i + \sum_{k=i+1}^{i+\gamma} t_k * P_k \\). For simplicity's sake, assume the attacker manipulates the spot price a percent difference \\(\epsilon_{\gamma} \\) for each block in the update window such that
+
+\\[ P_{i+1} = P_{i+2} = ... = P_{i+\gamma} = (1 + \epsilon_{\gamma}) * P_i \\]
+
+Then the value of the price accumulator at block \\( i + \gamma \\) will simplify to
+
+\\[ CP_{i+\gamma} = CP_i + \gamma * (1 + \epsilon_{\gamma}) * P_i \\]
+
+
+## Profitably Attacking Overlay
+
+
+## Considerations
+
+[These issues](https://uniswap.org/audit.html#org87c8b91) should be addressed. Particularly with regard to liquidity in the `periodSize` interval for the sliding window TWAP oracle. Initial naive analysis above assumes arbitrageurs bring the price back immediately every block. This is not necessarily the case (but will be close to for very liquid pairs).

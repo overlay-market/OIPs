@@ -23,6 +23,7 @@ twitter_username: OverlayProtocol
 github_username: overlay-market
 header_pages:
   - all-oip.html
+  - all-notes.html
 twitter:
   card: summary
   username: OverlayProtocol
@@ -40,6 +41,10 @@ defaults:
       path: "OIPS"
     values:
       layout: "oip"
+  - scope:
+      path: 'notes'
+    values:
+      layout: 'note'
 
 exclude:
   - Gemfile
