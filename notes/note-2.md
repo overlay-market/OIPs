@@ -61,7 +61,7 @@ Expression we want to examine is \\( TWAP_{i+\gamma} / TWAP_i - 1 \\), where \\(
 
 Then the value of the price accumulator at block \\( i + \gamma \\) will simplify to
 
-\\[ CP_{i+\gamma} = CP_i + \gamma * (1 + \epsilon_{\gamma}) * P_i \\]
+\\[ CP_{i+\gamma} = CP_i + \gamma * (1 + \epsilon_{\gamma}) \cdot P_i \\]
 
 
 ## Profitably Attacking Overlay
