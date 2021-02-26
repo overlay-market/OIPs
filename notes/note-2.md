@@ -21,33 +21,19 @@ Two issues to address in this note.
 
 Addressing the first question relates to using a [sliding window TWAP oracle](https://github.com/Uniswap/uniswap-v2-periphery/blob/master/contracts/examples/ExampleSlidingWindowOracle.sol) and the cost to attack the feed itself when using a `periodSize << windowSize`.
 
-For context, if we fix the price on Overlay to each fetch from the oracle, we encounter issues with [data freshness](https://uniswap.org/docs/v2/smart-contract-integration/building-an-oracle/) if using a fixed window oracle implementation, since we'd be fetching new scalar values every 1-8 hours. From a UX perspective as well, this is horrific since I need to wait the length of the `windowSize` for my trade to settle, which no one will do for a 1-8 hour window.
+For context, if we fix the price on Overlay to each fetch from the oracle, we encounter issues with [data freshness](https://uniswap.org/docs/v2/smart-contract-integration/building-an-oracle/) for a fixed window oracle implementation, since we'd be fetching new scalar values every 1-8 hours. From a UX perspective as well, this is horrific since I need to wait the length of the `windowSize` for my trade to settle, which no one will do for a 1-8 hour window.
 
-The alternative would be to use a sliding window TWAP oracle for each of our price feeds. The way it works: every \\( \gamma \\) blocks (`periodSize`), we fetch and store a new [cumulative price value](https://uniswap.org/docs/v2/core-concepts/oracles/) from the Uni/SushiSwap feed. Assume we average our TWAP over \\( \delta \\) blocks (`windowSize`) and \\( \gamma << \delta \\) (e.g. \\( \gamma = 5 \mathrm{min}; \delta = 8 \mathrm{hr} \\) in block time).
+The alternative would be to use a sliding window TWAP oracle for each of our price feeds. Summary of how it works: every \\( \gamma \\) blocks (`periodSize`), we fetch and store a new [cumulative price value](https://uniswap.org/docs/v2/core-concepts/oracles/) from the Uni/SushiSwap feed. Assume we average our TWAP over \\( \Delta \\) blocks (`windowSize`) and \\( \gamma \ll \Delta \\) (e.g. \\( \gamma = 5 \mathrm{m}, \Delta = 8 \mathrm{h} \\) in block time).
 
-We keep track of the trailing index of the \\( int(\delta / \gamma) \\) observation from the feed in our sliding window oracle. To calculate the TWAP value to use for our Overlay market prices during the current update interval \\( t_i < t < t_i + \gamma \\), we simply take the difference in the cumulative price value of the last observation stored with that of the trailing index value and divide by the difference in timestamps of the last and trailing. In Python (in Solidity, maps are used):
+The oracle keeps track of the trailing index of the observation (at the beginning of the window) relative to the current time index. To calculate the TWAP value for our Overlay market prices during the current update interval \\( t_i < t < t_i + \gamma \\), we simply take the difference in the cumulative price value of the last observation stored with that of the trailing index value and divide by the difference in timestamps of the last and trailing.
 
-```
-sliding_observations = deque([
-    Observation(timestamp=0, cum_price=0.0)
-    for i in range(granularity)
-])
+Explicitly, for a `windowSize` of \\( \Delta \\) blocks that we average our prices over, the TWAP at block \\( i \\) for our market feed is
 
-def sliding_twap(self) -> float:
-    oldest_obs = sliding_observations[0]
-    newest_obs = sliding_observations[-1]
-    if oldest_obs.timestamp == 0:
-        return 0.0
-    return (newest_obs.cum_price - oldest_obs.cum_price) / (newest_obs.timestamp - oldest_obs.timestamp)
-```
-
-Explicitly, for a `windowSize` of \\( \delta \\) blocks that we average our prices over, the TWAP at block \\( i \\) for our market feed is
-
-\\[ TWAP_i(\delta) = TWAP_i = ( CP_i - CP_{i-\delta} ) / \delta \\]
+\\[ \mathrm{TWAP}\_i(\Delta) = \mathrm{TWAP}\_i = ( CP_i - CP_{i-\Delta} ) / \Delta \\]
 
 where \\( CP_i \\) is the Uni/SushiSwap price accumulator
 
-\\[ CP_i = \sum_{k=0}^{i} t_k * P_k \\]
+\\[ CP_i = \sum_{k=0}^{i} t_k \cdot P_k \\]
 
 \\( t_k \\) is the time elapsed between the end of block \\( k \\) and beginning of block \\( k+1 \\). \\( P_k \\) is the price on Uni/SushiSwap at the end of block \\( k \\) and beginning of block \\( k+1 \\).
 
@@ -55,13 +41,29 @@ where \\( CP_i \\) is the Uni/SushiSwap price accumulator
 
 For a `periodSize` of \\( \gamma \\), we want an explicit expression for how much the TWAP can change due to an attacker consistently manipulating the spot from blocks \\( i \\) to \\( i + \gamma \\) within the update interval. See the [Considerations](#Considerations) section below for ways we need to further expand this analysis.
 
-Expression we want to examine is \\( TWAP_{i+\gamma} / TWAP_i - 1 \\), where \\( TWAP_{i+\gamma} = (CP_{i+\gamma} - CP_{i+\gamma - \delta}) / \delta \\), where the value of the price accumulator at block \\( i + \gamma \\) is \\( CP_{i+\gamma} = CP_i + \sum_{k=i+1}^{i+\gamma} t_k * P_k \\). For simplicity's sake, assume the attacker manipulates the spot price a percent difference \\(\epsilon_{\gamma} \\) for each block in the update window such that
+We want to look at \\( \mathrm{TWAP}\_{i+\gamma} / \mathrm{TWAP}\_i - 1 \\), where \\( \mathrm{TWAP}\_{i+\gamma} = (CP_{i+\gamma} - CP_{i+\gamma - \Delta}) / \Delta \\). The value of the price accumulator at block \\( i + \gamma \\) is simply
 
-\\[ P_{i+1} = P_{i+2} = ... = P_{i+\gamma} = (1 + \epsilon_{\gamma}) * P_i \\]
+\\[ CP_{i+\gamma} = CP_i + \sum_{k=i+1}^{i+\gamma} t_k \cdot P_k \\]
 
-Then the value of the price accumulator at block \\( i + \gamma \\) will simplify to
+For simplicity's sake, assume the attacker manipulates the spot price a percent difference \\(\epsilon_{\gamma} \\) for each block in the update window (i.e. for \\( \gamma \\) blocks) such that
 
-\\[ CP_{i+\gamma} = CP_i + \gamma * (1 + \epsilon_{\gamma}) \cdot P_i \\]
+\\[ P_{i+1} = P_{i+2} = ... = P_{i+\gamma} = (1 + \epsilon_{\gamma}) \cdot P_i \\]
+
+The value of the price accumulator at block \\( i + \gamma \\) will simplify to
+
+\\[ CP_{i+\gamma} = CP_i + \gamma \cdot (1 + \epsilon_{\gamma}) \cdot P_i \\]
+
+and \\( \mathrm{TWAP}\_{i+\gamma} \\) reduces to
+
+\\[\mathrm{TWAP}\_{i+\gamma} = \frac{\gamma}{\Delta} \cdot (1 + \epsilon_{\gamma}) \cdot P_i + \frac{CP_i - CP_{i+\gamma-\Delta}}{\Delta} \\]
+
+Simplify further (we can always generalize), and assume prior to the update interval
+
+\\[ P_{i-\Delta} = P_{i-\Delta+1} = ... = P_{i} \\]
+
+such that \\(\mathrm{TWAP}\_{i} = P_i \\). Then \\(\mathrm{TWAP}\_{i+\gamma} = P_i \cdot [ 1 + (\gamma/\Delta) \cdot \epsilon_{\gamma} ] \\) and the change in the TWAP over the update interval
+
+\\[\frac{\mathrm{TWAP}\_{i+\gamma}}{\mathrm{TWAP}\_{i}} - 1 = \frac{\gamma}{\Delta} \cdot \epsilon_{\gamma} \\]
 
 
 ## Profitably Attacking Overlay
