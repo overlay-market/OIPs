@@ -74,15 +74,15 @@ where for \\( f_i \\) substitute in the expression above for our funding payment
 
 \\[ \mathrm{PnL}(t_n) = P_n \cdot n_{OVL} \cdot [ 2 - ( P_n / P_0 + P_0 / P_n ) + \sum_{i=0}^{n} f_i ] \\]
 
-Let \\( P_n = P_0 \cdot (1 + e_n) \\), and assume \\( \|e_n\| < 1 \\) for our purposes. Then,
+Let \\( P_n = P_0 \cdot (1 + \epsilon_n) \\), and assume \\( \|\epsilon_n\| < 1 \\) for our purposes. Then,
 
-\\[ \mathrm{PnL}(t_n) = P_n \cdot n_{OVL} \cdot [ 2 - ( 1 + e_n + 1 / (1 + e_n) ) + \sum_{i=0}^{n} f_i ] \\]
+\\[ \mathrm{PnL}(t_n) = P_n \cdot n_{OVL} \cdot [ 2 - ( 1 + \epsilon_n + 1 / (1 + \epsilon_n) ) + \sum_{i=0}^{n} f_i ] \\]
 
-Taylor expanding \\( 1/(1 + e_n) = 1 - e_n + e_n^2 - e_n^3 + ... \\), my PnL in ETH terms for the 1x short to balance the system is
+Taylor expanding \\( 1/(1 + \epsilon_n) = 1 - \epsilon_n + \epsilon_n^2 - \epsilon_n^3 + ... \\), my PnL in ETH terms for the 1x short to balance the system is
 
-\\[ \mathrm{PnL}(t_n) = P_n \cdot n_{OVL} \cdot [ \sum_{i=0}^{n} f_i - e_n^2 + e_n^3 + ... ] \\]
+\\[ \mathrm{PnL}(t_n) = P_n \cdot n_{OVL} \cdot [ \sum_{i=0}^{n} f_i - \epsilon_n^2 + \epsilon_n^3 + ... ] \\]
 
-which is simply getting paid funding to go short to first order in \\( e_n \\). The higher order \\( e_n \\) terms are the reason we are not completely hedged from OVL price exposure in this trade. We could use an inverse contract payoff instead of the linear payoff we've adopted to eliminate these higher order terms, but there are issues with minting an infinite number of tokens if OVL-ETH price heads toward zero that we don't want. I'd suggest keeping the linear payoff for simplicity.
+which is simply getting paid funding to go short to first order in \\( \epsilon_n \\). The higher order \\( \epsilon_n \\) terms are the reason we are not completely hedged from OVL price exposure in this trade. We could use an inverse contract payoff instead of the linear payoff we've adopted to eliminate these higher order terms, but there are issues with minting an infinite number of tokens if OVL-ETH price heads toward zero that we don't want. I'd suggest keeping the linear payoff for simplicity.
 
 
 ### Case 2: OI Long < OI Short
@@ -112,15 +112,15 @@ and value of the spot ETH in OVL terms at time \\( t_n \\) is \\( (n_{OVL} / 2) 
 
 \\[ V(t_n) = (n_{OVL} / 2) \cdot [(P_0 / P_n) + 1 + (P_n - P_0) / P_0 + \sum_{i=0}^{n} f_i ] \\]
 
-Going through the same exercise as in the previous case and Taylor expanding for \\( P_n = P_0 \cdot (1 + e_n) \\) gives my PnL of
+Going through the same exercise as in the previous case and Taylor expanding for \\( P_n = P_0 \cdot (1 + \epsilon_n) \\) gives my PnL of
 
-\\[ \mathrm{PnL}(t_n) = ( n_{OVL} / 2 ) \cdot [ \sum_{i=0}^{n} f_i + e_n^2 - e_n^3 + ... ] \\]
+\\[ \mathrm{PnL}(t_n) = ( n_{OVL} / 2 ) \cdot [ \sum_{i=0}^{n} f_i + \epsilon_n^2 - \epsilon_n^3 + ... ] \\]
 
-which is profitable to second order in \\( e_n \\).
+which is profitable to second order in \\( \epsilon_n \\).
 
 
 ## Public Strategies
 
 What's even more interesting is these are simple trades that anyone should be able to participate in. We can code and propose strategies for [yearn vaults](https://github.com/iearn-finance/yearn-vaults) that accomplish this: one to earn yield on OVL and the other to earn yield on ETH. This ultimately stabilizes our system even more given TVL for yearn is on the order of [$500M - $1B](https://defipulse.com/yearn.finance) as of Feb 2021.
 
-The alternative would be to open source Python bots that anyone can run on their own servers, although gas costs here would be difficult. The benefit of proposing strategies for yearn would be the gas savings from aggregation of funds.
+The alternative would be to open source Python bots that anyone can run on their own servers, although gas costs here would be difficult. The benefit of proposing strategies for yearn would be community access to yield and the gas savings from aggregation of funds.

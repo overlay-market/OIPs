@@ -39,7 +39,7 @@ where \\( CP_i \\) is the Uni/SushiSwap price accumulator
 
 ### TWAP Manipulation
 
-For a `periodSize` of \\( \gamma \\), we want an explicit expression for how much the TWAP can change due to an attacker consistently manipulating the spot from blocks \\( i \\) to \\( i + \gamma \\) within the update interval. See the [Considerations](#Considerations) section below for ways we need to further expand this analysis.
+For a `periodSize` of \\( \gamma \\), we want an explicit expression for how much the TWAP can change due to an attacker consistently manipulating the spot from blocks \\( i \\) to \\( i + \gamma \\) within the update interval. See the [Considerations](#Considerations) section below for ways we need to further expand.
 
 We want to look at \\( \mathrm{TWAP}\_{i+\gamma} / \mathrm{TWAP}\_i - 1 \\), where \\( \mathrm{TWAP}\_{i+\gamma} = (CP_{i+\gamma} - CP_{i+\gamma - \Delta}) / \Delta \\). The value of the price accumulator at block \\( i + \gamma \\) is simply
 
@@ -61,13 +61,14 @@ Simplify further (we can always generalize), and assume prior to the update inte
 
 \\[ P_{i-\Delta} = P_{i-\Delta+1} = ... = P_{i} \\]
 
-such that \\(\mathrm{TWAP}\_{i} = P_i \\). Then \\(\mathrm{TWAP}\_{i+\gamma} = P_i \cdot [ 1 + (\gamma/\Delta) \cdot \epsilon_{\gamma} ] \\) and the change in the TWAP over the update interval given a consistent spot price change \\( \epsilon_{\gamma} \\) over the update interval's \\( \gamma \\) blocks is
+such that \\(\mathrm{TWAP}\_{i} = P_i \\). We have \\( (CP_i - CP_{i+\gamma-\Delta}) / \Delta = P_i \cdot (\Delta - \gamma) / \Delta \\) and the TWAP at the end of the update interval is \\(\mathrm{TWAP}\_{i+\gamma} = P_i \cdot [ 1 + (\gamma/\Delta) \cdot \epsilon_{\gamma} ] \\). Then the change in the TWAP during the update interval given a consistent spot price change \\( \epsilon_{\gamma} \\) over the update interval's \\( \gamma \\) blocks will be
 
 \\[\frac{\mathrm{TWAP}\_{i+\gamma}}{\mathrm{TWAP}\_{i}} - 1 = \frac{\gamma}{\Delta} \cdot \epsilon_{\gamma} \\]
 
 
 ## Profitably Attacking Overlay
 
+<!-- *TODO: Mention ignoring funding payments (which will take away from limits though so these are ceiling values for max) ...* -->
 
 ## Considerations
 
