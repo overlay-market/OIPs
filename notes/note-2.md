@@ -29,7 +29,7 @@ The oracle keeps track of the trailing index of the observation (at the beginnin
 
 Explicitly, for a `windowSize` of \\( \Delta \\) blocks that we average our prices over, the TWAP at block \\( i \\) for our market feed is
 
-\\[ \mathrm{TWAP}\_i(\Delta) = \mathrm{TWAP}\_i = ( CP_i - CP_{i-\Delta} ) / \Delta \\]
+\\[ \mathrm{TWAP}\_i(\Delta) = \mathrm{TWAP}\_i = \frac{CP_i - CP_{i-\Delta}}{\Delta} \\]
 
 where \\( CP_i \\) is the Uni/SushiSwap price accumulator
 
@@ -61,7 +61,7 @@ Simplify further (we can always generalize), and assume prior to the update inte
 
 \\[ P_{i-\Delta} = P_{i-\Delta+1} = ... = P_{i} \\]
 
-such that \\(\mathrm{TWAP}\_{i} = P_i \\). Then \\(\mathrm{TWAP}\_{i+\gamma} = P_i \cdot [ 1 + (\gamma/\Delta) \cdot \epsilon_{\gamma} ] \\) and the change in the TWAP over the update interval
+such that \\(\mathrm{TWAP}\_{i} = P_i \\). Then \\(\mathrm{TWAP}\_{i+\gamma} = P_i \cdot [ 1 + (\gamma/\Delta) \cdot \epsilon_{\gamma} ] \\) and the change in the TWAP over the update interval given a consistent spot price change \\( \epsilon_{\gamma} \\) over the update interval's \\( \gamma \\) blocks is
 
 \\[\frac{\mathrm{TWAP}\_{i+\gamma}}{\mathrm{TWAP}\_{i}} - 1 = \frac{\gamma}{\Delta} \cdot \epsilon_{\gamma} \\]
 

@@ -45,9 +45,9 @@ This type of mechanism has already been designed before through funding payments
 
 Enforcing a funding payment from longs to shorts at the next oracle fetch \\( t_1 \\) would work like so: I take out a 1x short position on the OVL-ETH Overlay market, locking in the ETH value of my OVL collateral staked to first order in price changes given we use linear contracts. Then at \\( t_1 \\), I get paid a funding amount from the longs since they are worsening the imbalance in the system while I am helping to balance the book.
 
-What should the functional form of that payment be? Something proportional to the time-weighted average of the open interest imbalance
+What should the functional form of that funding rate be? Something proportional to the time-weighted average of the open interest imbalance
 
-\\[ f_i = k(t_{i-1}, t_i) \cdot \mathrm{TWAOI}\_{imb}(t_i) \\]
+\\[ f_i = k(t_{i-1}, t_i) \cdot \frac{\mathrm{TWAOI}\_{imb}(t_i)}{\mathrm{TWAOI}\_{l}(t_i) + \mathrm{TWAOI}\_{s}(t_i)} \\]
 
 where we use \\( k \\) as a placeholder for a spring-like "constant" adjustable by governance, likely related to the vol of the underlying feed. Depending on the form of \\( k \\), Overlay still takes on some directional risk but these payments from longs to shorts when \\( \mathrm{TWAOI}\_{imb} > 0 \\) ultimately incentivize traders to take out short positions to lock in this payment at \\( t_1 \\). Traders with similar preferences (i.e. desire to earn yield on ETH) will compete for these payments with more rushing to the short side over time, likely incentivizing the balancing of our books until funding trends toward zero.
 
