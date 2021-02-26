@@ -86,24 +86,27 @@ Assume the attacker stakes \\( n_{\gamma} \\) OVL in a long position with levera
 
 ignoring payoff contributions from [funding payments](note-1) since the attacker would likely cause significant imbalance with a large long position and total profit would suffer (below is conservative).
 
-Total cost for the attack in OVL will be
+Total cost for the attack in OVL terms will be
 
 \\[ C = n_{\gamma} + p^{OVL}_R (t_i) \cdot x \\]
 
-where \\( p^{OVL}_R(t_i) \\) is the spot swap price at block \\( i \\) for the \\( R \\) token in terms of OVL. And total profit
+where \\( p^{OVL}_R(t_i) \\) is the spot swap price at block \\( i \\) for the \\( R \\) token in terms of OVL. And total profit in OVL terms
 
 \\[ \mathrm{PnL}(t_{i+\gamma}) = \mathrm{PO}(t_{i+\gamma}) - C = \epsilon^{\mathrm{TWAP}}\_{\gamma} \cdot \bigg[ n_{\gamma} \cdot l_{\gamma} - \frac{p^{OVL}_R(t_i) \cdot R \cdot \Delta}{2} \bigg] \\]
 
-This trade is only profitable when
+The attacker's trade is therefore only profitable when
 
 \\[ n_{\gamma} > p^{OVL}_R(t_i) \cdot \frac{R \cdot \Delta}{2 l\_{\gamma}} \\]
 
+independent of the `periodSize` \\( \gamma \\).
 
 ### Concrete Numbers
 
 **TODO: Take \\( \gamma = 5 \\) min and \\( \Delta = 8 \\) hr ...**
 
 <!-- TODO: Do it out in R or ETH terms ... worst case scenario for leverage so use leverage max -->
+
+### What About Flash Loans?
 
 ## Considerations
 
