@@ -57,19 +57,54 @@ and \\( \mathrm{TWAP}\_{i+\gamma} \\) reduces to
 
 \\[\mathrm{TWAP}\_{i+\gamma} = \frac{\gamma}{\Delta} \cdot (1 + \epsilon_{\gamma}) \cdot P_i + \frac{CP_i - CP_{i+\gamma-\Delta}}{\Delta} \\]
 
-Simplify further (we can always generalize), and assume prior to the update interval
+Simplify further (we can always generalize) by assuming prior to the update interval
 
 \\[ P_{i-\Delta} = P_{i-\Delta+1} = ... = P_{i} \\]
 
-such that \\(\mathrm{TWAP}\_{i} = P_i \\). We have \\( (CP_i - CP_{i+\gamma-\Delta}) / \Delta = P_i \cdot (\Delta - \gamma) / \Delta \\) and the TWAP at the end of the update interval is \\(\mathrm{TWAP}\_{i+\gamma} = P_i \cdot [ 1 + (\gamma/\Delta) \cdot \epsilon_{\gamma} ] \\). Then the change in the TWAP during the update interval given a consistent spot price change \\( \epsilon_{\gamma} \\) over the update interval's \\( \gamma \\) blocks will be
+such that \\(\mathrm{TWAP}\_{i} = P_i \\). We have \\( (CP_i - CP_{i+\gamma-\Delta}) / \Delta = P_i \cdot (\Delta - \gamma) / \Delta \\) and the TWAP at the end of the update interval is \\(\mathrm{TWAP}\_{i+\gamma} = P_i \cdot [ 1 + (\gamma/\Delta) \cdot \epsilon_{\gamma} ] \\). Then the change in the TWAP during the update interval \\( \epsilon^{\mathrm{TWAP}}\_{\gamma} \\) given a consistent spot change \\( \epsilon_{\gamma} \\) over the update interval's \\( \gamma \\) blocks will be
 
-\\[\frac{\mathrm{TWAP}\_{i+\gamma}}{\mathrm{TWAP}\_{i}} - 1 = \frac{\gamma}{\Delta} \cdot \epsilon_{\gamma} \\]
+\\[ \epsilon^{\mathrm{TWAP}}\_{\gamma} = \frac{\mathrm{TWAP}\_{i+\gamma} - \mathrm{TWAP}\_{i}}{\mathrm{TWAP}\_{i}} = \frac{\gamma}{\Delta} \cdot \epsilon_{\gamma} \\]
 
 
 ## Profitably Attacking Overlay
 
-<!-- *TODO: Mention ignoring funding payments (which will take away from limits though so these are ceiling values for max) ...* -->
+### Constructing the Trade
+
+Using the above as an attacker, I should be able to take a position on Overlay with max leverage, manipulate the spot price to my advantage within the update interval, and cash out the Overlay position for a profit. Understanding the break-even cost of such an attack will guide us in what TWAP feeds are suitable for the system as well as what constraints we must place on our max leverage values in order to make the cost of such an attack unreasonable.
+
+Take the relevant price on a constant product (\\( R \cdot R' = k \\)) market maker at block \\( i \\): \\( P_i = k / R^2 \\), where \\( R \\) is reserve 0 and \\( R' \\) reserve 1 at block \\( i \\). The change in price \\( \epsilon_{\gamma} \\) for \\( x_{\gamma} \\) number of tokens swapped will be
+
+\\[ \epsilon_{\gamma} = \frac{P_{i+\gamma} - P_i}{P_i} = \frac{1}{(1-x_{\gamma}/R)^2} - 1 \approx \frac{2 x_{\gamma}}{R} \\]
+
+to first order in \\( x_{\gamma}/R \\). Assuming arbitrageurs revert the price back to \\( P_i \\) after each block, the total amount of capital required on the spot side of the attack for \\( \gamma \\) blocks is
+
+\\[ x = \sum_{k=i+1}^{i+\gamma} x_{\gamma} = \frac{R \cdot \gamma}{2} \cdot \epsilon_{\gamma} = \frac{R \cdot \Delta}{2} \cdot \epsilon^{\mathrm{TWAP}}\_{\gamma} \\]
+
+Assume the attacker stakes \\( n_{\gamma} \\) OVL in a long position with leverage \\( l_{\gamma} \\) at block \\( i \\), then starts to manipulate the spot price from \\( i+1 \\) to \\( i+\gamma \\), when the next sliding window observation occurs. The payoff in OVL terms of the long position on the Overlay TWAP will be
+
+\\[ \mathrm{PO}(t_{i+\gamma}) = n_{\gamma} \cdot ( 1 + l_{\gamma} \cdot \epsilon^{\mathrm{TWAP}}\_{\gamma} ) \\]
+
+ignoring payoff contributions from [funding payments](note-1) since the attacker would likely cause significant imbalance with a large long position and total profit would suffer (below is conservative).
+
+Total cost for the attack in OVL will be
+
+\\[ C = n_{\gamma} + p^{OVL}_R (t_i) \cdot x \\]
+
+where \\( p^{OVL}_R(t_i) \\) is the spot swap price at block \\( i \\) for the \\( R \\) token in terms of OVL. And total profit
+
+\\[ \mathrm{PnL}(t_{i+\gamma}) = \mathrm{PO}(t_{i+\gamma}) - C = \epsilon^{\mathrm{TWAP}}\_{\gamma} \cdot \bigg[ n_{\gamma} \cdot l_{\gamma} - \frac{p^{OVL}_R(t_i) \cdot R \cdot \Delta}{2} \bigg] \\]
+
+This trade is only profitable when
+
+\\[ n_{\gamma} > p^{OVL}_R(t_i) \cdot \frac{R \cdot \Delta}{2 l\_{\gamma}} \\]
+
+
+### Concrete Numbers
+
+**TODO: Take \\( \gamma = 5 \\) min and \\( \Delta = 8 \\) hr ...**
+
+<!-- TODO: Do it out in R or ETH terms ... worst case scenario for leverage so use leverage max -->
 
 ## Considerations
 
-[These issues](https://uniswap.org/audit.html#org87c8b91) should be addressed. Particularly with regard to liquidity in the `periodSize` interval for the sliding window TWAP oracle. Initial naive analysis above assumes arbitrageurs bring the price back immediately every block. This is not necessarily the case (but will be close to for very liquid pairs).
+[These issues](https://uniswap.org/audit.html#org87c8b91) should be addressed. Particularly with regard to liquidity in the `periodSize` interval for the sliding window TWAP oracle. The initial naive analysis above assumes arbitrageurs bring the price back immediately after every block. This is not necessarily the case but will be close to accurate for very liquid pairs.

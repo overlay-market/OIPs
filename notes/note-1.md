@@ -11,9 +11,9 @@ updated: N/A
 
 ## Stability with Fixed Pricing
 
-Our biggest outstanding problem with Overlay is ensuring the currency supply remains stable over time. Ideally, traders should make money from stabilizing the system. If we can arrange this, we have the appropriate incentivizes to be confident this will work over longer periods of time.
+Our biggest outstanding problem with Overlay is ensuring the supply of the settlement currency (OVL) remains relatively stable over time. Ideally, traders should make money from stabilizing the system. If we can arrange this, we have the appropriate incentivizes to be confident this will work over longer periods of time.
 
-We must also keep in mind that different traders will have different preferences. Some will look to make yield on their ETH, while others will look to make yield on their OVL (for the example of an OVL-ETH feed).
+We must also keep in mind that different traders will have different preferences. For the example of an OVL-ETH feed, some will look to make yield on their ETH, while others will look to make yield on their OVL.
 
 For each feed, there should be at least two sets of traders with different preferences that can construct a portfolio of positions on Overlay in addition to tokens held from spot exchange swaps such that the trader in question will make yield on their chosen currency of preference by progressively stabilizing the system toward an equilibrium point.
 
@@ -49,7 +49,7 @@ What should the functional form of that funding rate be? Something proportional 
 
 \\[ f_i = k(t_{i-1}, t_i) \cdot \frac{\mathrm{TWAOI}\_{imb}(t_i)}{\mathrm{TWAOI}\_{l}(t_i) + \mathrm{TWAOI}\_{s}(t_i)} \\]
 
-where we use \\( k \\) as a placeholder for a spring-like "constant" adjustable by governance, likely related to the vol of the underlying feed. Depending on the form of \\( k \\), Overlay still takes on some directional risk but these payments from longs to shorts when \\( \mathrm{TWAOI}\_{imb} > 0 \\) ultimately incentivize traders to take out short positions to lock in this payment at \\( t_1 \\). Traders with similar preferences (i.e. desire to earn yield on ETH) will compete for these payments with more rushing to the short side over time, likely incentivizing the balancing of our books until funding trends toward zero.
+where we use \\( k \\) as a placeholder for a spring-like "constant" adjustable by governance, likely related to the vol of the underlying feed. Depending on the form of \\( k \\), passive OVL holders still take on some directional risk (i.e. inflation of currency supply) but these payments from longs to shorts when \\( \mathrm{TWAOI}\_{imb} > 0 \\) ultimately incentivize traders to take out short positions to lock in this payment at \\( t_1 \\). Traders with similar preferences (i.e. desire to earn yield on ETH) will compete for these payments with more rushing to the short side over time, likely incentivizing the balancing of our books until funding trends toward zero.
 
 
 #### Portfolio Construction
@@ -124,3 +124,10 @@ which is profitable to second order in \\( \epsilon_n \\).
 What's even more interesting is these are simple trades that anyone should be able to participate in. We can code and propose strategies for [yearn vaults](https://github.com/iearn-finance/yearn-vaults) that accomplish this: one to earn yield on OVL and the other to earn yield on ETH. This ultimately stabilizes our system even more given TVL for yearn is on the order of [$500M - $1B](https://defipulse.com/yearn.finance) as of Feb 2021.
 
 The alternative would be to open source Python bots that anyone can run on their own servers, although gas costs here would be difficult. The benefit of proposing strategies for yearn would be community access to yield and the gas savings from aggregation of funds.
+
+
+## Considerations
+
+The risk of an OVL-ETH death spiral still exists when incorporating funding payments, even with a profitable portfolio for case 2. If there is complete loss of faith in OVL and the price collapses while shorts heavily outweigh longs on the OVL-ETH feed, there may be few traders willing to earn yield in OVL and thus take the long side of the trade, even though funding payments would be extremely profitable in OVL terms. Shorts could ultimately still win in the short term, mint more OVL, then cash out that OVL, suppressing the price more and having even more shorts win.
+
+We need to address risk mitigation strategies for this death spiral scenario in a separate note.
