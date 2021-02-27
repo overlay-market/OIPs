@@ -80,33 +80,37 @@ to first order in \\( x_{\gamma}/R \\). Assuming arbitrageurs revert the price b
 
 \\[ x = \sum_{k=i+1}^{i+\gamma} x_{\gamma} = \frac{R \cdot \gamma}{2} \cdot \epsilon_{\gamma} = \frac{R \cdot \Delta}{2} \cdot \epsilon^{\mathrm{TWAP}}\_{\gamma} \\]
 
-Assume the attacker stakes \\( n_{\gamma} \\) OVL in a long position with leverage \\( l_{\gamma} \\) at block \\( i \\), then starts to manipulate the spot price from \\( i+1 \\) to \\( i+\gamma \\), when the next sliding window observation occurs. The payoff in OVL terms of the long position on the Overlay TWAP will be
+The attacker stakes \\( n_{\gamma} \\) OVL in a long position with leverage \\( l_{\gamma} \\) at block \\( i \\), then starts to manipulate the spot price from \\( i+1 \\) to \\( i+\gamma \\), when the next sliding window observation occurs. The payoff in OVL terms of the long position on the Overlay TWAP will be
 
 \\[ \mathrm{PO}(t_{i+\gamma}) = n_{\gamma} \cdot ( 1 + l_{\gamma} \cdot \epsilon^{\mathrm{TWAP}}\_{\gamma} ) \\]
 
 ignoring payoff contributions from [funding payments](note-1) since the attacker would likely cause significant imbalance with a large long position and total profit would suffer (below is conservative).
 
-Total cost for the attack in OVL terms will be
+Assume they obtain \\( x \\) number of \\( R \\) tokens at block \\( i \\) to prepare for the attack. The total cost for the attack in OVL terms will be
 
 \\[ C = n_{\gamma} + p^{OVL}_R (t_i) \cdot x \\]
 
-where \\( p^{OVL}_R(t_i) \\) is the spot swap price at block \\( i \\) for the \\( R \\) token in terms of OVL. And total profit in OVL terms
+where \\( p^{OVL}_R(t_i) \\) is the spot swap price at block \\( i \\) for the \\( R \\) token in terms of OVL. And total profit \\( \mathrm{PnL}(t\_{i+\gamma}) = \mathrm{PO}(t\_{i+\gamma}) - C \\) in OVL terms
 
-\\[ \mathrm{PnL}(t_{i+\gamma}) = \mathrm{PO}(t_{i+\gamma}) - C = \epsilon^{\mathrm{TWAP}}\_{\gamma} \cdot \bigg[ n_{\gamma} \cdot l_{\gamma} - \frac{p^{OVL}_R(t_i) \cdot R \cdot \Delta}{2} \bigg] \\]
+\\[ \mathrm{PnL}(t_{i+\gamma}) = \frac{\gamma}{\Delta} \cdot \epsilon_{\gamma} \cdot \bigg[ n_{\gamma} \cdot l_{\gamma} - \frac{p^{OVL}_R(t_i) \cdot R \cdot \Delta}{2} \bigg] \\]
 
 The attacker's trade is therefore only profitable when
 
 \\[ n_{\gamma} > p^{OVL}_R(t_i) \cdot \frac{R \cdot \Delta}{2 l\_{\gamma}} \\]
 
-independent of the `periodSize` \\( \gamma \\).
+independent of the `periodSize` \\( \gamma \\) and dictating the break-even amount of \\( n_{\gamma} \\) required to execute the long side of the trade.
 
 ### Concrete Numbers
+
+We can use the above inequality as guidance for which TWAP feeds are suitable to offer as Overlay markets in addition to what the maximum leverage \\( l_{\mathrm{max}} \\) allowed on such a feed should be set to.
 
 **TODO: Take \\( \gamma = 5 \\) min and \\( \Delta = 8 \\) hr ...**
 
 <!-- TODO: Do it out in R or ETH terms ... worst case scenario for leverage so use leverage max -->
 
 ### What About Flash Loans?
+
+<!-- TODO: What about if the attacker doesn't obtain x R tokens in prep but does it continuously -->
 
 ## Considerations
 
