@@ -11,9 +11,9 @@ updated: N/A
 
 ## Stability with Fixed Pricing
 
-Our biggest outstanding problem with Overlay is ensuring the supply of the settlement currency (OVL) remains relatively stable. Ideally, traders should make money from stabilizing the system. If we can arrange this, we have the appropriate incentivizes to be confident this will work over longer periods of time.
+Our biggest problem with Overlay is ensuring the supply of the settlement currency (OVL) remains relatively stable over longer periods of time. The goal is to limit excessive inflation of the settlement currency supply that would significantly dilute all passive OVL holders who effectively act as the counterparty to all unbalanced trades, including spot OVL-ETH LPs that backstop liquidity in the system. Ideally, traders should make money from stabilizing the system by taking the other side of any unbalanced trade. If we can arrange this, we likely have the appropriate incentivizes for longer time horizons.
 
-We must also keep in mind that different traders will have different preferences. For the example of an OVL-ETH feed, some will look to make yield on their ETH, while others will look to make yield on their OVL.
+As well, keep in mind that different traders will have different preferences. For the example of an OVL-ETH feed, some will look to make yield on their ETH, while others will look to make yield on their OVL.
 
 For each feed, there should be at least two sets of traders with different preferences that can construct a portfolio of positions on Overlay in addition to tokens held from spot exchange swaps such that the trader in question will make yield on their chosen currency of preference by progressively stabilizing the system toward an equilibrium point.
 
