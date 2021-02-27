@@ -72,13 +72,17 @@ such that \\(\mathrm{TWAP}\_{i} = P_i \\). We have \\( (CP_i - CP_{i+\gamma-\Del
 
 Using the above as an attacker, I should be able to take a position on Overlay with max leverage, manipulate the spot price to my advantage within the update interval, and cash out the Overlay position for a profit. Understanding the break-even cost of such an attack will guide us in what TWAP feeds are suitable for the system as well as what constraints we must place on our max leverage values in order to make the cost of such an attack unreasonable.
 
-Take the relevant price on a constant product (\\( R \cdot R' = k \\)) market maker at block \\( i \\): \\( P_i = k / R^2 \\), where \\( R \\) is reserve 0 and \\( R' \\) reserve 1 at block \\( i \\). The change in price \\( \epsilon_{\gamma} \\) for \\( x_{\gamma} \\) number of tokens swapped will be
+Take the relevant price on a constant product (\\( R \cdot R' = k \\)) market maker at block \\( i \\): \\( P_i = k / R^2 \\), where \\( R \\) is reserve 0 and \\( R' \\) reserve 1 at block \\( i \\). The change in price for \\( x_{\gamma} \\) number of tokens swapped will be
 
-\\[ \epsilon_{\gamma} = \frac{P_{i+\gamma} - P_i}{P_i} = \frac{1}{(1-x_{\gamma}/R)^2} - 1 \approx \frac{2 x_{\gamma}}{R} \\]
+\\[ \epsilon_{\gamma} = \frac{P_{i+\gamma} - P_i}{P_i} = \frac{1}{(1-x_{\gamma}/R)^2} - 1 \\]
 
-to first order in \\( x_{\gamma}/R \\). Assuming arbitrageurs revert the price back to \\( P_i \\) after each block, the total amount of capital required on the spot side of the attack for \\( \gamma \\) blocks is
+which implies the capital to move the spot an amount \\( \epsilon_{\gamma} \\) is
 
-\\[ x = \sum_{k=i+1}^{i+\gamma} x_{\gamma} = \frac{R \cdot \gamma}{2} \cdot \epsilon_{\gamma} = \frac{R \cdot \Delta}{2} \cdot \epsilon^{\mathrm{TWAP}}\_{\gamma} \\]
+\\[ x_{\gamma} = R \cdot \bigg[ 1 - \frac{1}{\sqrt{1+\epsilon_{\gamma}}} \bigg] \\]
+
+Assuming arbitrageurs revert the price back to \\( P_i \\) after each block, the total amount of capital required on the spot side of the attack for \\( \gamma \\) blocks is
+
+\\[ x = \sum_{k=i+1}^{i+\gamma} x_{\gamma} = R \cdot \gamma \cdot \bigg[ 1 - \frac{1}{\sqrt{1+\epsilon_{\gamma}}} \bigg] \\]
 
 The attacker stakes \\( n_{\gamma} \\) OVL in a long position with leverage \\( l_{\gamma} \\) at block \\( i \\), then starts to manipulate the spot price from \\( i+1 \\) to \\( i+\gamma \\), when the next sliding window observation occurs. The payoff in OVL terms of the long position on the Overlay TWAP will be
 
@@ -92,13 +96,17 @@ Assume they obtain \\( x \\) number of \\( R \\) tokens at block \\( i \\) to pr
 
 where \\( p^{OVL}_R(t_i) \\) is the spot swap price at block \\( i \\) for the \\( R \\) token in terms of OVL. And total profit \\( \mathrm{PnL}(t\_{i+\gamma}) = \mathrm{PO}(t\_{i+\gamma}) - C \\) in OVL terms
 
-\\[ \mathrm{PnL}(t_{i+\gamma}) = \frac{\gamma}{\Delta} \cdot \epsilon_{\gamma} \cdot \bigg[ n_{\gamma} \cdot l_{\gamma} - \frac{p^{OVL}_R(t_i) \cdot R \cdot \Delta}{2} \bigg] \\]
+\\[ \mathrm{PnL}(t_{i+\gamma}) = \frac{\gamma}{\Delta} \cdot \epsilon_{\gamma} \cdot \bigg[ n_{\gamma} \cdot l_{\gamma} - p^{OVL}_R(t_i) \cdot R \cdot \Delta \cdot \frac{1}{\epsilon\_{\gamma}} \cdot \bigg( 1 - \frac{1}{\sqrt{1+\epsilon\_{\gamma}}} \bigg) \bigg] \\]
 
 The attacker's trade is therefore only profitable when
 
-\\[ n_{\gamma} > p^{OVL}_R(t_i) \cdot \frac{R \cdot \Delta}{2 l\_{\gamma}} \\]
+\\[ n_{\gamma} > p^{OVL}_R(t_i) \cdot \frac{R \cdot \Delta}{l\_{\gamma}} \cdot \frac{1}{\epsilon\_{\gamma}} \cdot \bigg[ 1 - \frac{1}{\sqrt{1+\epsilon\_{\gamma}}} \bigg] \\]
 
-independent of the `periodSize` \\( \gamma \\) and dictating the break-even amount of \\( n_{\gamma} \\) required to execute the long side of the trade.
+Taylor expanding the root term, we have an inequality for the break-even amount of \\( n_{\gamma} \\) required to execute the long side of the trade
+
+\\[ n_{\gamma} > p^{OVL}_R(t_i) \cdot \frac{R \cdot \Delta}{l\_{\gamma}} \cdot \bigg[ \frac{1}{2} - \frac{3}{8} \epsilon\_{\gamma} + \frac{5}{16} \epsilon^2\_{\gamma} - ... \bigg] \\]
+
+which is independent of the `periodSize` \\( \gamma \\) to first order.
 
 ### Concrete Numbers
 

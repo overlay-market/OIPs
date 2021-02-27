@@ -49,7 +49,7 @@ What should the functional form of that funding rate be? Something proportional 
 
 \\[ f_i = k(t_{i-1}, t_i) \cdot \frac{\mathrm{TWAOI}\_{imb}(t_i)}{\mathrm{TWAOI}\_{l}(t_i) + \mathrm{TWAOI}\_{s}(t_i)} \\]
 
-where we use \\( k \\) as a placeholder for a spring-like "constant" adjustable by governance, likely related to the vol of the underlying feed. Depending on the form of \\( k \\), passive OVL holders still take on some directional risk (i.e. inflation of currency supply) but these payments from longs to shorts when \\( \mathrm{TWAOI}\_{imb} > 0 \\) ultimately incentivize traders to take out short positions to lock in this payment at \\( t_1 \\). Traders with similar preferences (i.e. desire to earn yield on ETH) will compete for these payments with more rushing to the short side over time, likely incentivizing the balancing of our books until funding trends toward zero.
+where we use \\( k \\) as a placeholder for a spring-like "constant" adjustable by governance, likely related to the vol of the underlying feed. We can use an accumulator for the OI on each side, similar to Uniswap's price accumulator, to compute these time-weighted averages. Depending on the form of \\( k \\), passive OVL holders still take on some directional risk (i.e. inflation of currency supply) but these payments from longs to shorts when \\( \mathrm{TWAOI}\_{imb} > 0 \\) ultimately incentivize traders to take out short positions to lock in this payment at \\( t_1 \\). Traders with similar preferences (i.e. desire to earn yield on ETH) will compete for these payments with more rushing to the short side over time, likely incentivizing the balancing of our books until funding trends toward zero.
 
 
 #### Portfolio Construction
@@ -121,7 +121,7 @@ which is profitable to second order in \\( \epsilon_n \\).
 
 ## Public Strategies
 
-What's even more interesting is these are simple trades that anyone should be able to participate in. We can code and propose strategies for [yearn vaults](https://github.com/iearn-finance/yearn-vaults) that accomplish this: one to earn yield on OVL and the other to earn yield on ETH. This ultimately stabilizes our system even more given TVL for yearn is on the order of [$500M - $1B](https://defipulse.com/yearn.finance) as of Feb 2021.
+What's even more interesting is these are simple trades that anyone should be able to participate in. We can code and propose strategies for [yearn vaults](https://github.com/iearn-finance/yearn-vaults) that accomplish this: one to earn yield on OVL and the other to earn yield on ETH. This ultimately stabilizes our system even more given TVL for yearn has ranged from [$500M - $1B](https://defipulse.com/yearn.finance) as of Feb 2021.
 
 The alternative would be to open source Python bots that anyone can run on their own servers, although gas costs here would be difficult. The benefit of proposing strategies for yearn would be community access to yield and the gas savings from aggregation of funds.
 
