@@ -102,7 +102,7 @@ independent of the `periodSize` \\( \gamma \\) and dictating the break-even amou
 
 ### Concrete Numbers
 
-We can use the above inequality as guidance for which TWAP feeds are suitable to offer as Overlay markets in addition to what the maximum leverage \\( l_{\mathrm{max}} \\) allowed on such a feed should be set to.
+We can use the above inequality as guidance for which TWAP feeds are suitable to offer as Overlay markets in addition to what the maximum leverage \\( l_{\mathrm{max}} \\) allowed on a TWAP feed should be.
 
 **TODO: Take \\( \gamma = 5 \\) min and \\( \Delta = 8 \\) hr ...**
 
@@ -110,7 +110,8 @@ We can use the above inequality as guidance for which TWAP feeds are suitable to
 
 ### What About Flash Loans?
 
-<!-- TODO: What about if the attacker doesn't obtain x R tokens in prep but does it continuously -->
+<!-- TODO: Mention would be a problem if didn't settle at t1 in t0 < t <= t1 timeframe  -->
+<!-- TODO: What about if the attacker doesn't obtain x R tokens in prep but does it continuously?  -->
 
 ## Considerations
 

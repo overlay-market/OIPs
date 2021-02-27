@@ -54,7 +54,7 @@ where we use \\( k \\) as a placeholder for a spring-like "constant" adjustable 
 
 #### Portfolio Construction
 
-Assume as a trader, I want to make yield on my ETH. I can take [this trade]((https://coinhax.com/guides/BitMEX-Funding/bitmex-btc-short-funding.html)) as an example, and execute a similar trade on the Overlay OVL-ETH market.
+Assume as a trader, I want to make yield on my ETH. I can take [this trade](https://coinhax.com/guides/BitMEX-Funding/bitmex-btc-short-funding.html) as an example, and execute a similar trade on the Overlay OVL-ETH market.
 
 I buy OVL with my ETH on the spot market. Take out a 1x short position on the Overlay OVL-ETH market to lock in the notional value of my staked OVL in ETH terms (this is almost completely hedged but, as shown below, still has some OVL price exposure). Then, this short position gets paid the funding amount above. And I will rack up funding payments until I exit at some time in the future \\( t_n \\) or when enough other traders take the short side so funding dries up.
 
@@ -64,23 +64,23 @@ For argument's sake, take \\( t = t_0 \\) and ignore fees for now. Because this 
 
 where \\( n_{OVL} \\) is the number of OVL I swapped for on the spot market and \\( P_0 \\) is the price of OVL in ETH terms. The payoff of my 1x short Overlay contract is
 
-\\[ \mathrm{PO}(t_n) = n_{OVL} \cdot [ 1 - (P_n - P_0) / P_0 ] \\]
+\\[ \mathrm{PO}(t_n) = n_{OVL} \cdot \bigg[ 1 - \frac{P_n - P_0}{P_0} \bigg] \\]
 
 and so the total value of my 1x short "portfolio" at \\( t_n \\) in ETH terms is
 
-\\[ V(t_n) = P_n \cdot n_{OVL} \cdot [ 1 - (P_n - P_0) / P_0 + \sum_{i=0}^{n} f_i ] \\]
+\\[ V(t_n) = P_n \cdot n_{OVL} \cdot \bigg[ 1 - \frac{P_n - P_0}{P_0} + \sum_{i=0}^{n} f_i \bigg] \\]
 
 where for \\( f_i \\) substitute in the expression above for our funding payments. Thus, my \\( \mathrm{PnL}(t_n) = V(t_n) - C \\) for this 1x short trade **in ETH terms** is
 
-\\[ \mathrm{PnL}(t_n) = P_n \cdot n_{OVL} \cdot [ 2 - ( P_n / P_0 + P_0 / P_n ) + \sum_{i=0}^{n} f_i ] \\]
+\\[ \mathrm{PnL}(t_n) = P_n \cdot n_{OVL} \cdot \bigg[ 2 - \bigg( \frac{P_n}{P_0} + \frac{P_0}{P_n} \bigg) + \sum_{i=0}^{n} f_i \bigg] \\]
 
 Let \\( P_n = P_0 \cdot (1 + \epsilon_n) \\), and assume \\( \|\epsilon_n\| < 1 \\) for our purposes. Then,
 
-\\[ \mathrm{PnL}(t_n) = P_n \cdot n_{OVL} \cdot [ 2 - ( 1 + \epsilon_n + 1 / (1 + \epsilon_n) ) + \sum_{i=0}^{n} f_i ] \\]
+\\[ \mathrm{PnL}(t_n) = P_n \cdot n_{OVL} \cdot \bigg[ 2 - \bigg( 1 + \epsilon_n + \frac{1}{1 + \epsilon_n} \bigg) + \sum_{i=0}^{n} f_i \bigg] \\]
 
 Taylor expanding \\( 1/(1 + \epsilon_n) = 1 - \epsilon_n + \epsilon_n^2 - \epsilon_n^3 + ... \\), my PnL in ETH terms for the 1x short to balance the system is
 
-\\[ \mathrm{PnL}(t_n) = P_n \cdot n_{OVL} \cdot [ \sum_{i=0}^{n} f_i - \epsilon_n^2 + \epsilon_n^3 + ... ] \\]
+\\[ \mathrm{PnL}(t_n) = P_n \cdot n_{OVL} \cdot \bigg[ \sum_{i=0}^{n} f_i - \epsilon_n^2 + \epsilon_n^3 + ... \bigg] \\]
 
 which is simply getting paid funding to go short to first order in \\( \epsilon_n \\). The higher order \\( \epsilon_n \\) terms are the reason we are not completely hedged from OVL price exposure in this trade. We could use an inverse contract payoff instead of the linear payoff we've adopted to eliminate these higher order terms, but there are issues with minting an infinite number of tokens if OVL-ETH price heads toward zero that we don't want. I'd suggest keeping the linear payoff for simplicity.
 
@@ -106,15 +106,15 @@ Cost to enter the trade **in OVL terms** is
 
 Payoff for the 1x long is
 
-\\[ \mathrm{PO}(t_n) = (n_{OVL} / 2) \cdot [ 1 + (P_n - P_0) / P_0 ] \\]
+\\[ \mathrm{PO}(t_n) = \frac{n_{OVL}}{2} \cdot \bigg[ 1 + \frac{P_n - P_0}{P_0} \bigg] \\]
 
 and value of the spot ETH in OVL terms at time \\( t_n \\) is \\( (n_{OVL} / 2) \cdot (P_0 / P_n) \\). Value of the portfolio at \\( t_n \\) is then
 
-\\[ V(t_n) = (n_{OVL} / 2) \cdot [(P_0 / P_n) + 1 + (P_n - P_0) / P_0 + \sum_{i=0}^{n} f_i ] \\]
+\\[ V(t_n) = \frac{n_{OVL}}{2} \cdot \bigg[\frac{P_0}{P_n} + 1 + \frac{P_n - P_0}{P_0} + \sum_{i=0}^{n} f_i \bigg] \\]
 
 Going through the same exercise as in the previous case and Taylor expanding for \\( P_n = P_0 \cdot (1 + \epsilon_n) \\) gives my PnL of
 
-\\[ \mathrm{PnL}(t_n) = ( n_{OVL} / 2 ) \cdot [ \sum_{i=0}^{n} f_i + \epsilon_n^2 - \epsilon_n^3 + ... ] \\]
+\\[ \mathrm{PnL}(t_n) = \frac{n_{OVL}}{2} \cdot \bigg[ \sum_{i=0}^{n} f_i + \epsilon_n^2 - \epsilon_n^3 + ... \bigg] \\]
 
 which is profitable to second order in \\( \epsilon_n \\).
 
