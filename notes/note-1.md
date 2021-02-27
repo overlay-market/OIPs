@@ -19,15 +19,15 @@ For each feed, there should be at least two sets of traders with different prefe
 
 ## Problems with Floating Price
 
-Floating the price has been ok, but introduced a large amount of additional complexity. Below, I want to explore whether we can offer opportunities for traders to construct "portfolios" that offer consistent yield while using a **fixed price** fetched directly from the oracle i.e., lock price of a new position built at a time \\( t \\) would be the price at the next oracle fetch \\( t_1 \\), where \\( t_0 < t \leq t_1 \\).
+Floating the price has been ok, but introduced a large amount of additional complexity. Below, I want to explore whether we can offer opportunities for traders to construct "portfolios" that offer consistent yield while using a **fixed price** fetched directly from the oracle i.e., lock price of a new position built at a time \\( t \\) would be the price at the next oracle fetch \\( t_1 \\), where \\( t_0 < t < t_1 \\).
 
-I'll go into the mechanisms for accomplishing filling at \\( P_1 \\) even though \\( P_0 \\) is all of the information we have at time \\( t \\) in a separate note. The strategy in short would be: the first trader in `n+1`th update interval of the feed settles all of the trades for the prior `n`th update interval (i.e. sets the price to value at \\( t_1 \\), so all trades from \\( t_0 < t \leq t_1 \\) settle at the same price).
+I'll go into the mechanisms for accomplishing filling at \\( P_1 \\) even though \\( P_0 \\) is all of the information we have at time \\( t \\) in a separate note. The strategy in short would be: the first trader in `n+1`th update interval of the feed settles all of the trades for the prior `n`th update interval (i.e. sets the price to value at \\( t_1 \\), so all trades from \\( t_0 < t < t_1 \\) settle at the same price).
 
 Daniel (@dwasse) made a good argument for the benefits of fixing the price to the oracle fetch. It reduces number of problems we have to solve from two to one. With a price fixed directly to each oracle fetch, we only have to worry about the stability of the currency supply, since arbitrage opportunities from price tracking the reference feed may not actually solve our stability problems, while also introducing other problems such as e.g., what should the price impact per OVL be.
 
 ## Imbalance and Currency Supply
 
-Assume the same fixed price locked in by all positions entered into between \\( t_0 < t \leq t_1 \\), and assume only one market. For argument's sake, take that Overlay market to be the Uni/SushiSwap TWAP for the price of OVL in ETH terms: OVL-ETH.
+Assume the same fixed price locked in by all positions entered into between \\( t_0 < t < t_1 \\), and assume only one market. For argument's sake, take that Overlay market to be the Uni/SushiSwap TWAP for the price of OVL in ETH terms: OVL-ETH.
 
 ### Case 1: OI Long > OI Short
 
