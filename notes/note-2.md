@@ -23,7 +23,7 @@ Addressing the first question relates to using a [sliding window TWAP oracle](ht
 
 For context, if we fix the price on Overlay to each fetch from the oracle, we encounter issues with [data freshness](https://uniswap.org/docs/v2/smart-contract-integration/building-an-oracle/) for a fixed window oracle implementation, since we'd be fetching new scalar values every 1-8 hours. From a UX perspective as well, this is horrific since I need to wait the length of the `windowSize` for my trade to settle, which no one will do for a 1-8 hour window.
 
-The alternative would be to use a sliding window TWAP oracle for each of our price feeds. Summary of how it works: every \\( \gamma \\) blocks (`periodSize`), we fetch and store a new [cumulative price value](https://uniswap.org/docs/v2/core-concepts/oracles/) from the Uni/SushiSwap feed. Assume we average our TWAP over \\( \Delta \\) blocks (`windowSize`) and \\( \gamma \ll \Delta \\) (e.g. \\( \gamma = 5 \mathrm{m}, \Delta = 8 \mathrm{h} \\) in block time).
+The alternative would be to use a sliding window TWAP oracle for each of our price feeds. Summary of how it works: every \\( \gamma \\) blocks (`periodSize`), we fetch and store a new [cumulative price value](https://uniswap.org/docs/v2/core-concepts/oracles/) from the Uni/SushiSwap feed. Assume we average our TWAP over \\( \Delta \\) blocks (`windowSize`) and \\( \gamma \ll \Delta \\) (e.g. \\( \gamma = 10 \mathrm{m}, \Delta = 8 \mathrm{h} \\) in block time).
 
 The oracle keeps track of the trailing index of the observation (at the beginning of the window) relative to the current time index. To calculate the TWAP value for our Overlay market prices during the current update interval \\( t_i < t < t_i + \gamma \\), we simply take the difference in the cumulative price value of the last observation stored with that of the trailing index value and divide by the difference in timestamps of the last and trailing.
 
@@ -121,9 +121,17 @@ where \\( p^{$}_R(t_i) \\) is the price of the \\( R \\) token in dollar terms a
 
 ### Concrete Numbers
 
-We can use the above inequality as guidance for which TWAP feeds are suitable to offer as Overlay markets in addition to what the maximum leverage \\( l_{\mathrm{max}} \\) allowed on a TWAP feed should be.
+We can use the above inequality and break-even cost as guidance for which TWAP feeds are suitable to offer as Overlay markets in addition to what the maximum leverage \\( l_{\gamma} = l_{\mathrm{max}} \\) allowed on a TWAP feed should be.
 
-**TODO: Take \\( \gamma = 5 \\) min and \\( \Delta = 8 \\) hr ...**
+For a small change \\( \epsilon_{\gamma} \approx 0 \\) to the spot price for \\( \gamma \\) blocks, the dominant term in the break-even cost becomes the TWAP window size expression and to first order reduces to
+
+\\[ C\|_{\mathrm{breakeven}} \approx p^{$}_R(t_i) \cdot \frac{R \cdot \Delta}{2l\_{\mathrm{max}}} \\]
+
+Take \\( \Delta = 1920 \\) for an approximately 8 hour TWAP. For a spot pool with liquidity of $20M, \\( p^{$}_R \cdot R = $10 \mathrm{M} \\). If we limit the max leverage allowed on this market to \\( l\_{\mathrm{max}} = 10 \\), break-even cost to attack the market would be
+
+\\[ C\|_{\mathrm{breakeven}} (\Delta = 8 \mathrm{h}, R = $10 \mathrm{M}, l\_{\mathrm{max}} = 10) \approx $960 \mathrm{M} \\]
+
+which is substantial and likely robust.
 
 <!-- TODO: Do it out in R or ETH terms ... worst case scenario for leverage so use leverage max -->
 
