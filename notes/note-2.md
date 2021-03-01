@@ -1,7 +1,7 @@
 ---
 note: 2
 oip-num: 1
-title: Cost of Attack with TWAPs
+title: Cost of Attack - TWAPs
 status: WIP
 author: Michael Feldman (@mikeyrf)
 discussions-to: oip-1
@@ -107,6 +107,17 @@ Taylor expanding the root term, we have an inequality for the break-even amount 
 \\[ n_{\gamma} > p^{OVL}_R(t_i) \cdot \frac{R \cdot \Delta}{l\_{\gamma}} \cdot \bigg[ \frac{1}{2} - \frac{3}{8} \epsilon\_{\gamma} + \frac{5}{16} \epsilon^2\_{\gamma} - ... \bigg] \\]
 
 which is independent of the `periodSize` \\( \gamma \\) to first order.
+
+The break-even amount of OVL required to attack the system on the Overlay side of the trade is then
+
+\\[ n_{\gamma}\|_{\mathrm{breakeven}} = p^{OVL}_R(t_i) \cdot \frac{R \cdot \Delta}{l\_{\gamma}} \cdot \frac{1}{\epsilon\_{\gamma}} \cdot \bigg[ 1 - \frac{1}{\sqrt{1+\epsilon\_{\gamma}}} \bigg] \\]
+
+and the break-even total cost in dollar terms is
+
+\\[ C\|_{\mathrm{breakeven}} = p^{$}_R(t_i) \cdot R \cdot \bigg(\frac{\Delta}{l\_{\gamma}} + \gamma \cdot \epsilon\_{\gamma} \bigg) \cdot \frac{1}{\epsilon\_{\gamma}} \cdot \bigg[ 1 - \frac{1}{\sqrt{1+\epsilon\_{\gamma}}} \bigg] \\]
+
+where \\( p^{$}_R(t_i) \\) is the price of the \\( R \\) token in dollar terms at block \\( i \\).
+
 
 ### Concrete Numbers
 
