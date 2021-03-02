@@ -133,7 +133,7 @@ Take \\( \Delta = 1920 \\) for an approximately 8 hour TWAP. For a spot pool wit
 
 which is substantial. If, however, the attacker is able to move the spot price within the update interval a large amount such that \\( \epsilon\_{\gamma} \gg 0 \\), the break-even cost reduces.
 
-Take \\( \gamma = 40 \\) for an approximately 10 minute update interval. The extreme case of \\( \epsilon\_{\gamma} \xrightarrow{} \infty \\) puts a lower bound on the break-even cost of capital to attack the system at
+Take \\( \gamma = 40 \\) for an approximately 10 minute update interval. The extreme case of \\( \epsilon\_{\gamma} \xrightarrow{} \infty \\) gives the break-even cost to attack the system solely through manipulating the spot in the update interval
 
 \\[ C\|_{\mathrm{breakeven}} (\gamma = 10 \mathrm{m}, \Delta = 8 \mathrm{h}, R = $10 \mathrm{M}, l\_{\mathrm{max}} = 10, \epsilon\_{\gamma} \xrightarrow{} \infty) \approx $400 \mathrm{M} \\]
 
