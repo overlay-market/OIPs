@@ -23,7 +23,7 @@ Floating the price has been ok, but introduced a large amount of additional comp
 
 I'll go into the mechanisms for accomplishing filling at \\( P_1 \\) even though \\( P_0 \\) is all of the information we have at time \\( t \\) in a separate note. The strategy in short would be: the first trader in `n+1`th update interval of the feed settles all of the trades for the prior `n`th update interval (i.e. sets the price to value at \\( t_1 \\), so all trades from \\( t_0 < t < t_1 \\) settle at the same price).
 
-Daniel (@dwasse) made a good argument for the benefits of fixing the price to the oracle fetch. It reduces number of problems we have to solve from two to one. With a price fixed directly to each oracle fetch, we only have to worry about the stability of the currency supply, since arbitrage opportunities from price tracking the reference feed may not actually solve our stability problems, while also introducing other problems such as e.g., what should the price impact per OVL be.
+There's a good argument to be made for the benefits of fixing the price to the oracle fetch. It reduces number of problems we have to solve from two to one. With a price fixed directly to each oracle fetch, we only have to worry about the stability of the currency supply, since arbitrage opportunities from price tracking the reference feed may not actually solve our stability problems, while also introducing other problems such as e.g., what should the price impact per OVL be.
 
 ## Imbalance and Currency Supply
 
@@ -54,7 +54,7 @@ where we use \\( k \\) as a placeholder for a spring-like "constant" adjustable 
 
 #### Portfolio Construction
 
-Assume as a trader, I want to make yield on my ETH. I can take [this trade](https://coinhax.com/guides/BitMEX-Funding/bitmex-btc-short-funding.html) as an example, and execute a similar trade on the Overlay OVL-ETH market.
+Assume as a trader, I want to make yield on my ETH. I can take the traditional short trade as an example, and execute a similar trade on the Overlay OVL-ETH market.
 
 I buy OVL with my ETH on the spot market. Take out a 1x short position on the Overlay OVL-ETH market to lock in the notional value of my staked OVL in ETH terms (this is almost completely hedged but, as shown below, still has some OVL price exposure). Then, this short position gets paid the funding amount above. And I will rack up funding payments until I exit at some time in the future \\( t_n \\) or when enough other traders take the short side so funding dries up.
 
