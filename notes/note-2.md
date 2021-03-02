@@ -137,11 +137,13 @@ Take \\( \gamma = 40 \\) for an approximately 10 minute update interval. The ext
 
 \\[ C\|_{\mathrm{breakeven}} (\gamma = 10 \mathrm{m}, \Delta = 8 \mathrm{h}, R = $10 \mathrm{M}, l\_{\mathrm{max}} = 10, \epsilon\_{\gamma} \xrightarrow{} \infty) \approx $400 \mathrm{M} \\]
 
-which is still substantial and likely robust. Plotting for \\( \epsilon_{\gamma} \in [0, 1000] \\)
+which is still substantial. Plotting \\( C\|\_{\mathrm{breakeven}} (\epsilon\_{\gamma}) \\) for \\( \epsilon_{\gamma} \in [0, 999] \\) with \\( \gamma = 10 \mathrm{m}, \Delta = 8 \mathrm{h}, R = $10 \mathrm{M}, l\_{\mathrm{max}} = 10\\):
 
 ![Image of Cost Plot](../assets/oip-1/cost_plot.png)
 
 with y-axis in millions of dollars.
+
+Using a 10 minute update interval for an 8 hour sliding window TWAP on an underlying spot pool having liquidity of $20M and setting leverage max to 10x will likely be robust.
 
 ### What About Flash Loans?
 
