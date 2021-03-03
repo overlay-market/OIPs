@@ -29,6 +29,10 @@ The second point is key to understanding how we'll construct this "portfolio" of
 
 ## Quanto
 
+### Summary
+
+To hedge out price exposure to \\( q_{p} \cdot n_{OVL} \\) OVL staked in a market position (where \\( q_{p} < 1 \\)), enter into an additional short position of \\( (1-q_{p}) \cdot n_{OVL} \\) staked on the OVL-ETH market with leverage of \\( 1/(1-q_{p}) \\). This will work to first order in price fluctuations on the OVL-ETH TWAP and be a partial hedge to second order.
+
 ### Overview
 
 
