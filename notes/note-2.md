@@ -68,6 +68,10 @@ such that \\(\mathrm{TWAP}\_{i} = P_i \\). We have \\( (CP_i - CP_{i+\gamma-\Del
 
 ## Profitably Attacking Overlay
 
+### Summary
+
+Using a 10 minute update interval for an 8 hour sliding window TWAP on an underlying spot pool having liquidity of $20M+ and setting leverage max to 10x will likely be robust. Cost of attack should be approximately $400M+.
+
 ### Constructing the Trade
 
 Using the above as an attacker, I should be able to take a position on Overlay with max leverage, manipulate the spot price to my advantage within the update interval, and cash out the Overlay position for a profit. Understanding the break-even cost of such an attack will guide us in what TWAP feeds are suitable for the system as well as what constraints we must place on our max leverage values in order to make the cost of such an attack unreasonable.
@@ -121,7 +125,7 @@ where \\( p^{$}_R(t_i) \\) is the price of the \\( R \\) token in dollar terms a
 
 ### Concrete Numbers
 
-We can use the above inequality and break-even cost as guidance for which TWAP feeds are suitable to offer as Overlay markets in addition to what the maximum leverage \\( l_{\gamma} = l_{\mathrm{max}} \\) allowed on a TWAP feed should be.
+We can use the above expression for the break-even cost as guidance for which TWAP feeds are suitable to offer as Overlay markets in addition to what the maximum leverage \\( l_{\gamma} = l_{\mathrm{max}} \\) allowed on a TWAP feed should be.
 
 For a small change \\( \epsilon_{\gamma} \approx 0 \\) to the spot price for \\( \gamma \\) blocks, the dominant term in the break-even cost becomes the TWAP window size expression and to first order reduces to
 
@@ -143,7 +147,6 @@ which is still substantial. Plotting \\( C\|\_{\mathrm{breakeven}} (\epsilon\_{\
 
 with y-axis in millions of dollars.
 
-Using a 10 minute update interval for an 8 hour sliding window TWAP on an underlying spot pool having liquidity of $20M+ and setting leverage max to 10x will likely be robust.
 
 ### What About Flash Loans?
 
