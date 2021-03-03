@@ -141,9 +141,11 @@ Take \\( \gamma = 40 \\) for an approximately 10 minute update interval. The ext
 
 \\[ C\|_{\mathrm{breakeven}} (\gamma = 10 \mathrm{m}, \Delta = 8 \mathrm{h}, R = $10 \mathrm{M}, l\_{\mathrm{max}} = 10, \epsilon\_{\gamma} \xrightarrow{} \infty) \approx $400 \mathrm{M} \\]
 
-which is still substantial. Plotting \\( C\|\_{\mathrm{breakeven}} (\epsilon\_{\gamma}) \\) for \\( \epsilon_{\gamma} \in [0, 999] \\) with \\( \gamma = 10 \mathrm{m}, \Delta = 8 \mathrm{h}, R = $10 \mathrm{M}, l\_{\mathrm{max}} = 10\\):
+which is still substantial. Plotting \\( C\|\_{\mathrm{breakeven}} (\epsilon\_{\gamma}) \\) with \\( \gamma = 10 \mathrm{m}, \Delta = 8 \mathrm{h}, R = $10 \mathrm{M}, l\_{\mathrm{max}} = 10\\):
 
-![Image of Cost Plot](../assets/oip-1/cost_plot.png)
+![Image of Cost Plot 1](../assets/oip-1/cost_plot_wolfram.gif)
+
+![Image of Cost Plot 2](../assets/oip-1/cost_plot_wolfram_2.gif)
 
 with y-axis in millions of dollars.
 
