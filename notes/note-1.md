@@ -74,13 +74,9 @@ where for \\( f_i \\) substitute in the expression above for our funding payment
 
 \\[ \mathrm{PnL}(t_n) = P_n \cdot n_{OVL} \cdot \bigg[ 2 - \bigg( \frac{P_n}{P_0} + \frac{P_0}{P_n} \bigg) + \sum_{i=0}^{n} f_i \bigg] \\]
 
-Let \\( P_n = P_0 \cdot (1 + \epsilon_n) \\), and assume \\( \|\epsilon_n\| < 1 \\) for our purposes. Then,
+Let \\( P_n = P_0 \cdot (1 + \epsilon_n) \\), and assume \\( \|\epsilon_n\| < 1 \\) for our purposes. Then, my PnL in ETH terms for the 1x short to balance the system is
 
-\\[ \mathrm{PnL}(t_n) = P_n \cdot n_{OVL} \cdot \bigg[ 2 - \bigg( 1 + \epsilon_n + \frac{1}{1 + \epsilon_n} \bigg) + \sum_{i=0}^{n} f_i \bigg] \\]
-
-Taylor expanding \\( 1/(1 + \epsilon_n) = 1 - \epsilon_n + \epsilon_n^2 - \epsilon_n^3 + ... \\), my PnL in ETH terms for the 1x short to balance the system is
-
-\\[ \mathrm{PnL}(t_n) = P_n \cdot n_{OVL} \cdot \bigg[ \sum_{i=0}^{n} f_i - \epsilon_n^2 + \epsilon_n^3 + ... \bigg] \\]
+\\[ \mathrm{PnL}(t_n) = P_0 \cdot n_{OVL} \cdot \bigg[ (1 + \epsilon_n) \sum_{i=0}^{n} f_i - \epsilon_n^2 \bigg] \\]
 
 which is simply getting paid funding to go short to first order in \\( \epsilon_n \\). The higher order \\( \epsilon_n \\) terms are the reason we are not completely hedged from OVL price exposure in this trade. We could use an inverse contract payoff instead of the linear payoff we've adopted to eliminate these higher order terms, but there are issues with minting an infinite number of tokens if OVL-ETH price heads toward zero that we don't want. I'd suggest keeping the linear payoff for simplicity.
 
@@ -112,7 +108,7 @@ and value of the spot ETH in OVL terms at time \\( t_n \\) is \\( (n_{OVL} / 2) 
 
 \\[ V(t_n) = \frac{n_{OVL}}{2} \cdot \bigg[\frac{P_0}{P_n} + 1 + \frac{P_n - P_0}{P_0} + \sum_{i=0}^{n} f_i \bigg] \\]
 
-Going through the same exercise as in the previous case and Taylor expanding for \\( P_n = P_0 \cdot (1 + \epsilon_n) \\) gives my PnL of
+Going through the same exercise as in the previous case and Taylor expanding \\( 1/(1 + \epsilon_n) = 1 - \epsilon_n + \epsilon_n^2 - \epsilon_n^3 + ... \\) for \\( P_n = P_0 \cdot (1 + \epsilon_n) \\) gives my PnL of
 
 \\[ \mathrm{PnL}(t_n) = \frac{n_{OVL}}{2} \cdot \bigg[ \sum_{i=0}^{n} f_i + \epsilon_n^2 - \epsilon_n^3 + ... \bigg] \\]
 
