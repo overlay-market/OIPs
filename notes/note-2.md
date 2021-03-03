@@ -23,7 +23,7 @@ Addressing the first question relates to using a [sliding window TWAP oracle](ht
 
 For context, if we fix the price on Overlay to each fetch from the oracle, we encounter issues with [data freshness](https://uniswap.org/docs/v2/smart-contract-integration/building-an-oracle/) for a fixed window oracle implementation, since we'd be fetching new scalar values every 1-8 hours. From a UX perspective as well, this is horrific since I need to wait the length of the `windowSize` for my trade to settle, which no one will do for a 1-8 hour window.
 
-The alternative would be to use a sliding window TWAP oracle for each of our price feeds. Summary of how it works: every \\( \gamma \\) blocks (`periodSize`), we fetch and store a new [cumulative price value](https://uniswap.org/docs/v2/core-concepts/oracles/) from the Uni/SushiSwap feed. Assume we average our TWAP over \\( \Delta \\) blocks (`windowSize`) and \\( \gamma \ll \Delta \\) (e.g. \\( \gamma = 10 \mathrm{m}, \Delta = 8 \mathrm{h} \\) in block time).
+The alternative would be to use a sliding window TWAP oracle for each of our price feeds. Summary of how it works: every \\( \gamma \\) blocks (`periodSize`), we fetch and store a new [cumulative price value](https://uniswap.org/docs/v2/core-concepts/oracles/) from the Uni/SushiSwap feed. Assume we average our TWAP over \\( \Delta \\) blocks (`windowSize`) and \\( \gamma \ll \Delta \\) (e.g. \\( \gamma = 10 \mathrm{m}, \Delta = 1 \mathrm{h} \\) in block time).
 
 The oracle keeps track of the trailing index of the observation (at the beginning of the window) relative to the current time index. To calculate the TWAP value for our Overlay market prices during the current update interval \\( t_i < t < t_i + \gamma \\), we simply take the difference in the cumulative price value of the last observation stored with that of the trailing index value and divide by the difference in timestamps of the last and trailing.
 
@@ -41,7 +41,7 @@ where \\( CP_i \\) is the Uni/SushiSwap price accumulator
 
 For a `periodSize` of \\( \gamma \\), we want an explicit expression for how much the TWAP can change due to an attacker consistently manipulating the spot from blocks \\( i \\) to \\( i + \gamma \\) within the update interval. See the [Considerations](#Considerations) section below for ways we need to further expand.
 
-We want to look at \\( \mathrm{TWAP}\_{i+\gamma} / \mathrm{TWAP}\_i - 1 \\), where \\( \mathrm{TWAP}\_{i+\gamma} = (CP_{i+\gamma} - CP_{i+\gamma - \Delta}) / \Delta \\). The value of the price accumulator at block \\( i + \gamma \\) is simply
+We want to look at \\( \mathrm{TWAP}\_{i+\gamma} / \mathrm{TWAP}\_i - 1 \\), where \\( \mathrm{TWAP}\_{i+\gamma} = (CP_{i+\gamma} - CP_{i+\gamma - \Delta}) / \Delta \\). The value of the price accumulator at block \\( i + \gamma \\) is
 
 \\[ CP_{i+\gamma} = CP_i + \sum_{k=i+1}^{i+\gamma} t_k \cdot P_k \\]
 
@@ -70,7 +70,7 @@ such that \\(\mathrm{TWAP}\_{i} = P_i \\). We have \\( (CP_i - CP_{i+\gamma-\Del
 
 ### Summary
 
-Using a 10 minute update interval for an 8 hour sliding window TWAP on an underlying spot pool having liquidity of $20M+ and setting leverage max to 10x will likely be robust. Cost of attack should be approximately $400M+.
+Using a 10 minute update interval for a 1 hour sliding window TWAP on an underlying spot pool having liquidity of $20M+ and setting leverage max to 5x will likely be robust. Cost of attack should be approximately $240M+.
 
 ### Constructing the Trade
 
@@ -112,7 +112,7 @@ Taylor expanding the root term, we have an inequality for the break-even amount 
 
 which is independent of the `periodSize` \\( \gamma \\) to first order.
 
-The break-even amount of OVL required to attack the system on the Overlay side of the trade is then
+The break-even (\\( \mathrm{PnL} = 0 \\)) amount of OVL required to attack the system on the Overlay side of the trade is then
 
 \\[ n_{\gamma}\|_{\mathrm{breakeven}} = p^{OVL}_R(t_i) \cdot \frac{R \cdot \Delta}{l\_{\gamma}} \cdot \frac{1}{\epsilon\_{\gamma}} \cdot \bigg[ 1 - \frac{1}{\sqrt{1+\epsilon\_{\gamma}}} \bigg] \\]
 
@@ -131,23 +131,21 @@ For a small change \\( \epsilon_{\gamma} \approx 0 \\) to the spot price for \\(
 
 \\[ C\|_{\mathrm{breakeven}} \approx p^{$}_R(t_i) \cdot \frac{R \cdot \Delta}{2l\_{\mathrm{max}}} \\]
 
-Take \\( \Delta = 1920 \\) for an approximately 8 hour TWAP. For a spot pool with liquidity of $20M, \\( p^{$}_R \cdot R = $10 \mathrm{M} \\). If we limit the max leverage allowed on this market to \\( l\_{\mathrm{max}} = 10 \\), break-even cost to attack the market would be
+Take \\( \Delta = 240 \\) for an approximately 1 hour TWAP. For a spot pool with liquidity of $20M, \\( p^{$}_R \cdot R = $10 \mathrm{M} \\). If we limit the max leverage allowed on this market to \\( l\_{\mathrm{max}} = 5 \\), break-even cost to attack the market would be
 
-\\[ C\|_{\mathrm{breakeven}} (\Delta = 8 \mathrm{h}, R = $10 \mathrm{M}, l\_{\mathrm{max}} = 10, \epsilon\_{\gamma} \approx 0) \approx $960 \mathrm{M} \\]
+\\[ C\|_{\mathrm{breakeven}} (\Delta = 1 \mathrm{h}, R = $10 \mathrm{M}, l\_{\mathrm{max}} = 5, \epsilon\_{\gamma} \approx 0) \approx $240 \mathrm{M} \\]
 
-which is substantial. If, however, the attacker is able to move the spot price within the update interval a large amount such that \\( \epsilon\_{\gamma} \gg 0 \\), the break-even cost reduces.
+which is substantial. If, however, the attacker is able to move the spot price within the update interval a large amount such that \\( \epsilon\_{\gamma} \gg 0 \\), the break-even cost increases.
 
 Take \\( \gamma = 40 \\) for an approximately 10 minute update interval. The extreme case of \\( \epsilon\_{\gamma} \xrightarrow{} \infty \\) gives the break-even cost to attack the system through drastically manipulating the spot in the update interval
 
-\\[ C\|_{\mathrm{breakeven}} (\gamma = 10 \mathrm{m}, \Delta = 8 \mathrm{h}, R = $10 \mathrm{M}, l\_{\mathrm{max}} = 10, \epsilon\_{\gamma} \xrightarrow{} \infty) \approx $400 \mathrm{M} \\]
+\\[ C\|_{\mathrm{breakeven}} (\gamma = 10 \mathrm{m}, \Delta = 1 \mathrm{h}, R = $10 \mathrm{M}, l\_{\mathrm{max}} = 5, \epsilon\_{\gamma} \xrightarrow{} \infty) \approx $400 \mathrm{M} \\]
 
-which is still substantial. Plotting \\( C\|\_{\mathrm{breakeven}} (\epsilon\_{\gamma}) \\) with \\( \gamma = 10 \mathrm{m}, \Delta = 8 \mathrm{h}, R = $10 \mathrm{M}, l\_{\mathrm{max}} = 10\\):
+which is still substantial. Plotting \\( C\|\_{\mathrm{breakeven}} (\epsilon\_{\gamma}) \\) with \\( \gamma = 10 \mathrm{m}, \Delta = 1 \mathrm{h}, R = $10 \mathrm{M}, l\_{\mathrm{max}} = 5 \\):
 
-![Image of Cost Plot 1](../assets/oip-1/cost_plot_wolfram.gif)
+![Image of Cost Plot](../assets/oip-1/cost_plot_wolfram.gif)
 
-![Image of Cost Plot 2](../assets/oip-1/cost_plot_wolfram_2.gif)
-
-with y-axis in millions of dollars.
+with y-axis in millions of dollars. Using this setup of a 1 hour TWAP with 10 min update interval and max leverage of 5x results in a minimum cost of attack on a $20M spot liquidity pool of approximately $240M, which is likely robust.
 
 
 ### What About Flash Loans?

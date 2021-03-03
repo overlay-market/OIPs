@@ -31,12 +31,14 @@ The second point is key to understanding how we'll construct this "portfolio" of
 
 ### Summary
 
-To hedge out price exposure to \\( q_{p} \cdot n_{OVL} \\) OVL staked in a market position (where \\( q_{p} < 1 \\)), enter into an additional short position of \\( (1-q_{p}) \cdot n_{OVL} \\) staked on the OVL-ETH market with leverage of \\( 1/(1-q_{p}) \\). This will work to first order in price fluctuations on the OVL-ETH TWAP and be a partial hedge to second order.
-
-### Overview
-
+To hedge out price exposure to \\( q_{p} \cdot n_{OVL} \\) OVL staked in a market position (where \\( 0 < q_{p} < 1 \\)), enter into an additional short position of \\( (1-q_{p}) \cdot n_{OVL} \\) staked on the OVL-ETH market with leverage of \\( 1/(1-q_{p}) \\). This will work to first order in price fluctuations on the OVL-ETH TWAP and be a partial hedge to second order.
 
 ### The Setup
 
+I stake an amount \\( q_{p} \cdot n_{OVL} \\) with leverage \\( l_p \\) on an Overlay market \\( X \\) (where \\( 0 < q_{p} < 1 \\)). I have an OVL amount \\( (1 - q_{p}) \cdot n_{OVL} \\) left to hedge with so my PnL is in ETH terms. For the purposes of this note, ignore [funding payments](note-1) between longs and shorts.
+
+My payoff for the \\( X \\) feed position **in OVL terms** is
+
+\\[ \mathrm{PO}\_p(t_n) = n_{OVL} \cdot \bigg[ 1 - l_p \cdot (\pm)_{p} \cdot \bigg( \frac{P_n}{P_0} - 1 \bigg) \bigg] \\]
 
 ### Portfolio Construction
