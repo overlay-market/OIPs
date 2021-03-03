@@ -16,6 +16,23 @@ Major issue to address with this note:
 
 ## Context
 
-In order to take positions on markets offered by the protocol, traders need to stake the settlement currency of the system (OVL). For traders that don't want price exposure to OVL but still wish to take a position on a market, they should be able to construct a portfolio that hedges out OVL price risk with respect to a quote currency like ETH. I'll address how to construct this combination of positions in this note.
+In order to take positions on markets offered by the protocol, traders need to stake the settlement currency of the system (OVL). For traders that don't want price exposure to OVL but still wish to take a position on a market, they should be able to construct a "portfolio" that hedges out OVL price risk with respect to a quote currency like ETH. Below, I'll address how to construct this type of portfolio as a combination of different positions on separate Overlay markets.
 
-<!-- TODO: For context, ... need to talk about offering OVL-ETH feed after bootstrap phase -->
+Assume our initial liquidity mining phase is successful, and we're able to bootstrap $20M+ in liquidity on spot markets for the OVL-ETH pair. A [manipulation-resistant TWAP](note-2) on OVL-ETH can then be offered as an additional market to trade on Overlay. There are significant benefits to this:
+
+1. I can lever up long on OVL-ETH price exposure using OVL on Overlay.
+
+2. I can hedge away price exposure to OVL on my other Overlay positions by shorting with appropriate leverage the OVL-ETH feed.
+
+The second point is key to understanding how we'll construct this "portfolio" of positions.
+
+
+## Quanto
+
+### Overview
+
+
+### The Setup
+
+
+### Portfolio Construction
