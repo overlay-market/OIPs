@@ -61,9 +61,9 @@ Total cost to construct the portfolio **in ETH terms**
 
 and my PnL for the "portfolio" **in ETH terms** (\\( \mathrm{PnL} = V - C \\))
 
-\\[ \mathrm{PnL}(t_n) = n_{OVL} \cdot \bigg[ P^{O/E}\_n \cdot \bigg( \mathrm{PO}\_p(t_n) + \mathrm{PO}\_h(t_n) \bigg) - P^{O/E}\_0 \bigg] \\]
+\\[ \mathrm{PnL}(t_n) =  P^{O/E}\_n \cdot \bigg( \mathrm{PO}\_p(t_n) + \mathrm{PO}\_h(t_n) \bigg) - P^{O/E}\_0 \cdot n_{OVL} \\]
 
-We want to examine what happens to the PnL in ETH terms when the price of OVL v.s. ETH changes an amount \\( \epsilon_n \\). Take \\( P^{O/E}_n = P^{O/E}_0 \cdot (1 + \epsilon_n) \\) such that the OVL-ETH feed price has changed \\( \epsilon_n \\) from time \\( t_0 \\) to \\( t_n \\). PnL for the "portfolio" **in ETH terms** reduces to
+We want to examine what happens to the PnL in ETH terms when the price of OVL vs ETH changes an amount \\( \epsilon_n \\). Take \\( P^{O/E}_n = P^{O/E}_0 \cdot (1 + \epsilon_n) \\) such that the OVL-ETH feed price has changed \\( \epsilon_n \\) from time \\( t_0 \\) to \\( t_n \\). PnL for the "portfolio" **in ETH terms** reduces to
 
 \\[
 \begin{eqnarray}
@@ -79,6 +79,6 @@ where take \\( \epsilon_n \cdot ( P^X_n / P^X_0 - 1 ) \\) as second order. To el
 
 and then PnL **in ETH terms** becomes
 
-\\[ \mathrm{PnL}(t_n) = P^{O/E}\_0 \cdot n_{OVL} \cdot \bigg[ (1 + \epsilon_n) \cdot q_p \cdot l_p \cdot (\pm)_{p} \cdot \bigg(\frac{P^X_n}{P^X_0} - 1 \bigg) - (1-q_p) \cdot l_h \cdot \epsilon^2_n \bigg] \\]
+\\[ \mathrm{PnL}(t_n) = P^{O/E}\_0 \cdot n_{OVL} \cdot \bigg[ (1 + \epsilon_n) \cdot q_p \cdot l_p \cdot (\pm)_{p} \cdot \bigg(\frac{P^X_n}{P^X_0} - 1 \bigg) - \epsilon^2_n \bigg] \\]
 
 which to first order in price changes is \\( \mathrm{PnL}(t_n) \approx P^{O/E}\_0 \cdot n_{OVL} \cdot q_p \cdot l_p \cdot (\pm)_p \cdot (P^X_n / P^X_0 - 1) \\). Given the initial amount staked in the \\( X \\) feed position **in ETH terms** is \\( P^{O/E}\_0 \cdot q_p \cdot n\_{OVL}\\), PnL to first order for the "portfolio" grows/shrinks linearly with respect to price changes in the \\( X \\) feed and the initial ETH amount staked. The combination of positions is then hedged to first order.
