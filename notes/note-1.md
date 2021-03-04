@@ -60,25 +60,25 @@ I buy OVL with my ETH on the spot market. Take out a 1x short position on the Ov
 
 For argument's sake, take \\( t = t_0 \\) and ignore fees for now. Because this trader prefers ETH, I care about my cost, value, and PnL in ETH terms. The cost in ETH terms to enter the short 1x OVL-ETH trade on Overlay is simply the cost to buy OVL on the spot market.
 
-\\[ C = P_0 \cdot n_{OVL} \\]
+\\[ C = P_0 \cdot n \\]
 
-where \\( n_{OVL} \\) is the number of OVL I swapped for on the spot market and \\( P_0 \\) is the price of OVL in ETH terms. The payoff of my 1x short Overlay contract is
+where \\( n \\) is the number of OVL I swapped for on the spot market and \\( P_0 \\) is the price of OVL in ETH terms. The payoff of my 1x short Overlay contract is
 
-\\[ \mathrm{PO}(t_n) = n_{OVL} \cdot \bigg[ 1 - \frac{P_n - P_0}{P_0} \bigg] \\]
+\\[ \mathrm{PO}(t_k) = n \cdot \bigg[ 1 - \frac{P_k - P_0}{P_0} \bigg] \\]
 
-and so the total value of my 1x short "portfolio" at \\( t_n \\) in ETH terms is
+and so the total value of my 1x short "portfolio" at \\( t_k \\) in ETH terms is
 
-\\[ V(t_n) = P_n \cdot n_{OVL} \cdot \bigg[ 1 - \frac{P_n - P_0}{P_0} + \sum_{i=0}^{n} f_i \bigg] \\]
+\\[ V(t_k) = P_k \cdot n \cdot \bigg[ 1 - \frac{P_k - P_0}{P_0} + \sum_{i=0}^{k} f_i \bigg] \\]
 
-where for \\( f_i \\) substitute in the expression above for our funding payments. Thus, my \\( \mathrm{PnL}(t_n) = V(t_n) - C \\) for this 1x short trade **in ETH terms** is
+where for \\( f_i \\) substitute in the expression above for our funding payments. Thus, my \\( \mathrm{PnL}(t_k) = V(t_k) - C \\) for this 1x short trade **in ETH terms** is
 
-\\[ \mathrm{PnL}(t_n) = P_n \cdot n_{OVL} \cdot \bigg[ 2 - \bigg( \frac{P_n}{P_0} + \frac{P_0}{P_n} \bigg) + \sum_{i=0}^{n} f_i \bigg] \\]
+\\[ \mathrm{PnL}(t_k) = P_k \cdot n \cdot \bigg[ 2 - \bigg( \frac{P_k}{P_0} + \frac{P_0}{P_k} \bigg) + \sum_{i=0}^{k} f_i \bigg] \\]
 
-Let \\( P_n = P_0 \cdot (1 + \epsilon_n) \\), and assume \\( \|\epsilon_n\| < 1 \\) for our purposes. Then, my PnL in ETH terms for the 1x short to balance the system is
+Let \\( P_k = P_0 \cdot (1 + \epsilon_k) \\), and assume \\( \|\epsilon_k\| < 1 \\) for our purposes. Then, my PnL in ETH terms for the 1x short to balance the system is
 
-\\[ \mathrm{PnL}(t_n) = P_0 \cdot n_{OVL} \cdot \bigg[ (1 + \epsilon_n) \sum_{i=0}^{n} f_i - \epsilon_n^2 \bigg] \\]
+\\[ \mathrm{PnL}(t_k) = P_0 \cdot n \cdot \bigg[ (1 + \epsilon_k) \sum_{i=0}^{k} f_i - \epsilon_k^2 \bigg] \\]
 
-which is simply getting paid funding to go short to first order in \\( \epsilon_n \\). The higher order \\( \epsilon_n \\) terms are the reason we are not completely hedged from OVL price exposure in this trade. We could use an inverse contract payoff instead of the linear payoff we've adopted to eliminate these higher order terms, but there are issues with minting an infinite number of tokens if OVL-ETH price heads toward zero that we don't want. I'd suggest keeping the linear payoff for simplicity.
+which is simply getting paid funding to go short to first order in \\( \epsilon_k \\). The higher order \\( \epsilon_k \\) terms are the reason we are not completely hedged from OVL price exposure in this trade. We could use an inverse contract payoff instead of the linear payoff we've adopted to eliminate these higher order terms, but there are issues with minting an infinite number of tokens if OVL-ETH price heads toward zero that we don't want. I'd suggest keeping the linear payoff for simplicity.
 
 
 ### Case 2: OI Long < OI Short
@@ -94,25 +94,25 @@ Assume now that \\( \mathrm{TWAOI}\_{imb} = \mathrm{TWAOI}_l - \mathrm{TWAOI}_s 
 
 #### Portfolio Construction
 
-Relatively simple trade to lock in funding. If I have \\( n_{OVL} \\) to start, I take out a 1x long position on the Overlay OVL-ETH market with \\( n_{OVL} / 2 \\) staked and swap \\( n_{OVL} / 2 \\) for ETH on the spot market. Because this trader prefers OVL, I care about my cost, value, and PnL in OVL terms.
+Relatively simple trade to lock in funding. If I have \\( n \\) OVL to start, I take out a 1x long position on the Overlay OVL-ETH market with \\( n / 2 \\) staked and swap \\( n / 2 \\) for ETH on the spot market. Because this trader prefers OVL, I care about my cost, value, and PnL in OVL terms.
 
 Cost to enter the trade **in OVL terms** is
 
-\\[ C = n_{OVL} \\]
+\\[ C = n \\]
 
 Payoff for the 1x long is
 
-\\[ \mathrm{PO}(t_n) = \frac{n_{OVL}}{2} \cdot \bigg[ 1 + \frac{P_n - P_0}{P_0} \bigg] \\]
+\\[ \mathrm{PO}(t_k) = \frac{n}{2} \cdot \bigg[ 1 + \frac{P_k - P_0}{P_0} \bigg] \\]
 
-and value of the spot ETH in OVL terms at time \\( t_n \\) is \\( (n_{OVL} / 2) \cdot (P_0 / P_n) \\). Value of the portfolio at \\( t_n \\) is then
+and value of the spot ETH in OVL terms at time \\( t_k \\) is \\( (n / 2) \cdot (P_0 / P_k) \\). Value of the portfolio at \\( t_k \\) is then
 
-\\[ V(t_n) = \frac{n_{OVL}}{2} \cdot \bigg[\frac{P_0}{P_n} + 1 + \frac{P_n - P_0}{P_0} + \sum_{i=0}^{n} f_i \bigg] \\]
+\\[ V(t_k) = \frac{n}{2} \cdot \bigg[\frac{P_0}{P_k} + 1 + \frac{P_k - P_0}{P_0} + \sum_{i=0}^{k} f_i \bigg] \\]
 
-Going through the same exercise as in the previous case and Taylor expanding \\( 1/(1 + \epsilon_n) = 1 - \epsilon_n + \epsilon_n^2 - \epsilon_n^3 + ... \\) for \\( P_n = P_0 \cdot (1 + \epsilon_n) \\) gives my PnL of
+Going through the same exercise as in the previous case and Taylor expanding \\( 1/(1 + \epsilon_k) = 1 - \epsilon_k + \epsilon_k^2 - \epsilon_k^3 + ... \\) for \\( P_k = P_0 \cdot (1 + \epsilon_k) \\) gives my PnL of
 
-\\[ \mathrm{PnL}(t_n) = \frac{n_{OVL}}{2} \cdot \bigg[ \sum_{i=0}^{n} f_i + \epsilon_n^2 - \epsilon_n^3 + ... \bigg] \\]
+\\[ \mathrm{PnL}(t_k) = \frac{n}{2} \cdot \bigg[ \sum_{i=0}^{k} f_i + \epsilon_k^2 - \epsilon_k^3 + ... \bigg] \\]
 
-which is profitable to second order in \\( \epsilon_n \\).
+which is profitable to second order in \\( \epsilon_k \\).
 
 
 ## Public Strategies
