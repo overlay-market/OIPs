@@ -100,7 +100,7 @@ Assume they obtain \\( x \\) number of \\( R \\) tokens at block \\( i \\) to pr
 
 where \\( p^{OVL}_R(t_i) \\) is the spot swap price at block \\( i \\) for the \\( R \\) token in terms of OVL. And total profit \\( \mathrm{PnL}(t\_{i+\gamma}) = \mathrm{PO}(t\_{i+\gamma}) - C \\) in OVL terms
 
-\\[ \mathrm{PnL}(t_{i+\gamma}) = \frac{\gamma}{\Delta} \cdot \epsilon_{\gamma} \cdot \bigg[ n_{\gamma} \cdot l_{\gamma} - p^{OVL}_R(t_i) \cdot R \cdot \Delta \cdot \frac{1}{\epsilon\_{\gamma}} \cdot \bigg( 1 - \frac{1}{\sqrt{1+\epsilon\_{\gamma}}} \bigg) \bigg] \\]
+\\[ \mathrm{PnL}(t_{i+\gamma}) = \frac{\gamma \cdot \epsilon_{\gamma}}{\Delta} \cdot \bigg[ n_{\gamma} \cdot l_{\gamma} - p^{OVL}_R(t_i) \cdot \frac{R \cdot \Delta}{\epsilon\_{\gamma}} \cdot \bigg( 1 - \frac{1}{\sqrt{1+\epsilon\_{\gamma}}} \bigg) \bigg] \\]
 
 The attacker's trade is therefore only profitable when
 
@@ -150,7 +150,7 @@ with y-axis in millions of dollars. Using this setup of a 1 hour TWAP with 10 mi
 
 ### What About Flash Loans?
 
-<!-- TODO: Mention would be a problem if didn't settle at t1 in t0 < t <= t1 timeframe  -->
+<!-- TODO: Mention would be a problem if didn't settle at t1 in t0 < t <= t1 timeframe -->
 <!-- TODO: What about if the attacker doesn't obtain x R tokens in prep but does it continuously?  -->
 
 ## Considerations

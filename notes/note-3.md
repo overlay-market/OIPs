@@ -111,7 +111,7 @@ Now, add in the hedge with a \\( l^{OE} = 1/(1-q) = 5 \mathrm{x} \\) short on th
 
 \\[ V^{OE} = 20 \cdot (1 + 5 \cdot 0.05) = 25 \; \mathrm{OVL} \\]
 
-which gives a total portfolio value **in ETH terms** of 107.35 ETH. Total PnL is then the OVL equivalent of 7.35 ETH on the combination, preserving most of the anticipated profit from the long.
+which gives a total portfolio value **in ETH terms** of 107.35 ETH. Total PnL is then the OVL equivalent of 7.35 ETH on the combination, preserving most of the anticipated profit from the long. Sanity check by plugging into the expression for \\( \mathrm{PnL}_{k} \\) from the previous section works out.
 
 #### Case 2: \\(X \uparrow 20\% \\), \\(OE \downarrow 25\%\\)
 

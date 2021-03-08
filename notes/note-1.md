@@ -45,11 +45,21 @@ This type of mechanism has already been designed before through funding payments
 
 Enforcing a funding payment from longs to shorts at the next oracle fetch \\( t_1 \\) would work like so: I take out a 1x short position on the OVL-ETH Overlay market, locking in the ETH value of my OVL collateral staked to first order in price changes given we use linear contracts. Then at \\( t_1 \\), I get paid a funding amount from the longs since they are worsening the imbalance in the system while I am helping to balance the book.
 
-What should the functional form of that funding rate be? Something proportional to the time-weighted average of the open interest imbalance
+What should the functional form of those funding payments \\( \mathrm{FP}_i \\) at each time \\( t_i \\) be? Likely something proportional to the time-weighted average of the open interest imbalance
 
-\\[ f_i = k(t_{i-1}, t_i) \cdot \frac{\mathrm{TWAOI}\_{imb}(t_i)}{\mathrm{TWAOI}\_{l}(t_i) + \mathrm{TWAOI}\_{s}(t_i)} \\]
+\\[ \mathrm{FP}\_i = k(t_{i-1}, t_i) \cdot \mathrm{TWAOI}\_{imb}(t_i) \\]
 
-where we use \\( k \\) as a placeholder for a spring-like "constant" adjustable by governance, likely related to the vol of the underlying feed. We can use an accumulator for the OI on each side, similar to Uniswap's price accumulator, to compute these time-weighted averages. Depending on the form of \\( k \\), passive OVL holders still take on some directional risk (i.e. inflation of currency supply) but these payments from longs to shorts when \\( \mathrm{TWAOI}\_{imb} > 0 \\) ultimately incentivize traders to take out short positions to lock in this payment at \\( t_1 \\). Traders with similar preferences (i.e. desire to earn yield on ETH) will compete for these payments with more rushing to the short side over time, likely incentivizing the balancing of our books until funding trends toward zero.
+where we use \\( k \\) as a placeholder for a spring-like "constant" adjustable by governance. \\( k \\) should be set and adjusted based on the risk to the system the underlying feed imposes (see [below](#what-should-k-be)). In terms of rates, the funding rate \\( f_i \\) imposed on each trader would be on pro-rata terms for the size their position represents on their respective side. For this case 1 scenario, longs would pay a rate on the size of their open positions of
+
+\\[ {f_l}_i = \frac{\mathrm{FP}\_i}{\mathrm{OI}\_l(t_i)} \\]
+
+and shorts would receive a rate
+
+\\[ {f_s}_i = \frac{\mathrm{FP}\_i}{\mathrm{OI}\_s(t_i)} \\]
+
+Conversely for case 2, where \\( \mathrm{TWAO}_l < \mathrm{TWAO}_s \\), swap longs for shorts in the above.
+
+We can use an accumulator for the OI on each side, similar to Uniswap's price accumulator, to compute these time-weighted averages. Depending on the form of \\( k \\), passive OVL holders still take on some directional risk through potential inflation of the currency supply, but these payments from longs to shorts when \\( \mathrm{TWAOI}\_{imb} > 0 \\) ultimately incentivize traders to take out short positions to lock in this payment at \\( t_1 \\). Traders with similar preferences (i.e. desire to earn yield on ETH) will compete for these payments with more rushing to the short side over time, likely incentivizing the balancing of our books until funding trends toward zero.
 
 
 #### Portfolio Construction
@@ -68,15 +78,15 @@ where \\( n \\) is the number of OVL I swapped for on the spot market and \\( P_
 
 and so the total value of my 1x short "portfolio" at \\( t_k \\) in ETH terms is
 
-\\[ V(t_k) = P_k \cdot n \cdot \bigg[ 1 - \frac{P_k - P_0}{P_0} + \sum_{i=0}^{k} f_i \bigg] \\]
+\\[ V(t_k) = P_k \cdot n \cdot \bigg[ 1 - \frac{P_k - P_0}{P_0} + \sum_{i=0}^{k} {f_s}_i \bigg] \\]
 
-where for \\( f_i \\) substitute in the expression above for our funding payments. Thus, my \\( \mathrm{PnL}(t_k) = V(t_k) - C \\) for this 1x short trade **in ETH terms** is
+where for \\( {f_s}_i \\) substitute in the expression above for our funding payments. Thus, my \\( \mathrm{PnL}(t_k) = V(t_k) - C \\) for this 1x short trade **in ETH terms** is
 
-\\[ \mathrm{PnL}(t_k) = P_k \cdot n \cdot \bigg[ 2 - \bigg( \frac{P_k}{P_0} + \frac{P_0}{P_k} \bigg) + \sum_{i=0}^{k} f_i \bigg] \\]
+\\[ \mathrm{PnL}(t_k) = P_k \cdot n \cdot \bigg[ 2 - \bigg( \frac{P_k}{P_0} + \frac{P_0}{P_k} \bigg) + \sum_{i=0}^{k} {f_s}_i \bigg] \\]
 
 Let \\( P_k = P_0 \cdot (1 + \epsilon_k) \\), and assume \\( \|\epsilon_k\| < 1 \\) for our purposes. Then, my PnL in ETH terms for the 1x short to balance the system is
 
-\\[ \mathrm{PnL}(t_k) = P_0 \cdot n \cdot \bigg[ (1 + \epsilon_k) \sum_{i=0}^{k} f_i - \epsilon_k^2 \bigg] \\]
+\\[ \mathrm{PnL}(t_k) = P_0 \cdot n \cdot \bigg[ (1 + \epsilon_k) \sum_{i=0}^{k} {f_s}_i - \epsilon_k^2 \bigg] \\]
 
 which is simply getting paid funding to go short to first order in \\( \epsilon_k \\). The higher order \\( \epsilon_k \\) terms are the reason we are not completely hedged from OVL price exposure in this trade. We could use an inverse contract payoff instead of the linear payoff we've adopted to eliminate these higher order terms, but there are issues with minting an infinite number of tokens if OVL-ETH price heads toward zero that we don't want. I'd suggest keeping the linear payoff for simplicity.
 
@@ -106,11 +116,11 @@ Payoff for the 1x long is
 
 and value of the spot ETH in OVL terms at time \\( t_k \\) is \\( (n / 2) \cdot (P_0 / P_k) \\). Value of the portfolio at \\( t_k \\) is then
 
-\\[ V(t_k) = \frac{n}{2} \cdot \bigg[\frac{P_0}{P_k} + 1 + \frac{P_k - P_0}{P_0} + \sum_{i=0}^{k} f_i \bigg] \\]
+\\[ V(t_k) = \frac{n}{2} \cdot \bigg[\frac{P_0}{P_k} + 1 + \frac{P_k - P_0}{P_0} + \sum_{i=0}^{k} {f_l}_i \bigg] \\]
 
 Going through the same exercise as in the previous case and Taylor expanding \\( 1/(1 + \epsilon_k) = 1 - \epsilon_k + \epsilon_k^2 - \epsilon_k^3 + ... \\) for \\( P_k = P_0 \cdot (1 + \epsilon_k) \\) gives my PnL of
 
-\\[ \mathrm{PnL}(t_k) = \frac{n}{2} \cdot \bigg[ \sum_{i=0}^{k} f_i + \epsilon_k^2 - \epsilon_k^3 + ... \bigg] \\]
+\\[ \mathrm{PnL}(t_k) = \frac{n}{2} \cdot \bigg[ \sum_{i=0}^{k} {f_l}_i + \epsilon_k^2 - \epsilon_k^3 + ... \bigg] \\]
 
 which is profitable to second order in \\( \epsilon_k \\).
 
