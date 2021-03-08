@@ -49,7 +49,7 @@ What should the functional form of those funding payments \\( \mathrm{FP}_i \\) 
 
 \\[ \mathrm{FP}\_i = k(t_{i-1}, t_i) \cdot \mathrm{TWAOI}\_{imb}(t_i) \\]
 
-where we use \\( k \\) as a placeholder for a spring-like "constant" adjustable by governance. \\( k \\) should be set and adjusted based on the risk to the system the underlying feed imposes (see [below](#what-should-k-be)). In terms of rates, the funding rate \\( f_i \\) imposed on each trader would be on pro-rata terms for the size their position represents on their respective side. For this case 1 scenario, longs would pay a rate on the size of their open positions of
+where we use \\( k \\) as a placeholder for a spring-like "constant" adjustable by governance. \\( k \\) should be set and adjusted based on the risk to the system the underlying feed imposes (see [below](#risk-and-the-spring-constant)). In terms of rates, the funding rate \\( f_i \\) imposed on each trader would be on pro-rata terms for the size their position represents on their respective side. For this case 1 scenario, longs would pay a rate on the size of their open positions of
 
 \\[ {f_l}_i = \frac{\mathrm{FP}\_i}{\mathrm{OI}\_l(t_i)} \\]
 
@@ -128,6 +128,11 @@ which is profitable to second order in \\( \epsilon_k \\).
 ## Public Strategies
 
 What's even more interesting is these are simple trades that anyone should be able to participate in. We can code and propose strategies for [yearn vaults](https://github.com/iearn-finance/yearn-vaults) that accomplish this: one to earn yield on OVL and the other to earn yield on ETH. This ultimately stabilizes our system even more given TVL for yearn has ranged from [$500M - $1B](https://defipulse.com/yearn.finance) as of Feb 2021. Although gas costs would likely be difficult to manage. The alternative would be to open source Python bots that anyone can run on their own servers, like [Hummingbot](https://hummingbot.io/) strategies.
+
+
+## Risk and the Spring Constant
+
+Returning to the functional form of our funding payments \\( \mathrm{FP}_i \\), we need some guidance on what to set the value of \\( k \\) as for every update period. \\( k \\) dictates the rate at which funds flow from longs to short or shorts to longs to rebalance the system and draw down the risk associated with an imbalanced book. Thus, \\( k \\) should be related to the risk the underlying feed imposes on the system and inherently passive OVL holders through the currency supply.
 
 
 ## Considerations
