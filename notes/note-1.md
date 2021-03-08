@@ -132,7 +132,33 @@ What's even more interesting is these are simple trades that anyone should be ab
 
 ## Risk and the Spring Constant
 
-Returning to the functional form of our funding payments \\( \mathrm{FP}_i \\), we need some guidance on what to set the value of \\( k \\) as for every update period. \\( k \\) dictates the rate at which funds flow from longs to short or shorts to longs to rebalance the system and draw down the risk associated with an imbalanced book. Thus, \\( k \\) should be related to the risk the underlying feed imposes on the system and inherently passive OVL holders through the currency supply.
+Returning to the functional form of our funding payments \\( \mathrm{FP}_i \\), we need some guidance on what to set the value of \\( k \\) as for every update period. \\( k \\) dictates the rate at which funds flow from longs to shorts or shorts to longs to rebalance the system and draw down the risk associated with an imbalanced book. Thus, \\( k \\) should be related to the risk the underlying feed imposes on the system and inherently passive OVL holders through the currency supply.
+
+To start, consider the case where \\( \mathrm{OI}_{imb} > 0 \\) so longs outweigh shorts. For simplicity within this section, assume time-weighted averages are equivalent to their associated open interest values such that \\( \mathrm{TWAOI} = \mathrm{OI} \\). Further, assume no more positions are taken or exited on either side such that the total open interest remains a constant: \\( \mathrm{OI}_l + \mathrm{OI}_s = \mathrm{const} \\). The latter assumption will skew our risk estimates, but likely to the more conservative side given funding incentives should trend towards a more balanced book over time.
+
+What does the evolution of the imbalance look like over time  when we factor in funding payments? Given an open interest on a market \\( X \\) for the long side of \\( \mathrm{OI}_l \\) and short side of \\( \mathrm{OI}_s \\), take the imbalance on the market at time \\( t_i \\) to be \\( {\mathrm{OI}\_{imb}}\_i = {\mathrm{OI}_l}_i - {\mathrm{OI}_s}_i > 0 \\). In terms of the prior period \\( t\_{i-1} \\), open interest on the long side after paying the funding payment will be
+
+\\[ {\mathrm{OI}\_{l}}_i = {\mathrm{OI}\_{l}}\_{i-1} - \mathrm{FP}\_{i-1} \\]
+
+and short side after receiving funding
+
+\\[ {\mathrm{OI}\_{s}}_i = {\mathrm{OI}\_{s}}\_{i-1} + \mathrm{FP}\_{i-1} \\]
+
+Subtracting these two and expanding \\( \mathrm{FP}_{i-1} \\) gives the time evolution of the imbalance from block \\( i-1 \\) to block \\( i \\)
+
+\\[ {\mathrm{OI}\_{imb}}_i = {\mathrm{OI}\_{imb}}\_{i-1} \cdot ( 1 - 2k ) \\]
+
+Rinse and repeat \\( i \\) times to get the time evolution as a function of the value of the open interest imbalance when traders initially enter their positions
+
+\\[ {\mathrm{OI}\_{imb}}_i = {\mathrm{OI}\_{imb}}\_{0} \cdot ( 1 - 2k )^i \\]
+
+where \\( k \in [0, 0.5] \\).
+
+One can view the risk to the system at time \\( t_0 \\) due to the long imbalance created on this market as the expected PnL the system would need to pay out to a long position with notional \\( \mathrm{OI}_{imb} \\) at some time in the future \\( t_i \\):
+
+\\[ {\mathrm{PnL}\_{imb}}_i = {\mathrm{OI}\_{imb}}\_{i} \cdot \bigg[ \frac{P_i}{P_0} - 1 \bigg] \\]
+
+where \\( P_i \\) is the future value of the underlying feed at time \\( t_i \\) and \\( P_0 \\) the value at the current time \\( t_0 \\).
 
 
 ## Considerations
