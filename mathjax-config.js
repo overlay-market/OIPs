@@ -1,9 +1,12 @@
 MathJax = {
-    tex: {
-        inlineMath: [['\\(', '\\)']],
-        displayMath: [['\\[', '\\]']]
-    },
-    svg: {
-        fontCache: 'global'
-    }
+  tex: {
+    inlineMath: [['\\(', '\\)']],
+    displayMath: [['\\[', '\\]']]
+  },
+  TeX: {
+    extensions: ["AMSmath.js", "AMSsymbols.js"]
+  },
+  svg: {
+    fontCache: 'global'
+  }
 };

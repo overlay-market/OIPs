@@ -158,7 +158,29 @@ One can view the risk to the system at time \\( t_0 \\) due to the long imbalanc
 
 \\[ {\mathrm{PnL}\_{imb}}_i = {\mathrm{OI}\_{imb}}\_{i} \cdot \bigg[ \frac{P_i}{P_0} - 1 \bigg] \\]
 
-where \\( P_i \\) is the future value of the underlying feed at time \\( t_i \\) and \\( P_0 \\) the value at the current time \\( t_0 \\).
+where \\( P_i = P(t_i) \\) is the future value of the underlying feed at time \\( t_i \\) and \\( P_0 \\) the value at the current time \\( t_0 \\). Take \\( P : \Omega \xrightarrow{} \mathbb{R} \\) to be a random variable on the probability space \\( (\Omega, \mathcal{F}, \mathrm{P}) \\) driven by a stochastic process \\( W_t \\)
+
+\\[ P_t = P_0 e^{\mu \cdot t + \sigma \cdot W_t} \\]
+
+such that the feed exhibits Geometric Brownian motion (GBM) when \\( W_t \\) is a Wiener process. Assume GBM for now even though DeFi price feeds will be far more fat-tailed (we'll have to be more conservative with \\( k \\) values chosen). PnL at time \\( t_i \\) from this hypothetical long position reduces to
+
+\\[ {\mathrm{PnL}\_{imb}}_i = {\mathrm{OI}\_{imb}}\_{0} \cdot ( 1 - 2k )^i \cdot \bigg[ e^{\mu \cdot i \cdot T + \sigma \cdot W\_{i \cdot T}}  - 1 \bigg] \\]
+
+where \\( t_i - t_0 = i \cdot T \\) and \\( T \\) is the length of time between funding payments.
+
+Our approach will be to choose a \\( k \\) that minimizes the expected value of the PnL, \\( \mathbb{E}[ {\mathrm{PnL}\_{imb}}\_i \| \mathcal{F}_{i} ] \\), for this "position" within a finite number \\( i \\) time intervals to reduce risk to the system. Taking the expected value of above
+
+\\[ \mathbb{E}[ {\mathrm{PnL}\_{imb}}\_i \| \mathcal{F}_{i} ] = {\mathrm{OI}\_{imb}}\_{0} \cdot ( 1 - 2k )^i \cdot \bigg[ e^{\mu \cdot i \cdot T} \cdot \mathbb{E}[e^{\sigma \cdot W\_{i \cdot T}}]  - 1 \bigg] \\]
+
+But, using \\( W_{i \cdot T} \sim \mathcal{N}(0, i \cdot T) \\) and the PDF of the [normal distribution](https://en.wikipedia.org/wiki/Normal_distribution), \\( \mathbb{E}[e^{\sigma \cdot W\_{i \cdot T}}] = (1 / \sqrt{2 \pi}) \int dz \; e^{\sigma \cdot \sqrt{i \cdot T} \cdot z - z^2 / 2} = e^{\sigma^2 \cdot i \cdot T / 2} \cdot (1 / \sqrt{2 \pi}) \int dz' \; e^{- z'^2 / 2} = e^{\sigma^2 \cdot i \cdot T / 2} \\), reducing our expression for the expected value the system needs to pay out for the imbalance to
+
+\\[ \mathbb{E}[ {\mathrm{PnL}\_{imb}}\_i \| \mathcal{F}_{i} ] = {\mathrm{OI}\_{imb}}\_{0} \cdot ( 1 - 2k )^i \cdot \bigg[ \bigg(e^{(\mu + \sigma^2 / 2) \cdot T} \bigg)^i  - 1 \bigg] \\]
+
+Let \\( a = 1 / (1 - 2k) \\), where \\( a \in [1, \infty] \\):
+
+\\[ \mathbb{E}[ {\mathrm{PnL}\_{imb}}\_i \| \mathcal{F}_{i} ] = {\mathrm{OI}\_{imb}}\_{0} \cdot a^{-i} \cdot \bigg[ \bigg(e^{(\mu + \sigma^2 / 2) \cdot T} \bigg)^i  - 1 \bigg] \\]
+
+Our task then becomes choosing a value for \\( a \gg e^{(\mu + \sigma^2 / 2) \cdot T} \\) such that the expected value of the imbalance profit significantly decays over time as more blocks go by. Notice, this relates our chosen value for \\( k \\) to properties of the underlying feed (i.e. drift and volatility).
 
 
 ## Considerations
