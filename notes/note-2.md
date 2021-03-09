@@ -9,11 +9,12 @@ created: 2021-02-25
 updated: N/A
 ---
 
-Two issues to address in this note.
+Two issues to address in this note:
 
-1. How much can the value of a Uniswap/SushiSwap **sliding window** TWAP oracle be manipulated within the oracle's update interval (which is much smaller than the time averaged over)?
+- How much can the value of a Uniswap/SushiSwap **sliding window** TWAP oracle be manipulated within the oracle's update interval (which is much smaller than the time averaged over)?
 
-2. How much capital is needed to **profitably attack** an Overlay market by manipulating the underlying price feed?
+- How much capital is needed to **profitably attack** an Overlay market by manipulating the underlying price feed?
+
 
 ## Sliding Window Oracles
 
