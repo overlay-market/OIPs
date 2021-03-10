@@ -151,14 +151,18 @@ with y-axis in millions of dollars.
 Using this setup of a 1 hour TWAP with 10 min update interval and max leverage of 5x results in a minimum cost of attack on a $20M spot liquidity pool of approximately $240M, which is likely robust.
 
 
-### What About Flash Loans?
+## Nuances with Oracles
 
-With pricing fixed to fetches from the sliding window TWAP oracle every \\( \gamma \\) blocks, an additional attack vector must be accounted for. Assume a user wishes to build a position between oracle fetches at time \\( t \\) where \\( t_{i} < t < t_{i+\gamma} \\), \\( t_i \\) is the last oracle fetch the market has information for with a TWAP value of \\( P_i \\), and \\( t_{i+\gamma} \\) is the pending next oracle fetch to update the TWAP to \\( P_{i+\gamma} \\). What should the locked in entry price be for this user's newly built position?
+With pricing fixed to fetches from the sliding window TWAP oracle every \\( \gamma \\) blocks, an additional attack vector must be accounted for. Assume a user wishes to build a position between oracle fetches at time \\( t \\) where \\( t_{i} < t < t_{i+\gamma} \\), \\( t_i \\) is the last oracle fetch the market has information for with a price of \\( P_i \\), and \\( t_{i+\gamma} \\) is the pending next oracle fetch to update the market price to \\( P_{i+\gamma} \\). What should the locked in entry price be for this user's newly built position?
+
+If we were to naively choose the last fetched oracle value \\( P_i \\) to use as this position's entry price, the system could be easily exploited using flash loans. To see how this would work, make this naive assumption and take \\( P(t) = P_i \\).
+
+Users have more up to date information about the current spot price (and thus the TWAP) than the Overlay market does at time \\( t \\). As an attacker, I wait to act until the block prior to the end of the update interval (i.e. at time \\( t_{i + \gamma - 1} \\)). If the sliding TWAP from blocks \\( i + \gamma - 1 - \Delta \\) to \\( i + \gamma - 1 \\) is significantly greater than the value of \\( P_i \\), I take out a max leverage long on the market in anticipation of locking in a relatively sure profit given the increased value to be fetched for \\( P_{i+\gamma} \\). Once the price has updated to \\( P_{i+\gamma} \\), I sell my position from the prior block, causing the protocol to mint "free" OVL tokens. Repeat this many times over for each update interval going max long or short depending on the price direction, and the system will bleed OVL rapidly.
 
 
 
-<!-- TODO: Mention would be a problem if didn't settle at t1 in t0 < t <= t1 timeframe -->
-<!-- TODO: What about if the attacker doesn't obtain x R tokens in prep but does it continuously?  -->
+<!-- TODO: Mention would be a problem if didn't settle at t1 in t0 < t <= t1 timeframe ... Flash loan resistant as long as price update happens prior to position entry -->
+
 
 ## Considerations
 
