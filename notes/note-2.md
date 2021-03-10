@@ -142,14 +142,20 @@ Take \\( \gamma = 40 \\) for an approximately 10 minute update interval. The ext
 
 \\[ C\|_{\mathrm{breakeven}} (\gamma = 10 \mathrm{m}, \Delta = 1 \mathrm{h}, R = $10 \mathrm{M}, l\_{\mathrm{max}} = 5, \epsilon\_{\gamma} \xrightarrow{} \infty) \approx $400 \mathrm{M} \\]
 
-which is still substantial. Plotting \\( C\|\_{\mathrm{breakeven}} (\epsilon\_{\gamma}) \\) with \\( \gamma = 10 \mathrm{m}, \Delta = 1 \mathrm{h}, R = $10 \mathrm{M}, l\_{\mathrm{max}} = 5 \\):
+which is still substantial. Plotting \\( C\|\_{\mathrm{breakeven}} (\epsilon\_{\gamma}) \\) with \\( \gamma = 10 \mathrm{m}, \Delta = 1 \mathrm{h}, R = $10 \mathrm{M}, l\_{\mathrm{max}} = 5 \\)
 
 ![Image of Cost Plot](../assets/oip-1/cost_plot_wolfram.gif)
 
-with y-axis in millions of dollars. Using this setup of a 1 hour TWAP with 10 min update interval and max leverage of 5x results in a minimum cost of attack on a $20M spot liquidity pool of approximately $240M, which is likely robust.
+with y-axis in millions of dollars.
+
+Using this setup of a 1 hour TWAP with 10 min update interval and max leverage of 5x results in a minimum cost of attack on a $20M spot liquidity pool of approximately $240M, which is likely robust.
 
 
 ### What About Flash Loans?
+
+With pricing fixed to fetches from the sliding window TWAP oracle every \\( \gamma \\) blocks, an additional attack vector must be accounted for. Assume a user wishes to build a position between oracle fetches at time \\( t \\) where \\( t_{i} < t < t_{i+\gamma} \\), \\( t_i \\) is the last oracle fetch the market has information for with a TWAP value of \\( P_i \\), and \\( t_{i+\gamma} \\) is the pending next oracle fetch to update the TWAP to \\( P_{i+\gamma} \\). What should the locked in entry price be for this user's newly built position?
+
+
 
 <!-- TODO: Mention would be a problem if didn't settle at t1 in t0 < t <= t1 timeframe -->
 <!-- TODO: What about if the attacker doesn't obtain x R tokens in prep but does it continuously?  -->

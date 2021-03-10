@@ -80,7 +80,7 @@ Let \\( a = 1 / (1 - 2k) \\), where \\( a \in [1, \infty] \\):
 
 \\[ \mathbb{E}[ {\mathrm{PnL}\_{imb}}\_n \| \mathcal{F}_{n} ] = {\mathrm{OI}\_{imb}}\_{0} \cdot a^{-n} \cdot \bigg[ \bigg(e^{(\mu + \sigma^2 / 2) \cdot T} \bigg)^n  - 1 \bigg] \\]
 
-Our task reduces to choosing an appropriate value for \\( a \gg e^{(\mu + \sigma^2 / 2) \cdot T} \\) such that the expected value of the imbalance profit significantly decays over time as more blocks go by. Notice, this relates our chosen value for \\( k \\) to properties of the underlying feed (i.e. drift and volatility).
+This reduces our task to choosing an appropriate value for \\( a \gg e^{(\mu + \sigma^2 / 2) \cdot T} \\) such that the expected value of the imbalance profit significantly decays over time as more blocks go by. Notice, this relates our chosen value for \\( k \\) to properties of the underlying feed (i.e. drift and volatility).
 
 
 ### Choice of \\( k \\)
