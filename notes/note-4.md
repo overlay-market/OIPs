@@ -26,7 +26,7 @@ where \\( {\mathrm{TWAOI}\_{imb}}_n = {\mathrm{TWAOI}_l}_n - {\mathrm{TWAOI}_s}_
 
 We need some guidance on what to set the value of \\( k \\) as for every update period. \\( k \\) dictates the rate at which funds flow from longs to shorts or shorts to longs to rebalance the system and draw down the risk associated with an imbalanced book. Thus, \\( k \\) should be related to the risk the underlying feed adds to the system and inherently passive OVL holders through the currency supply.
 
-To start, consider the case where \\( \mathrm{OI}_{imb} > 0 \\) so longs outweigh shorts. For simplicity, assume time-weighted averages are equivalent to their associated open interest values such that \\( \mathrm{TWAOI} = \mathrm{OI} \\). Further, assume no more positions are taken or exited on either side such that the total open interest remains a constant: \\( \mathrm{OI}_l + \mathrm{OI}_s = \mathrm{const} \\). The latter assumption will skew our risk estimates, but likely to the more conservative side given funding incentives should trend towards a more balanced book over time.
+To start, consider the case where \\( \mathrm{OI}_{imb} > 0 \\) so longs outweigh shorts. For simplicity, assume time-weighted averages are equivalent to their associated open interest values such that \\( \mathrm{TWAOI} = \mathrm{OI} \\). Further, assume no more positions are built or unwound on either side such that the total open interest remains a constant: \\( \mathrm{OI}_l + \mathrm{OI}_s = \mathrm{const} \\). The latter assumption will skew our risk estimates, but likely to the more conservative side given funding incentives should trend towards a more balanced book over time.
 
 
 ## Risk-Based Approach to Balancing Markets
@@ -41,7 +41,7 @@ and short side after receiving funding
 
 \\[ {\mathrm{OI}\_{s}}_n = {\mathrm{OI}\_{s}}\_{n-1} + \mathrm{FP}\_{n-1} \\]
 
-Subtracting these two and expanding \\( \mathrm{FP}_{n-1} \\) gives the time evolution of the imbalance from block \\( n-1 \\) to block \\( n \\)
+Subtracting the two and expanding \\( \mathrm{FP}_{n-1} \\) gives the time evolution of the imbalance from block \\( n-1 \\) to block \\( n \\)
 
 \\[ {\mathrm{OI}\_{imb}}_n = {\mathrm{OI}\_{imb}}\_{n-1} \cdot ( 1 - 2k ) \\]
 
@@ -49,16 +49,16 @@ Rinse and repeat \\( n \\) times to get the time evolution as a function of the 
 
 \\[ {\mathrm{OI}\_{imb}}_n = {\mathrm{OI}\_{imb}}\_{0} \cdot ( 1 - 2k )^n \\]
 
-where \\( k \in [0, 0.5] \\).
+where \\( k \in [0, \frac{1}{2}] \\).
 
 
 ### Risk to the System
 
-One can view the risk to the system at time \\( t_0 \\) due to the long imbalance created on this market as the expected PnL the system would need to pay out to a long position with notional \\( \mathrm{OI}_{imb} \\) at some time in the future \\( t_n \\):
+One can view the risk to the system at time \\( t_0 \\) due to the long imbalance created on this market as the expected PnL the system would need to pay out to a long position with notional \\( {\mathrm{OI}_{imb}}_0 > 0 \\) at some time in the future \\( t_n \\):
 
 \\[ {\mathrm{PnL}\_{imb}}_n = {\mathrm{OI}\_{imb}}\_{n} \cdot \bigg[ \frac{P_n}{P_0} - 1 \bigg] \\]
 
-where \\( P_n = P(t_n) \\) is the future value of the underlying feed at time \\( t_n \\) and \\( P_0 \\) the value at the current time \\( t_0 \\). Take \\( P : \Omega \xrightarrow{} \mathbb{R} \\) to be a random variable on the probability space \\( (\Omega, \mathcal{F}, \mathrm{P}) \\) driven by a stochastic process \\( W_t \\)
+where \\( P_n = P(t_n) \\) is the future value of the underlying feed at time \\( t_n \\) and \\( P_0 \\) the value at the current time \\( t_0 \\). Take \\( P : \Omega \to \mathbb{R} \\) to be a random variable on the probability space \\( (\Omega, \mathcal{F}, \mathrm{P}) \\) driven by a stochastic process \\( W_t \\)
 
 \\[ P_t = P_0 e^{\mu \cdot t + \sigma \cdot W_t} \\]
 
@@ -76,11 +76,31 @@ But, using \\( W_{n \cdot T} \sim \mathcal{N}(0, n \cdot T) \\) and the PDF of t
 
 \\[ \mathbb{E}[ {\mathrm{PnL}\_{imb}}\_n \| \mathcal{F}_{n} ] = {\mathrm{OI}\_{imb}}\_{0} \cdot ( 1 - 2k )^n \cdot \bigg[ \bigg(e^{(\mu + \sigma^2 / 2) \cdot T} \bigg)^n  - 1 \bigg] \\]
 
-Let \\( a = 1 / (1 - 2k) \\), where \\( a \in [1, \infty] \\):
+Let \\( a = \frac{1}{1 - 2k} \\), where \\( a \in [1, \infty] \\):
 
 \\[ \mathbb{E}[ {\mathrm{PnL}\_{imb}}\_n \| \mathcal{F}_{n} ] = {\mathrm{OI}\_{imb}}\_{0} \cdot a^{-n} \cdot \bigg[ \bigg(e^{(\mu + \sigma^2 / 2) \cdot T} \bigg)^n  - 1 \bigg] \\]
 
-This reduces our task to choosing an appropriate value for \\( a \gg e^{(\mu + \sigma^2 / 2) \cdot T} \\) such that the expected value of the imbalance profit significantly decays over time as more blocks go by. Notice, this relates our chosen value for \\( k \\) to properties of the underlying feed (i.e. drift and volatility).
+This reduces our task to choosing an appropriate value for \\( a \gg e^{(\mu + \sigma^2 / 2) \cdot T} \\) such that the expected value of the imbalance profit significantly decays over time as more blocks go: i.e., \\( \lim_{n\to\infty} \mathbb{E}[ {\mathrm{PnL}\_{imb}}\_n \| \mathcal{F}_{n} ] = 0 \\). Notice, this relates our chosen value for \\( k \\) to properties of the underlying feed.
+
+### Value at Risk
+
+Expanding further, we can examine the value at risk (VaR) to the system for paying out PnL on this hypothetical long position due to our market's imbalance. Note, the protocol and passive OVL holders are taking the other side, so what we really want is the probability \\( 1 - \alpha \\) this imbalance PnL is less than an amount \\( \mathrm{VaR}_{\alpha, n} \\):
+
+\\[ 1 - \alpha = \mathbb{P}[ {\mathrm{PnL}\_{imb}}\_n \leq \mathrm{VaR}_{\alpha, n} ] \\]
+
+where we abuse notation here given the [usual definition of VaR](https://en.wikipedia.org/wiki/Value_at_risk). From the prior section,
+
+\\[ 1 - \alpha = \mathbb{P}\bigg[{\mathrm{OI}\_{imb}}\_{0} \cdot a^{-n} \cdot \bigg( e^{\mu \cdot n \cdot T + \sigma \cdot W\_{n \cdot T}}  - 1 \bigg) \leq \mathrm{VaR}_{\alpha, n} \bigg] \\]
+
+which reduces to
+
+\\[ 1 - \alpha = \Phi \bigg( \frac{1}{\sigma \cdot \sqrt{n \cdot T}} \cdot \bigg[ \ln \bigg( 1 + a^{n} \cdot \tilde{\mathrm{VaR}}_{\alpha, n} \bigg) - \mu \cdot n \cdot T \bigg] \bigg) \\]
+
+\\( \tilde{\mathrm{VaR}}_{\alpha, n} = \frac{\mathrm{VaR}\_{\alpha, n}}{ {\mathrm{OI}\_{imb}}\_{0} } \\) is normalized for the original imbalance amount and \\( \Phi (z) = \mathbb{P}[ Z \leq z ] \\) is the CDF of the standard normal distribution \\( Z \sim \mathcal{N}(0, 1) \\). Inverting this, one finds the normalized upper bound for the PnL to be paid out, \\( \tilde{\mathrm{VaR}}\_{\alpha, n} \\), as a function of the (\\( 1 - \alpha \\))-quantile:
+
+\\[ \tilde{\mathrm{VaR}}_{\alpha, n} = a^{-n} \cdot \bigg[ \bigg( e^{\mu \cdot T + \sigma \cdot \sqrt{T/n} \cdot {\Phi}^{-1}(1-\alpha)} \bigg)^n - 1 \bigg] \\]
+
+Anticipated VaR to the system also scales with \\( a^{-n} \\), supporting a choice of \\( a \gg e^{(\mu + \sigma^2 / 2) \cdot T} \\).
 
 
 ### Choice of \\( k \\)

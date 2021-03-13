@@ -138,9 +138,9 @@ Take \\( \Delta = 240 \\) for an approximately 1 hour TWAP. For a spot pool with
 
 which is substantial. If, however, the attacker is able to move the spot price within the update interval a large amount such that \\( \epsilon\_{\gamma} \gg 0 \\), the break-even cost increases.
 
-Take \\( \gamma = 40 \\) for an approximately 10 minute update interval. The extreme case of \\( \epsilon\_{\gamma} \xrightarrow{} \infty \\) gives the break-even cost to attack the system through drastically manipulating the spot in the update interval
+Take \\( \gamma = 40 \\) for an approximately 10 minute update interval. The extreme case of \\( \epsilon\_{\gamma} \to \infty \\) gives the break-even cost to attack the system through drastically manipulating the spot in the update interval
 
-\\[ C\|_{\mathrm{breakeven}} (\gamma = 10 \mathrm{m}, \Delta = 1 \mathrm{h}, R = $10 \mathrm{M}, l\_{\mathrm{max}} = 5, \epsilon\_{\gamma} \xrightarrow{} \infty) \approx $400 \mathrm{M} \\]
+\\[ C\|_{\mathrm{breakeven}} (\gamma = 10 \mathrm{m}, \Delta = 1 \mathrm{h}, R = $10 \mathrm{M}, l\_{\mathrm{max}} = 5, \epsilon\_{\gamma} \to \infty) \approx $400 \mathrm{M} \\]
 
 which is still substantial. Plotting \\( C\|\_{\mathrm{breakeven}} (\epsilon\_{\gamma}) \\) with \\( \gamma = 10 \mathrm{m}, \Delta = 1 \mathrm{h}, R = $10 \mathrm{M}, l\_{\mathrm{max}} = 5 \\)
 

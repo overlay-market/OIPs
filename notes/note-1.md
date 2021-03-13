@@ -38,7 +38,7 @@ Assume the same fixed price locked in by all positions entered into between \\( 
 
 #### Summary
 
-When the time-weighted average of the open interest on the long side is greater than the short side \\( \mathrm{TWAOI}\_{imb} = \mathrm{TWAOI}_l - \mathrm{TWAOI}_s > 0 \\), traders who want to earn yield on their ETH can 1x short OVL-ETH on Overlay, lock in the ETH value of their staked OVL to first order in price changes, and get paid to take the short side of the OVL-ETH market through continuous funding. Thus, traders who prefer to denominate **in ETH terms** and wish to increase their ETH balance will complete for these funding payments until \\( \mathrm{TWAOI}\_{imb} \xrightarrow[]{} 0 \\).
+When the time-weighted average of the open interest on the long side is greater than the short side \\( \mathrm{TWAOI}\_{imb} = \mathrm{TWAOI}_l - \mathrm{TWAOI}_s > 0 \\), traders who want to earn yield on their ETH can 1x short OVL-ETH on Overlay, lock in the ETH value of their staked OVL to first order in price changes, and get paid to take the short side of the OVL-ETH market through continuous funding. Thus, traders who prefer to denominate **in ETH terms** and wish to increase their ETH balance will complete for these funding payments until \\( \mathrm{TWAOI}\_{imb} \to 0 \\).
 
 #### The Setup
 
@@ -54,7 +54,7 @@ What should the functional form of those funding payments \\( \mathrm{FP}_i \\) 
 
 \\[ \mathrm{FP}\_i = k(t_{i-1}, t_i) \cdot \mathrm{TWAOI}\_{imb}(t_i) \\]
 
-where we use \\( k \\) as a placeholder for a "constant" adjustable by governance. \\( k \\) should be set and adjusted based on the [risk to the system](note-4) the underlying feed imposes. In terms of rates, the funding rate \\( f_i \\) imposed on each trader would be on pro-rata terms for the size their position represents on their respective side. For this case 1 scenario, longs would pay a rate on the size of their open positions of
+where we use \\( k \\) as a placeholder for a "constant" adjustable by governance. \\( k \\) should be set and adjusted based on the [risk to the system](note-4) the underlying feed adds. In terms of rates, the funding rate \\( f_i \\) imposed on each trader would be on pro-rata terms for the size their position represents on their respective side. For this case 1 scenario, longs would pay a rate on the size of their open positions of
 
 \\[ {f_l}_i = \frac{\mathrm{FP}\_i}{\mathrm{OI}\_l(t_i)} \\]
 
@@ -100,7 +100,7 @@ which is simply getting paid funding to go short to first order in \\( \epsilon_
 
 #### Summary
 
-When \\( \mathrm{TWAOI}_{imb} = \mathrm{TWAOI}_l - \mathrm{TWAOI}_s < 0 \\), traders who want to earn yield on their OVL can 1x long OVL-ETH on Overlay with half of their OVL position while selling the other half into ETH. Their aggregate "portfolio" will grow in OVL terms through continuous funding payments to second order in price changes. Thus, traders who prefer to denominate **in OVL terms** and wish to increase their OVL balance will complete for these funding payments until \\( \mathrm{TWAOI}\_{imb} \xrightarrow[]{} 0 \\).
+When \\( \mathrm{TWAOI}_{imb} = \mathrm{TWAOI}_l - \mathrm{TWAOI}_s < 0 \\), traders who want to earn yield on their OVL can 1x long OVL-ETH on Overlay with half of their OVL position while selling the other half into ETH. Their aggregate "portfolio" will grow in OVL terms through continuous funding payments to second order in price changes. Thus, traders who prefer to denominate **in OVL terms** and wish to increase their OVL balance will complete for these funding payments until \\( \mathrm{TWAOI}\_{imb} \to 0 \\).
 
 #### The Setup
 
