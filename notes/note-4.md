@@ -76,11 +76,24 @@ But, using \\( W_{n \cdot T} \sim \mathcal{N}(0, n \cdot T) \\) and the PDF of t
 
 \\[ \mathbb{E}[ {\mathrm{PnL}\_{imb}}\_n \| \mathcal{F}_{n} ] = {\mathrm{OI}\_{imb}}\_{0} \cdot ( 1 - 2k )^n \cdot \bigg[ \bigg(e^{(\mu + \sigma^2 / 2) \cdot T} \bigg)^n  - 1 \bigg] \\]
 
-Let \\( a = \frac{1}{1 - 2k} \\), where \\( a \in [1, \infty] \\):
+Let \\( a = \frac{1}{1 - 2k} \\), where \\( a \in [1, \infty) \\):
 
 \\[ \mathbb{E}[ {\mathrm{PnL}\_{imb}}\_n \| \mathcal{F}_{n} ] = {\mathrm{OI}\_{imb}}\_{0} \cdot a^{-n} \cdot \bigg[ \bigg(e^{(\mu + \sigma^2 / 2) \cdot T} \bigg)^n  - 1 \bigg] \\]
 
-This reduces our task to choosing an appropriate value for \\( a \gg e^{(\mu + \sigma^2 / 2) \cdot T} \\) such that the expected value of the imbalance profit significantly decays over time as more blocks go: i.e., \\( \lim_{n\to\infty} \mathbb{E}[ {\mathrm{PnL}\_{imb}}\_n \| \mathcal{F}_{n} ] = 0 \\). Notice, this relates our chosen value for \\( k \\) to properties of the underlying feed.
+This reduces our task to choosing an appropriate value for \\( a \gg e^{(\mu + \sigma^2 / 2) \cdot T} \\) such that the expected value of the imbalance profit significantly decays over time as more blocks go. Take
+
+\\[ a = b \cdot e^{(\mu + \sigma^2 / 2) \cdot T} \\]
+
+where \\( b \in (1, \infty) \\). As \\( n \to \infty \\),
+
+\\[ \lim_{n\to\infty} \mathbb{E}[ {\mathrm{PnL}\_{imb}}\_n \| \mathcal{F}_{n} ] = {\mathrm{OI}\_{imb}}\_{0} \cdot \bigg( \frac{e^{(\mu + \sigma^2 / 2) \cdot T}}{a} \bigg)^n = \frac{ {\mathrm{OI}\_{imb}}\_0 }{b^n} = 0 \\]
+
+In terms of \\( k \\)
+
+\\[ k = \frac{1}{2} \cdot \bigg[ 1 - \frac{1}{b \cdot e^{(\mu + \sigma^2 / 2) \cdot T}} \bigg] \\]
+
+Notice, this relates our chosen value for \\( k \\) to properties of the underlying feed (i.e. drift and volatility).
+
 
 ### Value at Risk
 
@@ -104,3 +117,5 @@ Anticipated VaR to the system also scales with \\( a^{-n} \\), supporting a choi
 
 
 ### Choice of \\( k \\)
+
+<!-- TODO: Determining \\( \mu \\) and \\( \sigma^2 \\) -->
