@@ -80,7 +80,7 @@ Let \\( a = \frac{1}{1 - 2k} \\), where \\( a \in [1, \infty) \\):
 
 \\[ \mathbb{E}[ {\mathrm{PnL}\_{imb}}\_n \| \mathcal{F}_{n} ] = {\mathrm{OI}\_{imb}}\_{0} \cdot a^{-n} \cdot \bigg[ \bigg(e^{(\mu + \sigma^2 / 2) \cdot T} \bigg)^n  - 1 \bigg] \\]
 
-This reduces our task to choosing an appropriate value for \\( a \gg e^{(\mu + \sigma^2 / 2) \cdot T} \\) such that the expected value of the imbalance profit significantly decays over time as more blocks go. Take
+This reduces our task to choosing an appropriate value for \\( a \gg e^{(\mu + \sigma^2 / 2) \cdot T} \\) such that the expected value of the imbalance profit significantly decays over time as more blocks go by. Take
 
 \\[ a = b \cdot e^{(\mu + \sigma^2 / 2) \cdot T} \\]
 
@@ -88,7 +88,7 @@ where \\( b \in (1, \infty) \\). As \\( n \to \infty \\),
 
 \\[ \lim_{n\to\infty} \mathbb{E}[ {\mathrm{PnL}\_{imb}}\_n \| \mathcal{F}_{n} ] = {\mathrm{OI}\_{imb}}\_{0} \cdot \bigg( \frac{e^{(\mu + \sigma^2 / 2) \cdot T}}{a} \bigg)^n = \frac{ {\mathrm{OI}\_{imb}}\_0 }{b^n} = 0 \\]
 
-In terms of \\( k \\)
+producing the behavior we want when \\( b > 1 \\). In terms of \\( k \\)
 
 \\[ k = \frac{1}{2} \cdot \bigg[ 1 - \frac{1}{b \cdot e^{(\mu + \sigma^2 / 2) \cdot T}} \bigg] \\]
 
@@ -109,13 +109,31 @@ which reduces to
 
 \\[ 1 - \alpha = \Phi \bigg( \frac{1}{\sigma \cdot \sqrt{n \cdot T}} \cdot \bigg[ \ln \bigg( 1 + a^{n} \cdot \tilde{\mathrm{VaR}}_{\alpha, n} \bigg) - \mu \cdot n \cdot T \bigg] \bigg) \\]
 
-\\( \tilde{\mathrm{VaR}}_{\alpha, n} = \frac{\mathrm{VaR}\_{\alpha, n}}{ {\mathrm{OI}\_{imb}}\_{0} } \\) is normalized for the original imbalance amount and \\( \Phi (z) = \mathbb{P}[ Z \leq z ] \\) is the CDF of the standard normal distribution \\( Z \sim \mathcal{N}(0, 1) \\). Inverting this, one finds the normalized upper bound for the PnL to be paid out, \\( \tilde{\mathrm{VaR}}\_{\alpha, n} \\), as a function of the (\\( 1 - \alpha \\))-quantile:
+\\( \tilde{\mathrm{VaR}}_{\alpha, n} = \frac{\mathrm{VaR}\_{\alpha, n}}{ {\mathrm{OI}\_{imb}}\_{0} } \\) is normalized for the original imbalance amount and \\( \Phi (z) = \mathbb{P}[ Z \leq z ] \\) is the CDF of the standard normal distribution \\( Z \sim \mathcal{N}(0, 1) \\). Inverting this, one finds the normalized upper bound for the PnL to be paid out \\( n \\) blocks in the future, \\( \tilde{\mathrm{VaR}}\_{\alpha, n} \\), as a function of the (\\( 1 - \alpha \\))-quantile:
 
-\\[ \tilde{\mathrm{VaR}}_{\alpha, n} = a^{-n} \cdot \bigg[ \bigg( e^{\mu \cdot T + \sigma \cdot \sqrt{T/n} \cdot {\Phi}^{-1}(1-\alpha)} \bigg)^n - 1 \bigg] \\]
+\\[ \tilde{\mathrm{VaR}}_{\alpha, n} = a^{-n} \cdot \bigg[ e^{\mu \cdot n \cdot T + \sigma \cdot \sqrt{n \cdot T} \cdot {\Phi}^{-1}(1-\alpha)} - 1 \bigg] \\]
 
-Anticipated VaR to the system also scales with \\( a^{-n} \\), supporting a choice of \\( a \gg e^{(\mu + \sigma^2 / 2) \cdot T} \\).
+Anticipated VaR to the system also scales with \\( a^{-n} \\), supporting a choice of \\( a \gg e^{(\mu + \sigma^2 / 2) \cdot T} \\). Similar to the analysis above, we want VaR to decrease over time as more blocks go by, such that the limit approaches zero as \\( n \to \infty \\). This puts a lower bound on acceptable values for \\( b \\).
+
+Substituting for \\( a \\),
+
+\\[ \tilde{\mathrm{VaR}}_{\alpha, n} = \frac{1}{b^{n}} \cdot \frac{e^{\sigma \cdot \sqrt{n \cdot T} \cdot {\Phi}^{-1}(1-\alpha)}}{e^{\frac{\sigma^2}{2} \cdot n \cdot T}} - \frac{1}{a^{n}} \\]
+
+The first term is what we need to worry about, tuning \\( b \\) such that it appropriately decays to zero for large \\( n \\). Notice, since \\( n \geq 0 \\),
+
+\\[ \frac{1}{b^{n}} \cdot \frac{e^{\sigma \cdot \sqrt{n \cdot T} \cdot {\Phi}^{-1}(1-\alpha)}}{e^{\frac{\sigma^2}{2} \cdot n \cdot T}} \leq \bigg( \frac{1}{b} \cdot \frac{e^{\sigma \cdot \sqrt{T} \cdot {\Phi}^{-1}(1-\alpha)}}{e^{\frac{\sigma^2}{2} \cdot T}} \bigg)^n \\]
+
+which means having the right-hand side of this inequality go to zero for \\( n \to \infty \\) will lead to the first term in our expression for VaR also approaching zero. This occurs when the term in parentheses on the right-hand side is less than 1 or
+
+\\[ b > e^{\sigma \cdot \sqrt{T} \cdot {\Phi}^{-1}(1-\alpha) - \frac{\sigma^2}{2} \cdot T} \\]
+
+giving us a lower bound on \\( b \\) for a confidence level of \\( 1 - \alpha \\) on our VaR to decay to zero as \\( n \to \infty \\). Let \\( b_{\alpha} = e^{\sigma \cdot \sqrt{T} \cdot {\Phi}^{-1}(1-\alpha) - \frac{\sigma^2}{2} \cdot T} \\). If our chosen value for \\( b >  b_{\alpha} \\), we'll have with confidence \\( 1 - \alpha \\) \\( \lim_{n\to\infty} \tilde{\mathrm{VaR}}_{\alpha, n} = 0 \\).
 
 
 ### Choice of \\( k \\)
 
-<!-- TODO: Determining \\( \mu \\) and \\( \sigma^2 \\) -->
+
+### Determining \\( \mu \\) and \\( \sigma \\)
+
+
+### Concrete Numbers
