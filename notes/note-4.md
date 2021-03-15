@@ -62,7 +62,7 @@ where \\( P_n = P(t_n) \\) is the future value of the underlying feed at time \\
 
 \\[ P_t = P_0 e^{\mu \cdot t + \sigma \cdot W_t} \\]
 
-such that the feed exhibits Geometric Brownian motion (GBM) when \\( W_t \\) is a Wiener process. Assume GBM for now even though DeFi price feeds will be far more fat-tailed, particularly for feeds with stablecoins as the quote currency (we'll have to be more conservative with \\( k \\) values chosen). PnL at time \\( t_n \\) from this hypothetical long position reduces to
+such that the feed exhibits Geometric Brownian motion (GBM) when \\( W_t \\) is a Wiener process. Assume GBM for now even though DeFi price feeds will be far more fat-tailed, particularly for feeds with stablecoins as the quote currency (we'll have to be more conservative with \\( k \\) values chosen). \\( dP_t = P_t \cdot [ (\mu + \frac{\sigma^2}{2}) \cdot dt + \sigma \cdot dW_t ] \\) and PnL at time \\( t_n \\) from this hypothetical long position reduces to
 
 \\[ {\mathrm{PnL}\_{imb}}_n = {\mathrm{OI}\_{imb}}\_{0} \cdot ( 1 - 2k )^n \cdot \bigg[ e^{\mu \cdot n \cdot T + \sigma \cdot W\_{n \cdot T}}  - 1 \bigg] \\]
 
@@ -133,7 +133,25 @@ giving us a lower bound on \\( b \\) for a confidence level of \\( 1 - \alpha \\
 ### Choice of \\( k \\)
 
 
-### Determining \\( \mu \\) and \\( \sigma \\)
+### Determining \\( \mu \\) and \\( \sigma^2 \\)
+
+We'll use maximum likelihood estimation (MLE) from on-chain samples to find our \\( \mu \\) and \\( \sigma \\) values. At launch, we should have these simply inform our chosen \\( k \\) values over rolling time periods versus automating completely, and allow governance to tweak funding rates given existing risk conditions. So more as guidelines for funding rates in the current time period, given assumptions of GBM won't be accurate over longer time horizons.
+
+Assume \\( T \\) is the `periodSize` of a [sliding window TWAP oracle](note-2), such that funding is paid upon every price update of an Overlay market. Let
+
+\\[ R_i = \ln \bigg( \frac{P_i}{P_{i-1}} \bigg) = \mu \cdot T + \sigma \cdot [ W_{i \cdot T} - W_{(i-1) \cdot T} ] \sim \mathcal{N}(\mu \cdot T, \sigma^2 \cdot T) \\]
+
+Sampling \\( N+1 \\) of these windows over a length of time \\( (N + 1) \cdot T \\) for \\( (r_1, r_2, ..., r_{N}) \\) values of \\( R \\) gives MLEs
+
+\\[ \hat{\mu} = \frac{1}{N \cdot T} \cdot \sum_{i = 1}^N r_i \\]
+
+and
+
+\\[ \hat{\sigma}^2 = \frac{1}{N \cdot T} \cdot \sum_{i = 1}^N (r_i - \hat{\mu} \cdot T)^2 \\]
+
+to inform our governance-determined value for \\( k \\).
+
+With our proposed feeds at launch likely coming from an implementation of Keep3r Network's [Keep3rV1Oracle](https://github.com/keep3r-network/keep3r.network/blob/master/contracts/jobs/Keep3rV1Oracle.sol#L685) with SushiSwap TWAPs as the underlying, we should be able to calculate these rolling estimations [on-chain](https://github.com/keep3r-network/keep3r.network/blob/master/contracts/utils/logn.sol#L69).
 
 
 ### Concrete Numbers
