@@ -135,7 +135,7 @@ giving us a lower bound on \\( b \\) for a confidence level of \\( 1 - \alpha \\
 
 ### Determining \\( \mu \\) and \\( \sigma^2 \\)
 
-We'll use maximum likelihood estimation (MLE) from on-chain samples to find our \\( \mu \\) and \\( \sigma \\) values. At launch, we should have these simply inform our chosen \\( k \\) values over rolling time periods versus automating completely, and allow governance to tweak funding rates given existing risk conditions. So more as guidelines for funding rates in the current time period, given assumptions of GBM won't be accurate over longer time horizons.
+We'll use maximum likelihood estimation (MLE) from on-chain samples to find our \\( \mu \\) and \\( \sigma^2 \\) values. At launch, we should have these simply inform our chosen \\( k \\) values over rolling time periods versus automating completely, and allow governance to tweak funding rates given existing risk conditions. So more as guidelines for funding rates in the current time period, given assumptions of GBM won't be accurate over longer time horizons.
 
 Assume \\( T \\) is the `periodSize` of a [sliding window TWAP oracle](note-2), such that funding is paid upon every price update of an Overlay market. Let
 
@@ -151,7 +151,7 @@ and
 
 to inform our governance-determined value for \\( k \\).
 
-With our proposed feeds at launch likely coming from an implementation of Keep3r Network's [Keep3rV1Oracle](https://github.com/keep3r-network/keep3r.network/blob/master/contracts/jobs/Keep3rV1Oracle.sol#L685) with SushiSwap TWAPs as the underlying, we should be able to calculate these rolling estimations [on-chain](https://github.com/keep3r-network/keep3r.network/blob/master/contracts/utils/logn.sol#L69).
+With our proposed feeds at launch likely coming from an implementation of Keep3r Network's [Keep3rV1Oracle](https://github.com/keep3r-network/keep3r.network/blob/master/contracts/jobs/Keep3rV1Oracle.sol#L685) with SushiSwap TWAPs as the underlying, we should be able to calculate these rolling estimations [on-chain](https://github.com/keep3r-network/keep3r.network/blob/master/contracts/Keep3rV1Volatility.sol#L268).
 
 
 ### Concrete Numbers
