@@ -58,7 +58,9 @@ One can view the risk to the system at time \\( t_0 \\) due to the long imbalanc
 
 \\[ {\mathrm{PnL}\_{imb}}_n = {\mathrm{OI}\_{imb}}\_{n} \cdot \bigg[ \frac{P_n}{P_0} - 1 \bigg] \\]
 
-where \\( P_n = P(t_n) \\) is the future value of the underlying feed at time \\( t_n \\) and \\( P_0 \\) the value at the current time \\( t_0 \\). Take \\( P : \Omega \to \mathbb{R} \\) to be a random variable on the probability space \\( (\Omega, \mathcal{F}, \mathrm{P}) \\) driven by a stochastic process \\( W_t \\)
+where \\( P_n = P(t_n) \\) is the future value of the underlying feed at time \\( t_n \\) and \\( P_0 \\) the value at the current time \\( t_0 \\). Our results will also be the same when \\( {\mathrm{OI}_{imb}}_0 < 0 \\).
+
+Take \\( P : \Omega \to \mathbb{R} \\) to be a random variable on the probability space \\( (\Omega, \mathcal{F}, \mathrm{P}) \\) driven by a stochastic process \\( W_t \\)
 
 \\[ P_t = P_0 e^{\mu \cdot t + \sigma \cdot W_t} \\]
 
@@ -132,12 +134,25 @@ giving us a lower bound on \\( b \\) for a confidence level of \\( 1 - \alpha \\
 
 ### Choice of \\( k \\)
 
+The conditions on \\( k \\) imposed above ensure the appropriate limiting behavior as \\( n \to \infty \\), such that funding payments effectively zero out risk to the system over longer time horizons. However, our choice for an exact value of \\( k \\) should be set by our risk tolerance for the amount of OVL we'd be willing to let the system print *over shorter timeframes* if all excess notional causing the imbalance were to unwind at the same time *before* funding is able to fully rebalance the system.
+
+Thus, we wish to ensure the normalized value at risk to the system due to a particular market some finite number of blocks \\( n \\) into the future is equal to a threshold level \\( \tilde{\mathrm{VaR}}_{\alpha, n} = \tilde{\epsilon}\_{\alpha, n} \\) with confidence \\( 1 - \alpha \\). Assume we impose a cap on the notional imbalance on a market at \\( \| {\mathrm{OI}\_{imb}}_0 \| = \mathrm{OI}\_{imb}\|\_{\mathrm{max}} \\), such that no more positions can be built if the notional to be added to the overweight side would cause the cap to be breached (i.e. \\( - \mathrm{OI}\_{imb}\|\_{\mathrm{max}} \leq \mathrm{OI}\_{imb} \leq \mathrm{OI}\_{imb}\|\_{\mathrm{max}} \\)).
+
+Max value at risk for this market \\( n \\) periods into the future is then (still assuming \\( \mathrm{OI}\_{imb} > 0 \\))
+
+\\[ \mathrm{VaR}_{\alpha, n}\|\_{\mathrm{max}} = \tilde{\epsilon}\_{\alpha, n} \cdot \mathrm{OI}\_{imb}\|\_{\mathrm{max}} \\]
+
+and max inflation \\( i_{\alpha, n}\|\_{\mathrm{max}} \\) of the total currency supply \\( \mathrm{TS}_0 \\) produced by this hypothetical amount at risk is
+
+\\[ i_{\alpha, n}\|\_{\mathrm{max}} = \frac{\mathrm{VaR}_{\alpha, n}\|\_{\mathrm{max}}}{\mathrm{TS}_0} = \frac{\tilde{\epsilon}\_{\alpha, n} \cdot \mathrm{OI}\_{imb}\|\_{\mathrm{max}}}{\mathrm{TS}_0} \\]
+
+
 
 ### Determining \\( \mu \\) and \\( \sigma^2 \\)
 
 We'll use maximum likelihood estimation (MLE) from on-chain samples to find our \\( \mu \\) and \\( \sigma^2 \\) values. At launch, we should have these simply inform our chosen \\( k \\) values over rolling time periods versus automating completely, and allow governance to tweak funding rates given existing risk conditions. So more as guidelines for funding rates in the current time period, given assumptions of GBM won't be accurate over longer time horizons.
 
-Assume \\( T \\) is the `periodSize` of a [sliding window TWAP oracle](note-2), such that funding is paid upon every price update of an Overlay market. Let
+Assume \\( T \\) is the `periodSize` of a [sliding window TWAP oracle](note-2), such that funding is paid upon every price update of an Overlay market, versus per block (results will be the same). Let
 
 \\[ R_i = \ln \bigg( \frac{P_i}{P_{i-1}} \bigg) = \mu \cdot T + \sigma \cdot [ W_{i \cdot T} - W_{(i-1) \cdot T} ] \sim \mathcal{N}(\mu \cdot T, \sigma^2 \cdot T) \\]
 
