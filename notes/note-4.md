@@ -146,11 +146,29 @@ and max inflation \\( i_{\alpha, n}\|\_{\mathrm{max}} \\) of the total currency 
 
 \\[ i_{\alpha, n}\|\_{\mathrm{max}} = \frac{\mathrm{VaR}_{\alpha, n}\|\_{\mathrm{max}}}{\mathrm{TS}_0} = \frac{\tilde{\epsilon}\_{\alpha, n} \cdot \mathrm{OI}\_{imb}\|\_{\mathrm{max}}}{\mathrm{TS}_0} \\]
 
-Take the imbalance cap to be some fixed percentage \\( p_{\mathrm{max}} \\) of the total supply such that \\( \mathrm{OI}\_{imb}\|\_{\mathrm{max}} = p_{\mathrm{max}} \cdot \mathrm{TS}_0 \\). Max inflation rate \\( n \\) blocks into the future then reduces to
+Take the imbalance cap to be some fixed percentage \\( c_{\mathrm{max}} \in [0, 1] \\) of the total supply such that \\( \mathrm{OI}\_{imb}\|\_{\mathrm{max}} = c_{\mathrm{max}} \cdot \mathrm{TS}_0 \\). Max inflation rate \\( n \\) blocks into the future then reduces to
 
-\\[ i_{\alpha, n}\|\_{\mathrm{max}} = \tilde{\epsilon}\_{\alpha, n} \cdot p_{\mathrm{max}} \\]
+\\[ i_{\alpha, n}\|\_{\mathrm{max}} = \tilde{\epsilon}\_{\alpha, n} \cdot c_{\mathrm{max}} \\]
 
-showing our chosen threshold risk level \\( \tilde{\epsilon}\_{\alpha, n} \\) is directly proportional to the hypothetical inflation rate we're willing to tolerate with \\( 1 - \alpha \\) confidence for the currency supply (which the cap helps to mitigate).
+showing our chosen threshold risk level \\( \tilde{\epsilon}\_{\alpha, n} \\) is directly proportional to the hypothetical inflation rate we're willing to tolerate with \\( 1 - \alpha \\) confidence for the currency supply (which the cap helps to mitigate). So \\( i_{\alpha, n}\|\_{\mathrm{max}} \\) is ultimately what governance will target.
+
+How does this translate to a value to set for \\( k \\)? Return to the form of our targeted normalized value at risk for the system \\( \tilde{\mathrm{VaR}}_{\alpha, n} = \tilde{\epsilon}]\_{\alpha, n} \\), plug in for the max inflation rate to be tolerated for a market (adjusted for the cap)
+
+\\[ \frac{i_{\alpha, n}\|\_{\mathrm{max}}}{c_{\mathrm{max}}} = a^{-n} \cdot \bigg[ e^{\mu \cdot n \cdot T + \sigma \cdot \sqrt{n \cdot T} \cdot {\Phi}^{-1}(1-\alpha)} - 1 \bigg] \\]
+
+Solving for \\( a = a_{\alpha, n} \\) gives a guideline for our governance-set funding constant based on a tolerated inflation rate within \\( n \\) blocks due to the market at \\( 1-\alpha \\) confidence
+
+\\[ a_{\alpha, n} = \bigg[ \frac{c_{\mathrm{max}}}{i_{\alpha, n}\|\_{\mathrm{max}}} \cdot \bigg( e^{\mu \cdot n \cdot T + \sigma \cdot \sqrt{n \cdot T} \cdot {\Phi}^{-1}(1-\alpha)} - 1 \bigg) \bigg]^{1/n} \\]
+
+where \\( k_{\alpha, n} = \frac{1}{2} \cdot [ 1 - \frac{1}{a_{\alpha, n}} ] \\), with target conditions to ensure \\( \lim_{n\to\infty} \tilde{\mathrm{VaR}}\_{\alpha, n} = 0 \\)
+
+\\[ \frac{i_{\alpha, n}\|\_{\mathrm{max}}}{c_{\mathrm{max}}} < 1 - e^{-n \cdot ( \mu \cdot T + \sigma \cdot \sqrt{T} \cdot \Phi^{-1} (1 - \alpha) )} \\]
+
+and \\( \lim_{n\to\infty} \mathbb{E}[ {\mathrm{PnL}\_{imb}}\_n \| \mathcal{F}_{n} ] = 0 \\)
+
+\\[ \frac{i_{\alpha, n}\|\_{\mathrm{max}}}{c_{\mathrm{max}}} < e^{-\sigma^2 \cdot n \cdot T / 2} \cdot \bigg[ e^{\sigma \cdot \sqrt{n \cdot T} \cdot \Phi^{-1} (1 - \alpha)} - e^{-n \cdot \mu \cdot T} \bigg] \\]
+
+The former condition will likely be more restrictive as \\( \alpha \to 0^{+} \\).
 
 
 ### Determining \\( \mu \\) and \\( \sigma^2 \\)
