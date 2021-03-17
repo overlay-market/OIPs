@@ -146,6 +146,11 @@ and max inflation \\( i_{\alpha, n}\|\_{\mathrm{max}} \\) of the total currency 
 
 \\[ i_{\alpha, n}\|\_{\mathrm{max}} = \frac{\mathrm{VaR}_{\alpha, n}\|\_{\mathrm{max}}}{\mathrm{TS}_0} = \frac{\tilde{\epsilon}\_{\alpha, n} \cdot \mathrm{OI}\_{imb}\|\_{\mathrm{max}}}{\mathrm{TS}_0} \\]
 
+Take the imbalance cap to be some fixed percentage \\( p_{\mathrm{max}} \\) of the total supply such that \\( \mathrm{OI}\_{imb}\|\_{\mathrm{max}} = p_{\mathrm{max}} \cdot \mathrm{TS}_0 \\). Max inflation rate \\( n \\) blocks into the future then reduces to
+
+\\[ i_{\alpha, n}\|\_{\mathrm{max}} = \tilde{\epsilon}\_{\alpha, n} \cdot p_{\mathrm{max}} \\]
+
+showing our chosen threshold risk level \\( \tilde{\epsilon}\_{\alpha, n} \\) is directly proportional to the hypothetical inflation rate we're willing to tolerate with \\( 1 - \alpha \\) confidence for the currency supply (which the cap helps to mitigate).
 
 
 ### Determining \\( \mu \\) and \\( \sigma^2 \\)
