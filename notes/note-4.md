@@ -64,7 +64,7 @@ Take \\( P : \Omega \to \mathbb{R} \\) to be a random variable on the probabilit
 
 \\[ P_t = P_0 e^{\mu \cdot t + \sigma \cdot W_t} \\]
 
-such that the feed exhibits Geometric Brownian motion (GBM) when \\( W_t \\) is a Wiener process. Assume GBM for now even though DeFi price feeds will be far more fat-tailed, particularly for feeds with stablecoins as the quote currency (we'll have to be more conservative with \\( k \\) values chosen). \\( dP_t = P_t \cdot [ (\mu + \frac{\sigma^2}{2}) \cdot dt + \sigma \cdot dW_t ] \\) and PnL at time \\( t_n \\) from this hypothetical long position reduces to
+such that the feed exhibits Geometric Brownian motion (GBM) when \\( W_t \\) is a Wiener process. Assume GBM for now even though DeFi price feeds will be far more fat-tailed (we'll have to be more conservative with \\( k \\) values chosen). \\( dP_t = P_t \cdot [ (\mu + \frac{\sigma^2}{2}) \cdot dt + \sigma \cdot dW_t ] \\) and PnL at time \\( t_n \\) from this hypothetical long position reduces to
 
 \\[ {\mathrm{PnL}\_{imb}}_n = {\mathrm{OI}\_{imb}}\_{0} \cdot ( 1 - 2k )^n \cdot \bigg[ e^{\mu \cdot n \cdot T + \sigma \cdot W\_{n \cdot T}}  - 1 \bigg] \\]
 
@@ -168,8 +168,6 @@ and \\( \lim_{n\to\infty} \mathbb{E}[ {\mathrm{PnL}\_{imb}}\_n \| \mathcal{F}_{n
 
 \\[ \frac{i_{\alpha, n}\|\_{\mathrm{max}}}{c_{\mathrm{max}}} < e^{-\sigma^2 \cdot n \cdot T / 2} \cdot \bigg[ e^{\sigma \cdot \sqrt{n \cdot T} \cdot \Phi^{-1} (1 - \alpha)} - e^{-n \cdot \mu \cdot T} \bigg] \\]
 
-The former condition will likely be more restrictive as \\( \alpha \to 0^{+} \\).
-
 
 ### Determining \\( \mu \\) and \\( \sigma^2 \\)
 
@@ -193,3 +191,14 @@ With our proposed feeds at launch likely coming from an implementation of Keep3r
 
 
 ### Concrete Numbers
+
+
+## Considerations
+
+The analysis above only examines value at risk to the system on an individual market-by-market level. While useful, it is not entirely accurate at the macro level. We should really examine the "portfolio" of markets we're offering and the total value at risk to the system caused by the *sum of imbalances* on each individual market
+
+\\[ 1 - \alpha = \mathbb{P}\bigg[ \sum_{j=1}^{N} {\mathrm{OI}\_{imb}}\_{j} (t_0) \cdot a^{-n}\_{j} \cdot \bigg( e^{\mu_j \cdot n \cdot T + \sigma_j \cdot W\_{n \cdot T}}  - 1 \bigg) \leq \mathrm{VaR}_{\alpha, n} \bigg] \\]
+
+where \\( (\mu_j, \sigma_j, a_j) \\) are the relevant parameters for market \\( j \\) assuming \\( N \\) total markets offered by the protocol. 
+
+<!-- TODO: Should really be looking at "portfolio" of markets we're offering and VaR from combination of feeds! sum of log normals isn't closed form (?) so more annoying. Do this later ... -->
