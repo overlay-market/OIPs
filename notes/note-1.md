@@ -126,11 +126,11 @@ The funding will probably compute each oracle fetch rather than each block, as o
 Thus, the full value of the portfolio **in ETH terms** at time \\(t_m \\) will be \\(V(t_m) = V_1(t_m) + V_2(t_m) \\) and the profit/loss will be given by \\(\mathrm{PnL} = V - C\\), yielding:
 <!-- \\( \mathrm{PnL}(t) = V(t_m) - C \\) for this 1x short trade **in ETH terms** is -->
 
-\\[\mathrm{PnL}(t_m) =  P(t_m) \cdot n \cdot \bigg[ 2 - \bigg( \frac{P(t_m)}{P_0} + \frac{P_0}{P(t_m)} \bigg) + \sum_{i=0}^{m} {f_s}\_i \bigg] \\]
+\\[\mathrm{PnL}(t_m) =  P(t_m) \cdot n \cdot \bigg[ 2 - \bigg( \frac{P(t_m)}{P_0} + \frac{P_0}{P(t_m)} \bigg) + \sum_{i=0}^{m} {f_s}(t_i) \bigg] \\]
 
 Let \\( P_m = P_0 \cdot (1 + \epsilon) \\), and assume \\( \|\epsilon\| < 1 \\) for our purposes. Then, my PnL in ETH terms for the 1x short to balance the system is
 
-\\[ \mathrm{PnL}(t_m) = P_0 \cdot n \cdot \bigg[ (1 + \epsilon) \sum_{i=0}^{m} {f_s}\_i - \epsilon^2 \bigg] \\]
+\\[ \mathrm{PnL}(t_m) = P_0 \cdot n \cdot \bigg[ (1 + \epsilon) \sum_{i=0}^{m} {f_s}(t_i) - \epsilon^2 \bigg] \\]
 
 which is simply getting paid funding to go short to first order in \\( \epsilon \\).
 
@@ -139,7 +139,7 @@ The higher order \\( \epsilon \\) terms are the reason we are not completely hed
 
 The boundary for this funding to be profitable for arbitrageurs is
 
-\\[  \sum_{i=0}^{m} {f_s}\_i = \frac{\epsilon^2}{1+\epsilon} \\]
+\\[  \sum_{i=0}^{m} {f_s}(t_i) = \frac{\epsilon^2}{1+\epsilon} \\]
 
 <!-- Assume that the arbitrageur is providing the entirety of the offsetting position. -->
 Note that both sides are expressed as percentages. We seek an expression in terms of OVL,  and the initial imbalance.
@@ -152,7 +152,7 @@ Because the deltas get very small for large \\(m\\) we can let \\(m \to \infty\\
 \\[\mathrm{OI}\_s(m) - \mathrm{OI}\_s(0) \approx k \mathrm{OI}\_{imb}(0)\sum_{i=0}^\infty(1-2k)^i = \frac{k \mathrm{OI}\_{imb}(0)}{1 - (1-2k)} =  \mathrm{OI}\_{imb}(0)/2 \\]
 
 As expected then, the profit for those going short is one half the imbalance. Noting that for large enough \\( m \\)
-\\[ n\cdot \sum_{i=0}^{m} {f_s}\_i \approx \mathrm{OI}\_{imb}(0)/2 \\]
+\\[ n\cdot \sum_{i=0}^{m} {f_s}(t_i) \approx \mathrm{OI}\_{imb}(0)/2 \\]
 and assuming for simplicity that there is a single  arbitrageur, we obtain the condition for this trader to be economically motivated to collect funding payments:
 \\[ \mathrm{OI}\_{imb}(0) > \frac{2n\epsilon^2}{1+\epsilon}
 \\]
@@ -194,13 +194,16 @@ Payoff for the 1x long is
 
 and value of the spot ETH in OVL terms at time \\( t\\) is \\( (n / 2) \cdot (P_0 / P(t)) \\). Value of the portfolio at \\( t \\) is then
 
-\\[ V(t) = \frac{n}{2} \cdot \bigg[\frac{P_0}{P_k} + 1 + \frac{P(t) - P_0}{P_0} + \sum_{i=0}^{m} {f_l}\_i \bigg] \\]
+\\[ V(t) = \frac{n}{2} \cdot \bigg[\frac{P_0}{P_k} + 1 + \frac{P(t) - P_0}{P_0} + \sum_{i=0}^{m} {f_l}(t_i) \bigg] \\]
 
 Going through the same exercise as in the previous case and Taylor expanding \\( 1/(1 + \epsilon) = 1 - \epsilon + \epsilon^2 - \epsilon^3 + ... \\) for \\( P(t) = P_0 \cdot (1 + \epsilon) \\) gives my PnL of
 
-\\[ \mathrm{PnL}(t_k) = \frac{n}{2} \cdot \bigg[2+ \sum_{i=0}^{m} {f_l}\_i + \epsilon_k^2 - \epsilon_k^3 + ... \bigg] \\]
+\\[ \mathrm{PnL}(t_i) = \frac{n}{2} \cdot \bigg[\sum_{i=0}^{m} {f_l}(t_i) + \epsilon^2 - \epsilon^3 + ... \bigg] \\]
 
-which is profitable to second order in \\( \epsilon_k \\).
+As  
+\\[  \epsilon^2 - \epsilon^3 + ... = \frac{\epsilon ^2}{1 + \epsilon}\\]
+<!-- which is profitable to second order in \\( \epsilon_k \\). -->
+this strategy has the same profitability boundary as the previous one.  
 
 
 ## Public Strategies
