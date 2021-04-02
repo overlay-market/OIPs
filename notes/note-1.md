@@ -3,7 +3,7 @@ note: 1
 oip-num: 1
 title: Funding Payments
 status: WIP
-author: Michael Feldman  and Adam Kay
+author: Michael Feldman (@mikeyrf), Adam Kay (@mcillkay)
 discussions-to: oip-1
 created: 2021-02-25
 updated: N/A
@@ -38,50 +38,50 @@ Assume the same fixed price locked in by all positions entered into between \\( 
 
 
 #### Summary
-We will only treat the OVL-ETH market, as it keeps things simpler. The same ideas will generalize to, say, the ETH-SUSHI market, *mutatis mutandis*. 
+We will only treat the OVL-ETH market, as it keeps things simpler. The same ideas will generalize to, say, the ETH-SUSHI market, *mutatis mutandis*.
 
-Furthermore, we will think in terms of "internal time," that is each new block is a new time step. Thus time is discrete and we have \\(t_0, t_0+1, \ldots t-1, t, t+1, \ldots \\). 
+Furthermore, we will think in terms of "internal time," that is each new block is a new time step. Thus time is discrete and we have \\(t_0, t_0+1, \ldots t-1, t, t+1, \ldots \\).
 
-Let the open interest to the long (short) side be the number \\(N \\) of OVL locked to that side, times the leverage \\(L\\) associated with those \\(N\\)  OVL. Thus, for trader \\(k\\) going long (thus the subscript \\(l\\)) we have \\[ \mathrm{OI}\_{kl} = L_{kl} \cdot N_{kl}\\] 
+Let the open interest to the long (short) side be the number \\(N \\) of OVL locked to that side, times the leverage \\(L\\) associated with those \\(N\\)  OVL. Thus, for trader \\(k\\) going long (thus the subscript \\(l\\)) we have \\[ \mathrm{OI}\_{kl} = L_{kl} \cdot N_{kl}\\]
 If that trader has multiple long positions we sum over the OI of each one:
 
-\\[\mathrm{OI}\_{kl} = \sum_i  L_{kli}N_{kli}\\] 
+\\[\mathrm{OI}\_{kl} = \sum_i  L_{kli}N_{kli}\\]
 
-We define the open interest on an entire market as above, summing over first \\(i\\) then \\(k\\). The imbalance on open interest is the long side OI minus the short side: 
+We define the open interest on an entire market as above, summing over first \\(i\\) then \\(k\\). The imbalance on open interest is the long side OI minus the short side:
 \\[\mathrm{OI}\_{imb} = \mathrm{OI}\_l - \mathrm{OI}\_s  \\]
 
 #### The Setup
 
-Say everyone goes long to begin with.  We want some way to encourage traders to take the short side of the trade, while ensuring that they make money in ETH terms. Then, they are making yield on their ETH and they don't care that they are short OVL-ETH. If everyone is short, we want the same mechanism to work for those who want to make yield in OVL terms. 
+Say everyone goes long to begin with.  We want some way to encourage traders to take the short side of the trade, while ensuring that they make money in ETH terms. Then, they are making yield on their ETH and they don't care that they are short OVL-ETH. If everyone is short, we want the same mechanism to work for those who want to make yield in OVL terms.
 
 This type of mechanism has already been designed before through funding payments, used as a way to incentivize having the futures price track the spot price. We should flip this on its head and instead *fix the price* but use the funding payment as a means to incentivize *balancing of position notionals* (Synthetix is also [exploring this](https://sips.synthetix.io/sips/sip-80#skew-funding-rate) for their futures product).
 
-Enforcing a funding payment from longs to shorts 
-<!-- at the next oracle fetch \\( t^\* \\) --> 
+Enforcing a funding payment from longs to shorts
+<!-- at the next oracle fetch \\( t^\* \\) -->
 would work like so: I notice at \\( t_0\\) that there is an imbalance on the long side. At \\(t_0 + 1\\) (the next block) I take out a 1x short position on the OVL-ETH Overlay market, locking in the ETH value of my OVL collateral, and  use the OVL to go short against the imbalance.  <!-- staked to first order in price changes given we use linear contracts. --> Then at each \\( t = t_0 + 2, t_0 + 3,\ldots \\) I get paid a funding amount from the longs since they are worsening the imbalance in the system while I am helping to balance the book.
 
 What should the functional form of those funding payments \\( \mathrm{FP}(t) \\) at each time \\( t \\) be? Likely something proportional to the open interest imbalance
 
 \\[ \mathrm{FP}(t) = k(t) \cdot \mathrm{OI}\_{imb}(t) \\]
 
-where we use \\( k \\) as a placeholder for a "constant" adjustable by governance. This constant should be set and adjusted based on the [risk to the system](note-4) the underlying feed adds. 
+where we use \\( k \\) as a placeholder for a "constant" adjustable by governance. This constant should be set and adjusted based on the [risk to the system](note-4) the underlying feed adds.
 
 The *funding rate*\\( f(t) \\) imposed on each trader is the cost of holding that position, expressed in units of that trader's open interest. In other words, the funding rate is a source of return on each trader's position. For the side \\( a \in \\{l, s\\}\\), the funding rate is defined to be
 
 \\[ {f_a}(t) = \frac{\mathrm{FP}(t)}{\mathrm{OI}\_a(t)}. \\]
 
-<!-- In our case of \\( \mathrm{OI}> 0\\), --> 
-<!-- , defined posiwould be on pro-rata terms for the size their position represents on their respective side. --> 
+<!-- In our case of \\( \mathrm{OI}> 0\\), -->
+<!-- , defined posiwould be on pro-rata terms for the size their position represents on their respective side. -->
 
-For this case 1 scenario, longs would post a negative return of \\(f_l(t) \\) and shorts would post a positive return of \\( f_s(t)\\).  Conversely for case 2, where \\( \mathrm{OI}\_l < \mathrm{OI}\_s \\), the rates are defined identicaly but the shorts pay the longs. 
+For this case 1 scenario, longs would post a negative return of \\(f_l(t) \\) and shorts would post a positive return of \\( f_s(t)\\).  Conversely for case 2, where \\( \mathrm{OI}\_l < \mathrm{OI}\_s \\), the rates are defined identicaly but the shorts pay the longs.
 <!-- wap longs for shorts in the above. -->
 
 For example, in the case that  \\( \mathrm{OI}\_l = 500\\) and  \\( \mathrm{OI}\_s = 200\\), we would have \\({f_l}(t) = 3k/5 \\) and \\({f_s}(t) = 3k/2 \\). Setting \\(k=1/2\\) for simplicity (this is an extreme value for \\(k\\), in practice the amount will be much lower, see [risk to the system](note-4)), the longs have a new open interest given by  
 \\[ \mathrm{OI}\_l(t+1) = \mathrm{OI}\_l(t) - \mathrm{FP}(t) = \mathrm{OI}\_l(t) - f_l(t) \mathrm{OI}\_l(t) =  500 - 1500/10 = 350 \\]  
 and the shorts have a new open interest given by
-\\[ \mathrm{OI}\_s(t+1) =\mathrm{OI}\_s(t) + \mathrm{FP}(t) = \mathrm{OI}\_s(t) + f_s(t) \mathrm{OI}\_s(t) =  200 + 600/4 = 350. \\] 
+\\[ \mathrm{OI}\_s(t+1) =\mathrm{OI}\_s(t) + \mathrm{FP}(t) = \mathrm{OI}\_s(t) + f_s(t) \mathrm{OI}\_s(t) =  200 + 600/4 = 350. \\]
 
-Then in the case that the situation is reversed, the funding rate is reversed and the shorts pay the longs. This has eliminated the imbalance in a single time step. 
+Then in the case that the situation is reversed, the funding rate is reversed and the shorts pay the longs. This has eliminated the imbalance in a single time step.
 
 
 <!-- , and shorts a rate on the size of their open positions of -->
@@ -89,13 +89,13 @@ Then in the case that the situation is reversed, the funding rate is reversed an
 <!-- and shorts would receive a rate -->
 <!-- \\[ {f_s}(t) = \frac{\mathrm{FP}(t)}{\mathrm{OI}\_s(t) \\] -->
 
-<!-- We can use an accumulator for the OI on each side, similar to Uniswap's price accumulator, to compute these time-weighted averages. --> 
+<!-- We can use an accumulator for the OI on each side, similar to Uniswap's price accumulator, to compute these time-weighted averages. -->
 
-<!-- Depending on the form of \\( k \\), passive OVL holders still take on some directional risk through potential inflation of the currency supply, but --> 
-These payments from  the larger to the smaller open interest 
-<!-- longs to shorts when \\( \mathrm{OI}\_{imb} > 0 \\) --> 
+<!-- Depending on the form of \\( k \\), passive OVL holders still take on some directional risk through potential inflation of the currency supply, but -->
+These payments from  the larger to the smaller open interest
+<!-- longs to shorts when \\( \mathrm{OI}\_{imb} > 0 \\) -->
 ultimately incentivize arbitrageurs with desire to earn yield on ETH to take  offestting positions to lock in the payment.
-<!-- at \\( t_1 \\). --> 
+<!-- at \\( t_1 \\). -->
 These arbutrageurs will compete for these payments, likely incentivizing the balancing of our books until funding trends toward zero.
 
 
@@ -122,7 +122,7 @@ The funding will probably compute each oracle fetch rather than each block, as o
 
 \\[  V_2(t) = P(t) \cdot n \cdot \sum_{i=1}^{m} {f_s}(t_i)  \\]
 
-<!-- where for \\( {f_s}\_i \\) substitute in the expression above for our funding payments. --> 
+<!-- where for \\( {f_s}\_i \\) substitute in the expression above for our funding payments. -->
 Thus, the full value of the portfolio **in ETH terms** at time \\(t_m \\) will be \\(V(t_m) = V_1(t_m) + V_2(t_m) \\) and the profit/loss will be given by \\(\mathrm{PnL} = V - C\\), yielding:
 <!-- \\( \mathrm{PnL}(t) = V(t_m) - C \\) for this 1x short trade **in ETH terms** is -->
 
@@ -132,7 +132,7 @@ Let \\( P_m = P_0 \cdot (1 + \epsilon) \\), and assume \\( \|\epsilon\| < 1 \\) 
 
 \\[ \mathrm{PnL}(t_m) = P_0 \cdot n \cdot \bigg[ (1 + \epsilon) \sum_{i=0}^{m} {f_s}\_i - \epsilon^2 \bigg] \\]
 
-which is simply getting paid funding to go short to first order in \\( \epsilon \\). 
+which is simply getting paid funding to go short to first order in \\( \epsilon \\).
 
 
 The higher order \\( \epsilon \\) terms are the reason we are not completely hedged from OVL price exposure in this trade. We could use an inverse contract payoff instead of the linear payoff we've adopted to eliminate these higher order terms, but there are issues with minting an infinite number of tokens if OVL-ETH price heads toward zero that we don't want. I'd suggest keeping the linear payoff for simplicity.
@@ -141,8 +141,8 @@ The boundary for this funding to be profitable for arbitrageurs is
 
 \\[  \sum_{i=0}^{m} {f_s}\_i = \frac{\epsilon^2}{1+\epsilon} \\]
 
-<!-- Assume that the arbitrageur is providing the entirety of the offsetting position. --> 
-Note that both sides are expressed as percentages. We seek an expression in terms of OVL,  and the initial imbalance. 
+<!-- Assume that the arbitrageur is providing the entirety of the offsetting position. -->
+Note that both sides are expressed as percentages. We seek an expression in terms of OVL,  and the initial imbalance.
 
 After \\(m\\) funding payments, the open interest on the short side satisfies the relation
 \\[\mathrm{OI}\_s(m) =\mathrm{OI}\_s(0) + k \mathrm{OI}\_{imb}(0)\sum_{i=0}^m(1-2k)^i \\]
@@ -151,21 +151,21 @@ Because the deltas get very small for large \\(m\\) we can let \\(m \to \infty\\
 
 \\[\mathrm{OI}\_s(m) - \mathrm{OI}\_s(0) \approx k \mathrm{OI}\_{imb}(0)\sum_{i=0}^\infty(1-2k)^i = \frac{k \mathrm{OI}\_{imb}(0)}{1 - (1-2k)} =  \mathrm{OI}\_{imb}(0)/2 \\]
 
-As expected then, the profit for those going short is one half the imbalance. Noting that for large enough \\( m \\) 
+As expected then, the profit for those going short is one half the imbalance. Noting that for large enough \\( m \\)
 \\[ n\cdot \sum_{i=0}^{m} {f_s}\_i \approx \mathrm{OI}\_{imb}(0)/2 \\]
 and assuming for simplicity that there is a single  arbitrageur, we obtain the condition for this trader to be economically motivated to collect funding payments:
-\\[ \mathrm{OI}\_{imb}(0) > \frac{2n\epsilon^2}{1+\epsilon} 
+\\[ \mathrm{OI}\_{imb}(0) > \frac{2n\epsilon^2}{1+\epsilon}
 \\]
 
 Clearly, \\( n\\) can be set vanishingly small, corresponding to the fact that we have not set a minimum value required to collect payments. Thus, the funding payment mechanism becomes an auction in which all arbitrageurs try to outbid others while keeping their \\( n \\) as small as possible.
 
 Say we imposed a minimum on the bet required to collect funding, as some fraction \\( \alpha \\) of the initial imbalance. Then we obtain  
-\\[ 1 > \frac{2\alpha\epsilon^2}{1+\epsilon} 
+\\[ 1 > \frac{2\alpha\epsilon^2}{1+\epsilon}
 \\]
 
-We then get an expression for \\( \epsilon \\) in terms of \\(\alpha \\), and we find that the extreme values for \\( \alpha \\) of .1 gives values for \\( \epsilon \\)  of 5.8 and -.85, and a value of .9 gives and 1.16 and -.53. 
+We then get an expression for \\( \epsilon \\) in terms of \\(\alpha \\), and we find that the extreme values for \\( \alpha \\) of .1 gives values for \\( \epsilon \\)  of 5.8 and -.85, and a value of .9 gives and 1.16 and -.53.
 
-For a reasonable \\( \alpha \\) of .33, we have \\( \epsilon = (2.2, -.68) \\).  We can thus conclude that the nonlinearity will not effect things and that the hedging mechanism will, in practice, be quite robust. 
+For a reasonable \\( \alpha \\) of .33, we have \\( \epsilon = (2.2, -.68) \\).  We can thus conclude that the nonlinearity will not effect things and that the hedging mechanism will, in practice, be quite robust.
 
 Finally, note that the above expression is independent of \\( k \\), because we made the long-time assumption \\( m \to \infty\\). In practice,  \\( k\\) becomes more relevant the smaller it is. We can make various estimates, replacing the factor of 2 with increasingly larger numbers as \\( k\\) is made smaller. Initial examination shows that even if we assume an order of magnitude decrease in funding, we obtain \\( \alpha = .33  \to \epsilon = (.47, -.32) \\).
 
@@ -209,14 +209,14 @@ What's even more interesting is these are simple trades that anyone should be ab
 
 
 # Considerations
- 
+
 ## Setting \\( k \\)
 
 We will explore the required value of \\( k \\) in more depth in [risk to the system](note-4). However, for now we note that (assuming no trades are made) the next value of the imbalance, calculated after funding, satisfies the recurrence relation  \\( \mathrm{OI}\_{imb}(m+1) = \mathrm{OI}\_{imb}(m)(1 -2k)\\). This may easily be solved, yielding
 
 \\[ \mathrm{OI}\_{imb}(m) = \mathrm{OI}\_{imb}(0)\cdot \bigg(1 -2k\bigg)^m.  \\]
 
-If we define \\( 0 < \ell < 1 \\) such that \\( \ell \cdot \mathrm{OI}\_{imb}(m) = \mathrm{OI}\_{imb}(0)\\), then we can explictly solve for \\(k \\) as a function of \\( \ell, m\\). The below gives a table where the leftmost column is \\( \ell \\), and values of \\( m \\) from 1 through 9 are given. Intuitively, it tells us what value of \\( k \\) we need to pick in order to have \\( \ell \\) imbalance left after \\( m \\) funding payments. 
+If we define \\( 0 < \ell < 1 \\) such that \\( \ell \cdot \mathrm{OI}\_{imb}(m) = \mathrm{OI}\_{imb}(0)\\), then we can explictly solve for \\(k \\) as a function of \\( \ell, m\\). The below gives a table where the leftmost column is \\( \ell \\), and values of \\( m \\) from 1 through 9 are given. Intuitively, it tells us what value of \\( k \\) we need to pick in order to have \\( \ell \\) imbalance left after \\( m \\) funding payments.
 
 | \\(\ell \\) | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 |
 | --- | ----- | ----- | ----- | ----- | ----- | ----- | ----- | ----- | ----- |
