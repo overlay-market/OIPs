@@ -177,16 +177,12 @@ and value of the spot ETH in OVL terms at time \\( t\\) is \\( (n / 2) \cdot (P_
 
 \\[ V(t) = \frac{n}{2} \cdot \bigg[\frac{P_0}{P_k} + 1 + \frac{P(t) - P_0}{P_0} + \sum_{i=0}^{m} {f_l}(t_i) \bigg] \\]
 
-Going through the same exercise as in the previous case and Taylor expanding \\( 1/(1 + \epsilon) = 1 - \epsilon + \epsilon^2 - \epsilon^3 + ... \\) for \\( P(t) = P_0 \cdot (1 + \epsilon) \\) gives our PnL of
+Going through the same exercise as in the previous case with \\( P(t) = P_0 \cdot (1 + \epsilon) \\) gives our PnL of
 
-\\[ \mathrm{PnL}(t_i) = \frac{n}{2} \cdot \bigg[\sum_{i=0}^{m} {f_l}(t_i) + \epsilon^2 - \epsilon^3 + ... \bigg] \\]
+\\[ \mathrm{PnL}(t_i) = \frac{n}{2} \cdot \bigg[\sum_{i=0}^{m} {f_l}(t_i) + \frac{\epsilon ^2}{1 + \epsilon} \bigg] \\]
 
-As  
-\\[  \epsilon^2 - \epsilon^3 + ... = \frac{\epsilon ^2}{1 + \epsilon}\\]
+which is always profitable in OVL terms.  
 
-this strategy has the same profitability boundary as the previous one.  
-
-<!-- NOTE: Do this out without taylor expanding ... -->
 
 ## Public Strategies
 
@@ -199,9 +195,15 @@ What's even more interesting is these are simple trades that anyone should be ab
 
 We will explore the required value of \\( k \\) in more depth in [risk to the system](note-4). However, for now we note that (assuming no trades are made) the next value of the imbalance, calculated after funding, satisfies the recurrence relation  \\( \mathrm{OI}\_{imb}(m+1) = \mathrm{OI}\_{imb}(m)(1 -2k)\\). This may easily be solved, yielding
 
-\\[ \mathrm{OI}\_{imb}(m) = \mathrm{OI}\_{imb}(0)\cdot \bigg(1 -2k\bigg)^m.  \\]
+\\[ \mathrm{OI}\_{imb}(m) = \mathrm{OI}\_{imb}(0)\cdot \bigg(1 -2k\bigg)^m  \\]
 
-If we define \\( 0 < \ell < 1 \\) such that \\( \ell \cdot \mathrm{OI}\_{imb}(m) = \mathrm{OI}\_{imb}(0)\\), then we can explictly solve for \\(k \\) as a function of \\( \ell, m\\). The below gives a table where the leftmost column is \\( \ell \\), and values of \\( m \\) from 1 through 9 are given. Intuitively, it tells us what value of \\( k \\) we need to pick in order to have \\( \ell \\) imbalance left after \\( m \\) funding payments.
+If we define \\( 0 < \ell < 1 \\) such that
+
+\\[ \mathrm{OI}\_{imb}(m) = \ell \cdot \mathrm{OI}\_{imb}(0)\\]
+
+<!-- NOTE: \ell \cdot was on wrong side of eqn -->
+
+then we can explictly solve for \\(k \\) as a function of \\( \ell, m\\). The below gives a table where the leftmost column is \\( \ell \\), and values of \\( m \\) from 1 through 9 are given. Intuitively, it tells us what value of \\( k \\) we need to pick in order to have \\( \ell \\) imbalance left after \\( m \\) funding payments.
 
 | \\(\ell \\) | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 |
 | --- | ----- | ----- | ----- | ----- | ----- | ----- | ----- | ----- | ----- |
