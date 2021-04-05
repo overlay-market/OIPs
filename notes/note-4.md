@@ -20,13 +20,13 @@ Two issues to address with this note:
 
 Return to the functional form of our [funding payments](note-1) \\( \mathrm{FP}_n \\)
 
-\\[ \mathrm{FP}\_n = k \cdot \mathrm{TWAOI}\_{imb}(t_n) \\]
+\\[ \mathrm{FP}\_n = k \cdot \mathrm{OI}\_{imb}(t_n) \\]
 
-where \\( {\mathrm{TWAOI}\_{imb}}_n = {\mathrm{TWAOI}_l}_n - {\mathrm{TWAOI}_s}_n \\) is the time-weighted average of the open interest imbalance between the long and short side on a market at time \\( t_n \\).
+where \\( {\mathrm{OI}\_{imb}}_n = {\mathrm{OI}_l}_n - {\mathrm{OI}_s}_n \\) is the open interest imbalance between the long and short side on a market at time \\( t_n \\).
 
 We need some guidance on what to set the value of \\( k \\) as for every update period. \\( k \\) dictates the rate at which funds flow from longs to shorts or shorts to longs to rebalance the system and draw down the risk associated with an imbalanced book. Thus, \\( k \\) should be related to the risk the underlying feed adds to the system and inherently passive OVL holders through the currency supply.
 
-To start, consider the case where \\( \mathrm{OI}_{imb} > 0 \\) so longs outweigh shorts. For simplicity, assume time-weighted averages are equivalent to their associated open interest values such that \\( \mathrm{TWAOI} = \mathrm{OI} \\). Further, assume no more positions are built or unwound on either side such that the total open interest remains a constant: \\( \mathrm{OI}_l + \mathrm{OI}_s = \mathrm{const} \\). The latter assumption will skew our risk estimates, but likely to the more conservative side given funding incentives should trend towards a more balanced book over time.
+To start, consider the case where \\( \mathrm{OI}_{imb} > 0 \\) so longs outweigh shorts. For simplicity, assume no more positions are built or unwound on either side such that the total open interest remains a constant: \\( \mathrm{OI}_l + \mathrm{OI}_s = \mathrm{const} \\). The latter assumption will skew our risk estimates, but likely to the more conservative side given funding incentives should trend towards a more balanced book over time.
 
 
 ## Risk-Based Approach to Balancing Markets
