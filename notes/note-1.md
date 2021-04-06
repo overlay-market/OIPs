@@ -100,11 +100,11 @@ The funding will probably compute each oracle fetch rather than each block, as o
 
 <!-- NOTE: This is slightly off (but won't change things to first order) given funding payments should alter a user's collateral amount n -> n*(1 + share of funding) and thus V1 -->
 
-\\[  V_2(t) = P(t) \cdot n \cdot \sum_{i=1}^{m} {f_s}(t_i)  \\]
+\\[  V_2(t) = P(t) \cdot \sum_{i=1} FP(t_i)  \\]
 
 Thus, the full value of the portfolio **in ETH terms** at time \\(t_m \\) will be \\(V(t_m) = V_1(t_m) + V_2(t_m) \\) and the profit/loss will be given by \\(\mathrm{PnL} = V - C\\), yielding:
 
-\\[\mathrm{PnL}(t_m) =  P(t_m) \cdot n \cdot \bigg[ 2 - \bigg( \frac{P(t_m)}{P_0} + \frac{P_0}{P(t_m)} \bigg) + \sum_{i=0}^{m} {f_s}(t_i) \bigg] \\]
+\\[\mathrm{PnL}(t_m) =  P(t_m) \cdot n \cdot \bigg[ 2 - \bigg( \frac{P(t_m)}{P_0} + \frac{P_0}{P(t_m)} \bigg) + \sum_{i=0}^{m} \frac{FP(t_i)}{n} \bigg] \\]
 
 Let
 
@@ -112,7 +112,7 @@ Let
 
 Then, our PnL in ETH terms for the 1x short to balance the system is
 
-\\[ \mathrm{PnL}(t_m) = P_0 \cdot n \cdot \bigg[ (1 + \epsilon) \sum_{i=0}^{m} {f_s}(t_i) - \epsilon^2 \bigg] \\]
+\\[ \mathrm{PnL}(t_m) = P_0 \cdot n \cdot \bigg[ (1 + \epsilon) \sum_{i=0}^{m} \frac{FP(t_i)}{n} - \epsilon^2 \bigg] \\]
 
 which is simply getting paid funding to go short to first order in \\( \epsilon \\).
 
@@ -121,11 +121,9 @@ The higher order \\( \epsilon \\) terms are the reason we are not completely hed
 
 The boundary for this funding to be profitable for arbitrageurs is
 
-\\[  \sum_{i=0}^{m} {f_s}(t_i) = \frac{\epsilon^2}{1+\epsilon} \\]
+\\[  \sum_{i=0}^{m} FP(t_i) = \frac{n\epsilon^2}{1+\epsilon} \\]
 
-Note that both sides are expressed as percentages. We seek an expression in terms of OVL,  and the initial imbalance.
-
-After \\(m\\) funding payments, the open interest on the short side satisfies the relation
+We seek an expression in terms of the initial imbalance.  After \\(m\\) funding payments, the open interest on the short side satisfies the relation
 \\[\mathrm{OI}\_s(m) =\mathrm{OI}\_s(0) + k \mathrm{OI}\_{imb}(0)\sum_{i=0}^m(1-2k)^i \\]
 
 Because the deltas get very small for large \\(m\\) <!-- NOTE: What do you mean by this? --> we can let \\(m \to \infty\\) and notice that \\(\|1-2k\|<0\\), allowing us to use the closed form expression of the geometric series. Thus when \\(m\\) is large enough, the profit from funding in OVL terms is:
@@ -133,7 +131,7 @@ Because the deltas get very small for large \\(m\\) <!-- NOTE: What do you mean 
 \\[\mathrm{OI}\_s(m) - \mathrm{OI}\_s(0) \approx k \mathrm{OI}\_{imb}(0)\sum_{i=0}^\infty(1-2k)^i = \frac{k \mathrm{OI}\_{imb}(0)}{1 - (1-2k)} =  \mathrm{OI}\_{imb}(0)/2 \\]
 
 As expected then, the profit for those going short is one half the imbalance. Noting that for large enough \\( m \\)
-\\[ n\cdot \sum_{i=0}^{m} {f_s}(t_i) \approx \mathrm{OI}\_{imb}(0)/2 \\]
+\\[ \sum_{i=0}^{m} FP(t_i) \approx \mathrm{OI}\_{imb}(0)/2 \\]
 and assuming for simplicity that there is a single  arbitrageur, we obtain the condition for this trader to be economically motivated to collect funding payments (i.e. make a profit):
 
 \\[ \mathrm{OI}\_{imb}(0) > \frac{2n\epsilon^2}{1+\epsilon} \\]
@@ -175,13 +173,13 @@ Payoff for the 1x long is
 
 and value of the spot ETH in OVL terms at time \\( t\\) is \\( (n / 2) \cdot (P_0 / P(t)) \\). Value of the portfolio at \\( t \\) is then
 
-\\[ V(t) = \frac{n}{2} \cdot \bigg[\frac{P_0}{P_k} + 1 + \frac{P(t) - P_0}{P_0} + \sum_{i=0}^{m} {f_l}(t_i) \bigg] \\]
+\\[ V(t) = \frac{n}{2} \cdot \bigg[\frac{P_0}{P_k} + 1 + \frac{P(t) - P_0}{P_0} + 2\sum_{i=0}^{m} \frac{\mathrm{FP}(t_i)}{n} \bigg] \\]
 
 Going through the same exercise as in the previous case with \\( P(t) = P_0 \cdot (1 + \epsilon) \\) gives our PnL of
 
-\\[ \mathrm{PnL}(t_i) = \frac{n}{2} \cdot \bigg[\sum_{i=0}^{m} {f_l}(t_i) + \frac{\epsilon ^2}{1 + \epsilon} \bigg] \\]
+\\[ \mathrm{PnL}(t_i) = \frac{n}{2} \cdot \bigg[ 2\sum_{i=0}^{m} \frac{\mathrm{FP}(t_i)}{n} + \frac{\epsilon ^2}{1 + \epsilon} \bigg] \\]
 
-which is always profitable in OVL terms.  
+which is always profitable in OVL terms (in the worst-case scenario of no funding payments and no price movement, PnL = 0).  
 
 
 ## Public Strategies
