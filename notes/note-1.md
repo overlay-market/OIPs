@@ -117,7 +117,7 @@ Let
 
 Then, our PnL in ETH terms for the 1x short to balance the system is
 
-\\[ \mathrm{PnL}(t_m) = P_0 \cdot n \cdot \bigg[ (1 - \epsilon^2) \prod_{i=0}^{m-1} \bigg( 1 + f_s(i) \bigg) - 1  \bigg] \\]
+\\[ \mathrm{PnL}(t) = P_0 \cdot n \cdot \bigg[ (1 - \epsilon^2) \prod_{i=0}^{m-1} \bigg( 1 + f_s(i) \bigg) - 1  \bigg] \\]
 
 which is simply getting paid funding to go short to first order in \\( \epsilon \\), as \\( f_s(i) > 0 \; \forall i \\) in this scenario.
 
@@ -153,13 +153,13 @@ which gives single-trader profitably constraints on \\( \epsilon \\) in terms of
 
 For a reasonable \\( \alpha \\) of .33, we have \\( \epsilon = (.7762, -.7762) \\).  We can thus conclude that the nonlinearity will not effect things and that the hedging mechanism will, in practice, be quite robust.
 
-Finally, note that the above expression is independent of \\( k \\), because we made the long-time assumption \\( m \to \infty\\). In practice,  \\( k\\) becomes more relevant the smaller it is. We can make various estimates, replacing the factor of 2 with increasingly larger numbers as \\( k\\) is made smaller. Initial examination shows that even if we assume an order of magnitude decrease in funding, we obtain \\( \alpha = .33  \to \epsilon = (.47, -.32) \\).
+Finally, note that the above expression is independent of \\( k \\), because we made the long-time assumption \\( m \to \infty\\). In practice,  \\( k\\) becomes more relevant the smaller it is. We can make various estimates, replacing the factor of 2 in the denominator of \\( \mathrm{OI}\_{imb}(0)/2 \\) with increasingly larger numbers as \\( k\\) is made smaller. Initial examination shows that even if we assume an order of magnitude decrease in funding, we obtain \\( \alpha = .33  \to \epsilon = (.47, -.32) \\).
 
 ### Case 2: OI Long < OI Short
 
 #### Summary
 
-When \\( \mathrm{OI}\_{imb} = \mathrm{OI}\_l - \mathrm{OI}\_s < 0 \\), traders who want to earn yield on their OVL can 1x long OVL-ETH on Overlay with half of their OVL position while selling the other half into ETH. Their aggregate "portfolio" will grow in OVL terms through continuous funding payments to second order in price changes. Thus, traders who prefer to denominate **in OVL terms** and wish to increase their OVL balance will complete for these funding payments until \\( \mathrm{OI}\_{imb} \to 0 \\).
+When \\( \mathrm{OI}\_{imb} = \mathrm{OI}\_l - \mathrm{OI}\_s < 0 \\), traders who want to earn yield on their OVL can 1x long OVL-ETH on Overlay with half of their OVL position while selling the other half into ETH. Their aggregate "portfolio" will grow in OVL terms through continuous funding payments. Thus, traders who prefer to denominate **in OVL terms** and wish to increase their OVL balance will complete for these funding payments until \\( \mathrm{OI}\_{imb} \to 0 \\).
 
 #### The Setup
 
@@ -176,18 +176,31 @@ Cost to enter the trade **in OVL terms** is
 
 Payoff for the 1x long is
 
-\\[ \mathrm{PO}(t) = \frac{n}{2} \cdot \bigg[ 1 + \frac{P(t) - P_0}{P_0} \bigg] \\]
+\\[ \mathrm{PO}(t) = \frac{N(t)}{2} \cdot \bigg[ 1 + \frac{P(t) - P_0}{P_0} \bigg] \\]
 
 and value of the spot ETH in OVL terms at time \\( t\\) is \\( (n / 2) \cdot (P_0 / P(t)) \\). Value of the portfolio at \\( t \\) is then
 
-\\[ V(t) = \frac{n}{2} \cdot \bigg[\frac{P_0}{P_k} + 1 + \frac{P(t) - P_0}{P_0} + 2\sum_{i=0}^{m} \frac{\mathrm{FP}(t_i)}{n} \bigg] \\]
+\\[ V(t) = \frac{n}{2} \cdot \frac{P_0}{P(t)} + \frac{N(t)}{2} \cdot \frac{P(t)}{P_0} \\]
 
-Going through the same exercise as in the previous case with \\( P(t) = P_0 \cdot (1 + \epsilon) \\) gives our PnL of
+Similar to the prior case, assume for this note that funding only affects the user's collateral (disregard leverage considerations), such that
 
-\\[ \mathrm{PnL}(t_i) = \frac{n}{2} \cdot \bigg[ 2\sum_{i=0}^{m} \frac{\mathrm{FP}(t_i)}{n} + \frac{\epsilon ^2}{1 + \epsilon} \bigg] \\]
+\\[ N(t) = n \cdot \prod_{i=0}^{m-1} \bigg( 1 + f_l (i) \bigg) \\]
 
-which is always profitable in OVL terms (in the worst-case scenario of no funding payments and no price movement, PnL = 0).  
+Going through the same exercise as in the previous case with \\( P(t) = P_0 \cdot (1 + \epsilon) \\) gives a PnL of
 
+\\[ \mathrm{PnL}(t) = \frac{n}{2} \cdot \bigg[ (1+\epsilon) \prod_{i=0}^{m-1} \bigg( 1 + f_l (i) \bigg) + \frac{1}{1+\epsilon} - 2 \bigg] \\]
+
+which is always profitable in OVL terms (in the worst-case scenario of no funding payments and no price movement, we still have PnL = 0).
+
+To see why, notice the profitability condition
+
+\\[ (1+\epsilon) \prod_{i=0}^{m-1} \bigg( 1 + f_l (i) \bigg) + \frac{1}{1+\epsilon} - 2 > 0 \\]
+
+implies
+
+\\[ \epsilon^2 + 2\epsilon \cdot A + A > 0 \\]
+
+is needed for the portfolio to remain profitable, where \\( A = 1 - \frac{1}{\prod_{i=0}^{m-1}[1 + f_l (i)]} \\). However, since \\( A \in [0, 1] \\), this condition is satisfied for all real \\( \epsilon \\). Thus, the long portfolio is always profitable **in OVL terms** (even without funding payments, but ignoring trading fees).
 
 ## Public Strategies
 
