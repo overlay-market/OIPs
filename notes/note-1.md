@@ -41,10 +41,13 @@ We will only treat the OVL-ETH market, as it keeps things simpler. The same idea
 
 Furthermore, we will think in terms of "internal time" to keep things simple. That is, each new block is a new time step. Thus time is discrete and we have \\(t_0, t_0+1, \ldots t-1, t, t+1, \ldots \\).
 
-Let the open interest contributed by any one position to the long (short) side be the number \\(N \\) of OVL locked to that side, times the leverage \\(L\\) associated with those \\(N\\)  OVL. Thus, for trader \\( j \\) going long (thus the subscript \\(l\\)) we have \\[ \mathrm{OI}\_{jl} = L_{jl} \cdot N_{jl}\\]
+Let the open interest contributed by any one position to the long (short) side be the number \\(N \\) of OVL locked to that side, times the leverage \\(L\\) associated with those \\(N\\)  OVL. Thus, for trader \\( j \\) going long (thus the subscript \\(l\\)) we have
+
+\\[ \mathrm{OI}\_{jl} = L_{jl} \cdot N_{jl}\\]
+
 If that trader has multiple long positions we sum over the OI of each one:
 
-\\[\mathrm{OI}\_{jl} = \sum_i  L_{jli}N_{jli}\\]
+\\[\mathrm{OI}\_{jl} = \sum_i L_{jli} N_{jli}\\]
 
 We define the open interest on an entire market as above, summing over first \\(i\\) then \\(j\\). The imbalance on open interest is the long side OI minus the short side:
 \\[\mathrm{OI}\_{imb} = \mathrm{OI}\_l - \mathrm{OI}\_s  \\]
@@ -70,8 +73,11 @@ The *funding rate*\\( f(t) \\) imposed on each trader is the cost of holding tha
 For this case 1 scenario, longs would post a negative return of \\(f_l(t) \\) and shorts would post a positive return of \\( f_s(t)\\).  Conversely for case 2, where \\( \mathrm{OI}\_l < \mathrm{OI}\_s \\), the rates are defined identically but the shorts pay the longs.
 
 For example, in the case that  \\( \mathrm{OI}\_l = 500\\) and  \\( \mathrm{OI}\_s = 200\\), we would have \\({f_l}(t) = 3k/5 \\) and \\({f_s}(t) = 3k/2 \\). Setting \\(k=1/2\\) for simplicity (this is an extreme value for \\(k\\), in practice the amount will be much lower, see [risk to the system](note-4)), the longs have a new open interest given by  
+
 \\[ \mathrm{OI}\_l(t+1) = \mathrm{OI}\_l(t) - \mathrm{FP}(t) = \mathrm{OI}\_l(t) - f_l(t) \mathrm{OI}\_l(t) =  500 - 1500/10 = 350 \\]  
+
 and the shorts have a new open interest given by
+
 \\[ \mathrm{OI}\_s(t+1) =\mathrm{OI}\_s(t) + \mathrm{FP}(t) = \mathrm{OI}\_s(t) + f_s(t) \mathrm{OI}\_s(t) =  200 + 600/4 = 350. \\]
 
 Then in the case that the situation is reversed, the funding rate is reversed and the shorts pay the longs. This has eliminated the imbalance in a single time step.
@@ -80,6 +86,7 @@ These payments from the larger to the smaller open interest ultimately incentivi
 
 
 ### Case 1: OI Long > OI Short
+
 When \\( \mathrm{OI}\_{imb} > 0 \\), traders who want to earn yield on their ETH can 1x short OVL-ETH on Overlay, lock in the ETH value of their staked OVL to first order in price changes, and get paid to take the short side of the OVL-ETH market through continuous funding. Thus, traders who prefer to denominate **in ETH terms** and wish to increase their ETH balance will complete for these funding payments until \\( \mathrm{OI}\_{imb} \to 0 \\).
 
 #### Portfolio Construction
@@ -92,46 +99,44 @@ For argument's sake we ignore fees for now. Because we prefer ETH, we care about
 
 \\[ C = P_0 \cdot n \\]
 
-where \\( n \\) is the number of OVL purchased on the spot market (and also the amount we will be using to offset OI imbalance) and \\( P_0 \\) is the price of OVL in ETH terms (units of ETH/OVL) when we enter the position. At time \\(t \\), the current value in ETH terms of our 1x short Overlay contract without funding considerations is
+where \\( n \\) is the number of OVL purchased on the spot market and \\( P_0 \\) is the price of OVL in ETH terms (units of ETH/OVL) when we enter the position. At time \\( t \\), the current value in ETH terms of our 1x short Overlay contract without funding considerations is
 
-\\[ V_1(t) = P(t) \cdot n \cdot \bigg[ 1 - \frac{P(t) - P_0}{P_0} \bigg].\\]
+\\[ V(t) = P(t) \cdot N(t) \cdot \bigg[ 1 - \frac{P(t) - P_0}{P_0} \bigg].\\]
 
-The funding will probably compute each oracle fetch rather than each block, as oracle times may vary by market and are a natural 'heartbeat'.  Consequently, let us assume there are \\(m \\) funding payments accrued between \\(t_0\\) and \\(t\\), and that each one takes place at some time \\(t_i\\) for \\(i = 1,2,\ldots,m\\).  The value in ETH terms for the funding payments collected is
+where \\( N(t) \\) is the amount of collateral attributed to our position from the collateral pool. The funding payment will probably be computed each oracle fetch rather than each block, as oracle times may vary by market and are a natural 'heartbeat'.  Consequently, let us assume there are \\(m \\) funding payments accrued between \\(t_0\\) and \\(t\\), and that each one takes place at some time \\(t_i\\) for \\(i = 1,2,\ldots,m\\). Additionally assume, for this note, that all positions are taken without leverage \\(  L_{jli} = 1 \\), such that a user's share of each funding payment is taken from or accrues to their OVL collateral staked. For our short position
 
-<!-- NOTE: This is slightly off (but won't change things to first order) given funding payments should alter a user's collateral amount n -> n*(1 + share of funding) and thus V1 -->
+\\[ N(t) = n \cdot \bigg( 1 + \frac{\mathrm{FP}(0)}{\mathrm{OI}\_s(0)} \bigg) \cdots \bigg( 1 + \frac{\mathrm{FP}(m-1)}{\mathrm{OI}\_s(m-1)} \bigg) = n \cdot \prod_{i=0}^{m-1} \bigg[ 1 + f_s(i) \bigg] \\]
 
-\\[  V_2(t) = P(t) \cdot \sum_{i=1} FP(t_i)  \\]
+Thus, the profit/loss **in ETH terms** at time \\(t \\) will be given by \\(\mathrm{PnL} = V - C\\), yielding:
 
-Thus, the full value of the portfolio **in ETH terms** at time \\(t_m \\) will be \\(V(t_m) = V_1(t_m) + V_2(t_m) \\) and the profit/loss will be given by \\(\mathrm{PnL} = V - C\\), yielding:
-
-\\[\mathrm{PnL}(t_m) =  P(t_m) \cdot n \cdot \bigg[ 2 - \bigg( \frac{P(t_m)}{P_0} + \frac{P_0}{P(t_m)} \bigg) + \sum_{i=0}^{m} \frac{FP(t_i)}{n} \bigg] \\]
+\\[\mathrm{PnL}(t) =  P(t) \cdot n \cdot \prod_{i=0}^{m-1}\bigg( 1 + f_s(i) \bigg) \cdot \bigg[ 1 - \bigg( \frac{P(t)}{P_0} - 1 \bigg) \bigg] - P_0 \cdot n \\]
 
 Let
 
-\\[ P_m = P_0 \cdot (1 + \epsilon) \\]
+\\[ P(t) = P_0 \cdot (1 + \epsilon) \\]
 
 Then, our PnL in ETH terms for the 1x short to balance the system is
 
-\\[ \mathrm{PnL}(t_m) = P_0 \cdot n \cdot \bigg[ (1 + \epsilon) \sum_{i=0}^{m} \frac{FP(t_i)}{n} - \epsilon^2 \bigg] \\]
+\\[ \mathrm{PnL}(t_m) = P_0 \cdot n \cdot \bigg[ (1 - \epsilon^2) \prod_{i=0}^{m-1} \bigg( 1 + f_s(i) \bigg) - 1  \bigg] \\]
 
-which is simply getting paid funding to go short to first order in \\( \epsilon \\).
+which is simply getting paid funding to go short to first order in \\( \epsilon \\), as \\( f_s(i) > 0 \; \forall i \\) in this scenario.
 
+The second order term \\( \epsilon^2 \\) is the reason we are not completely hedged from OVL price exposure in this trade. We could use an inverse contract payoff instead of the linear payoff we've adopted to eliminate these higher order terms, but there are issues with minting an infinite number of tokens if OVL-ETH price heads toward zero that we don't want. We'd suggest keeping the linear payoff for simplicity.
 
-The higher order \\( \epsilon \\) terms are the reason we are not completely hedged from OVL price exposure in this trade. We could use an inverse contract payoff instead of the linear payoff we've adopted to eliminate these higher order terms, but there are issues with minting an infinite number of tokens if OVL-ETH price heads toward zero that we don't want. We'd suggest keeping the linear payoff for simplicity.
+The condition for this funding trade to be profitable for arbitrageurs is
 
-The boundary for this funding to be profitable for arbitrageurs is
-
-\\[  \sum_{i=0}^{m} FP(t_i) = \frac{n\epsilon^2}{1+\epsilon} \\]
+\\[  \prod_{i=0}^{m-1} \bigg( 1 + f_s (i) \bigg) > \frac{1}{1 - \epsilon^2} \\]
 
 We seek an expression in terms of the initial imbalance.  After \\(m\\) funding payments, the open interest on the short side satisfies the relation
-\\[\mathrm{OI}\_s(m) =\mathrm{OI}\_s(0) + k \mathrm{OI}\_{imb}(0)\sum_{i=0}^m(1-2k)^i \\]
+
+\\[\mathrm{OI}\_s(m) = \mathrm{OI}\_s(0) + \sum_{i=0}^{m-1} \mathrm{FP}(i) = \mathrm{OI}\_s(0) + k \mathrm{OI}\_{imb}(0) \sum_{i=0}^{m-1} (1 - 2k)^i \\]
 
 Because the deltas get very small for large \\(m\\) <!-- NOTE: What do you mean by this? --> we can let \\(m \to \infty\\) and notice that \\(\|1-2k\|<0\\), allowing us to use the closed form expression of the geometric series. Thus when \\(m\\) is large enough, the profit from funding in OVL terms is:
 
-\\[\mathrm{OI}\_s(m) - \mathrm{OI}\_s(0) \approx k \mathrm{OI}\_{imb}(0)\sum_{i=0}^\infty(1-2k)^i = \frac{k \mathrm{OI}\_{imb}(0)}{1 - (1-2k)} =  \mathrm{OI}\_{imb}(0)/2 \\]
+\\[\mathrm{OI}\_s(m) - \mathrm{OI}\_s(0) \approx k \mathrm{OI}\_{imb}(0)\sum_{i=0}^\infty(1-2k)^i = \frac{k \mathrm{OI}\_{imb}(0)}{1 - (1-2k)} = \frac{\mathrm{OI}\_{imb}(0)}{2} \\]
 
 As expected then, the profit for those going short is one half the imbalance. Noting that for large enough \\( m \\)
-\\[ \sum_{i=0}^{m} FP(t_i) \approx \mathrm{OI}\_{imb}(0)/2 \\]
+\\[ \sum_{i=0}^{m} \mathrm{FP}(t_i) \approx \frac{\mathrm{OI}\_{imb}(0)}{2} \\]
 and assuming for simplicity that there is a single  arbitrageur, we obtain the condition for this trader to be economically motivated to collect funding payments (i.e. make a profit):
 
 \\[ \mathrm{OI}\_{imb}(0) > \frac{2n\epsilon^2}{1+\epsilon} \\]
@@ -139,9 +144,9 @@ and assuming for simplicity that there is a single  arbitrageur, we obtain the c
 Clearly, \\( n\\) can be set vanishingly small, corresponding to the fact that we have not set a minimum value required to collect payments. Thus, the funding payment mechanism becomes an auction in which all arbitrageurs try to outbid others while keeping their \\( n \\) as small as possible.
 
 Say we imposed a minimum on the bet required to collect funding, as some fraction \\( \alpha \\) of the initial imbalance. Then we obtain  
+
 \\[ 1 > \frac{2\alpha\epsilon^2}{1+\epsilon}\\]
 
-<!-- NOTE: Note that e expression mentioned below are profitability roots for a given amount alpha committed. so i added emin < e < emax as range bounds on price deviations for funding to remain profitable on the short. We should likely reiterate here that we assumed P(t) = P_0 * (1+e), so e is price **deviation** -->
 We then get profitably constraints on \\( \epsilon \\) in terms of \\(\alpha \\). We find that the extreme values for \\( \alpha \\) of .1 gives max and min values on \\( \epsilon \\) for the trade to remain profitable of 5.8 and -.85, respectively, and a value of .9 gives and 1.16 and -.53. Remember, \\( \epsilon \\) represents the *deviation* in price \\( P(t) \\) from \\( P_0 \\), so a max value of 1.16 would mean the funding trade is profitable as long as the price doesn't increase more than 116% from \\( t_0 \\) to \\(t\\).
 
 For a reasonable \\( \alpha \\) of .33, we have \\( \epsilon = (2.2, -.68) \\).  We can thus conclude that the nonlinearity will not effect things and that the hedging mechanism will, in practice, be quite robust.
@@ -216,6 +221,16 @@ then we can explictly solve for \\(k \\) as a function of \\( \ell, m\\). The be
 
 ## Remaining Risk
 
-The risk of an OVL-ETH death spiral still exists when incorporating funding payments, even with a profitable portfolio for case 2. If there is complete loss of faith in OVL and the price collapses while shorts heavily outweigh longs on the OVL-ETH feed, there may be few traders willing to earn yield in OVL and thus take the long side of the trade, even though funding payments would be extremely profitable in OVL terms. Shorts could ultimately still win in the short term, mint more OVL, then cash out that OVL, suppressing the price more and having even more shorts win.
+The risk of an OVL-ETH death spiral still exists when incorporating funding payments, even with a profitable portfolio for case 2. If there is complete loss of faith in OVL and the price collapses while shorts heavily outweigh longs on the OVL-ETH feed, there may be few traders willing to earn yield in OVL and thus take the long side of the trade, even though funding payments would be extremely profitable in OVL terms. Shorts could ultimately still win in the short term, mint more OVL, then cash out that OVL, suppressing the price more and having even more shorts win. It is a positive feedback loop that needs to be mitigated.
 
-We will to address risk mitigation strategies for this death spiral scenario in a separate note.
+This death spiral scenario can be curbed by the introduction of caps on open interest *along with* having contract payoffs be linear. To understand why, assume the OVL-ETH market is completely imbalanced to the short side and no one is willing to go long. Ignore funding payments that would be received by any new long entrants and charged to the shorts for the extreme bound. What is the maximum amount of OVL the system can print given all notional is short the OVL-ETH market?
+
+Simplify and assume all the open interest on the short side is locked in at some average price \\( P_0 \\). The profit/loss **in OVL** at time \\( t \\) to be paid out by the protocol due to this aggregate net short on the OVL-ETH market is
+
+\\[ \mathrm{PnL}(t) = \mathrm{OI}_s \cdot \bigg[1 - \frac{P(t)}{P_0} \bigg] \\]
+
+The maximum amount of OVL the protocol could print occurs when \\( P(t) \to 0 \\), which means
+
+\\[ \mathrm{PnL}\|\_{\mathrm{max}} = \mathrm{OI}_s \\]
+
+for the entire short side. Thus, since we use linear payoffs, the shorts can only cause the system to print an additional 1x the total notional amount imposed in the worst case scenario. Capping the open interest allowed on a market on either side \\( (\mathrm{OI}\_{l}, \mathrm{OI}\_{s}) \\) then implicitly restricts this positive feedback loop scenario to printing a *finite and calculable* amount of OVL even if the price hits zero, removing any worries of an infinite printing death spiral. Our subsequent note on [risk to the system](note-4) gives guidelines on what these caps should be set to given the risk added to the protocol by offering a market on the underlying feed.
