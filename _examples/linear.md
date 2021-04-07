@@ -39,7 +39,7 @@ I want to convert back to OVL since I like to denominate in OVL. Price of OVL-ET
 - **-21.875 ETH** in ETH terms
 
 
-#### Scenario 2: OVL-ETH feed drops +25%
+#### Scenario 2: OVL-ETH feed increases +25%
 
 I want to convert back to OVL since I like to denominate in OVL. Price of OVL-ETH has changed to 1 OVL = 1.25 ETH.
 
