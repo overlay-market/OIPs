@@ -121,35 +121,37 @@ Then, our PnL in ETH terms for the 1x short to balance the system is
 
 which is simply getting paid funding to go short to first order in \\( \epsilon \\), as \\( f_s(i) > 0 \; \forall i \\) in this scenario.
 
-The second order term \\( \epsilon^2 \\) is the reason we are not completely hedged from OVL price exposure in this trade. We could use an inverse contract payoff instead of the linear payoff we've adopted to eliminate these higher order terms, but there are issues with minting an infinite number of tokens if OVL-ETH price heads toward zero that we don't want. We'd suggest keeping the linear payoff for simplicity.
+The second order term \\( \epsilon^2 \\) is the reason we are not completely hedged from OVL price exposure in this trade. We could use an inverse contract payoff instead of the linear payoff we've adopted to eliminate these higher order terms, but there are issues with minting an infinite number of tokens if OVL-ETH price heads toward zero that we don't want (see [below](#remaining-risk)).
 
 The condition for this funding trade to be profitable for arbitrageurs is
 
 \\[  \prod_{i=0}^{m-1} \bigg( 1 + f_s (i) \bigg) > \frac{1}{1 - \epsilon^2} \\]
 
-We seek an expression in terms of the initial imbalance.  After \\(m\\) funding payments, the open interest on the short side satisfies the relation
+which simply says funding payment compounding needs to outpace any second order deviations in price.
+
+It is instructive to look at the simplistic case of only one trader entering in on the short side. We seek an expression for this profitability condition for a single trader in terms of the initial imbalance.  After \\(m\\) funding payments, the open interest on the short side satisfies the relation
 
 \\[\mathrm{OI}\_s(m) = \mathrm{OI}\_s(0) + \sum_{i=0}^{m-1} \mathrm{FP}(i) = \mathrm{OI}\_s(0) + k \mathrm{OI}\_{imb}(0) \sum_{i=0}^{m-1} (1 - 2k)^i \\]
 
-Because the deltas get very small for large \\(m\\) <!-- NOTE: What do you mean by this? --> we can let \\(m \to \infty\\) and notice that \\(\|1-2k\|<0\\), allowing us to use the closed form expression of the geometric series. Thus when \\(m\\) is large enough, the profit from funding in OVL terms is:
+Over longer time horizons, we can approximate with \\(m \to \infty\\) and notice that \\(\|1-2k\|<0\\), allowing us to use the closed form expression of the geometric series. Thus when \\(m\\) is large enough, the change in open interest due to funding payments in OVL terms is:
 
 \\[\mathrm{OI}\_s(m) - \mathrm{OI}\_s(0) \approx k \mathrm{OI}\_{imb}(0)\sum_{i=0}^\infty(1-2k)^i = \frac{k \mathrm{OI}\_{imb}(0)}{1 - (1-2k)} = \frac{\mathrm{OI}\_{imb}(0)}{2} \\]
 
 As expected then, the profit for those going short is one half the imbalance. Noting that for large enough \\( m \\)
-\\[ \sum_{i=0}^{m} \mathrm{FP}(t_i) \approx \frac{\mathrm{OI}\_{imb}(0)}{2} \\]
+\\[ \sum_{i=0}^{m-1} \mathrm{FP}(i) \approx \frac{\mathrm{OI}\_{imb}(0)}{2} \\]
 and assuming for simplicity that there is a single  arbitrageur, we obtain the condition for this trader to be economically motivated to collect funding payments (i.e. make a profit):
 
-\\[ \mathrm{OI}\_{imb}(0) > \frac{2n\epsilon^2}{1+\epsilon} \\]
+\\[ \mathrm{OI}\_{imb}(0) > \frac{2n\epsilon^2}{1-\epsilon^2} \\]
 
 Clearly, \\( n\\) can be set vanishingly small, corresponding to the fact that we have not set a minimum value required to collect payments. Thus, the funding payment mechanism becomes an auction in which all arbitrageurs try to outbid others while keeping their \\( n \\) as small as possible.
 
-Say we imposed a minimum on the bet required to collect funding, as some fraction \\( \alpha \\) of the initial imbalance. Then we obtain  
+Say we imposed a minimum on the bet required to collect funding, as some fraction \\( \alpha \\) of the initial imbalance. We obtain
 
-\\[ 1 > \frac{2\alpha\epsilon^2}{1+\epsilon}\\]
+\\[ 1 > \frac{2\alpha\epsilon^2}{1-\epsilon^2} \\]
 
-We then get profitably constraints on \\( \epsilon \\) in terms of \\(\alpha \\). We find that the extreme values for \\( \alpha \\) of .1 gives max and min values on \\( \epsilon \\) for the trade to remain profitable of 5.8 and -.85, respectively, and a value of .9 gives and 1.16 and -.53. Remember, \\( \epsilon \\) represents the *deviation* in price \\( P(t) \\) from \\( P_0 \\), so a max value of 1.16 would mean the funding trade is profitable as long as the price doesn't increase more than 116% from \\( t_0 \\) to \\(t\\).
+which gives single-trader profitably constraints on \\( \epsilon \\) in terms of \\(\alpha \\) for the 1x short funding trade of \\( \epsilon \in [- \frac{1}{\sqrt{1+2\alpha}} , \frac{1}{\sqrt{1+2\alpha}} ] \\). Extreme values for \\( \alpha \\) of .1 gives max and min values on \\( \epsilon \\) for the trade to remain profitable of .9129 and -.9129, respectively, and an \\(\alpha \\) value of .9 gives .5976 and -.5976. Remember, \\( \epsilon \\) represents the *deviation* in price \\( P(t) \\) from \\( P_0 \\), so a max value of .913 would mean the funding trade is profitable as long as the price doesn't increase more than 91.3% from \\( t_0 \\) to \\(t\\).
 
-For a reasonable \\( \alpha \\) of .33, we have \\( \epsilon = (2.2, -.68) \\).  We can thus conclude that the nonlinearity will not effect things and that the hedging mechanism will, in practice, be quite robust.
+For a reasonable \\( \alpha \\) of .33, we have \\( \epsilon = (.7762, -.7762) \\).  We can thus conclude that the nonlinearity will not effect things and that the hedging mechanism will, in practice, be quite robust.
 
 Finally, note that the above expression is independent of \\( k \\), because we made the long-time assumption \\( m \to \infty\\). In practice,  \\( k\\) becomes more relevant the smaller it is. We can make various estimates, replacing the factor of 2 with increasingly larger numbers as \\( k\\) is made smaller. Initial examination shows that even if we assume an order of magnitude decrease in funding, we obtain \\( \alpha = .33  \to \epsilon = (.47, -.32) \\).
 
@@ -233,4 +235,4 @@ The maximum amount of OVL the protocol could print occurs when \\( P(t) \to 0 \\
 
 \\[ \mathrm{PnL}\|\_{\mathrm{max}} = \mathrm{OI}_s \\]
 
-for the entire short side. Thus, since we use linear payoffs, the shorts can only cause the system to print an additional 1x the total notional amount imposed in the worst case scenario. Capping the open interest allowed on a market on either side \\( (\mathrm{OI}\_{l}, \mathrm{OI}\_{s}) \\) then implicitly restricts this positive feedback loop scenario to printing a *finite and calculable* amount of OVL even if the price hits zero, removing any worries of an infinite printing death spiral. Our subsequent note on [risk to the system](note-4) gives guidelines on what these caps should be set to given the risk added to the protocol by offering a market on the underlying feed.
+for the entire short side. Thus, since we use linear payoffs, the shorts can only cause the system to print an additional 1x the total notional amount imposed in the worst case scenario. Capping the open interest allowed on a market on either side \\( (\mathrm{OI}\_{l}, \mathrm{OI}\_{s}) \\) then implicitly restricts this positive feedback loop scenario to printing a *finite and calculable* amount of OVL even if the price hits zero, removing any worries of an infinite printing death spiral. The additional benefit of introducing per-market caps would be the ability to introduce new markets in incremental steps, increasing caps the more confidence we have that the market empirically tracks our risk expectations.
