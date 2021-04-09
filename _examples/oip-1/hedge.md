@@ -115,7 +115,7 @@ Value of the hedged 2x short at exit in
 
 for a profit of 84.76 ETH - 100 ETH = -15.24 ETH. The 20% loss from the X feed position has been reduced to a -15.24% loss in ETH terms.
 
-Hedged portfolio protects the gains in ETH terms.
+Hedged portfolio reduces the losses in ETH terms.
 
 ##### Check Hedged PnL Formula
 
@@ -145,7 +145,7 @@ Value of the hedged long at exit in
 
 for a profit of 74.4 ETH - 100 ETH = -25.6 ETH. The 40% loss from the X feed position has been reduced to a loss of 25.6% in ETH terms.
 
-Hedged portfolio protects the gains in ETH terms even more significantly.
+Hedged portfolio reduces the losses in ETH terms even more significantly.
 
 ##### Check Hedged PnL Formula
 
