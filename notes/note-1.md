@@ -175,8 +175,6 @@ If we define \\( 0 < \ell < 1 \\) such that
 
 \\[ \mathrm{OI}\_{imb}(m) = \ell \cdot \mathrm{OI}\_{imb}(0)\\]
 
-<!-- NOTE: \ell \cdot was on wrong side of eqn -->
-
 then we can explictly solve for \\(k \\) as a function of \\( \ell, m\\). The below gives a table where the leftmost column is \\( \ell \\), and values of \\( m \\) from 1 through 9 are given. Intuitively, it tells us what value of \\( k \\) we need to pick in order to have \\( \ell \\) imbalance left after \\( m \\) funding payments.
 
 | \\(\ell \\) | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 |
