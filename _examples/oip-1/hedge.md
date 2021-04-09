@@ -15,7 +15,7 @@ I enter into two positions:
 
 What happens in the following two scenarios:
 
- 1. Price of X goes up 10% but ETH-OVL goes up 5% from 1 OVL / 1 ETH to 1.05 OVL / 1 ETH (i.e. OVL becomes more valuable)
+ 1. Price of X goes up 10% but ETH-OVL goes up 5% from 1 OVL / 1 ETH to 1.05 OVL / 1 ETH (i.e. OVL becomes less valuable)
  2. Price of X goes up 20% but ETH-OVL goes up 25% from 1 OVL / 1 ETH to 1.25 OVL / 1 ETH (i.e. OVL becomes less valuable)
 
 Comparing hedged with unhedged.
@@ -43,6 +43,12 @@ for a profit of 107.62 ETH - 100 ETH = 7.62 ETH. The 10% gain from the X feed po
 
 Hedged portfolio protects the gains in ETH terms.
 
+##### Check Hedged PnL Formula
+
+ - ETH terms: PnL = (0.8 * 100 OVL / (1.05 OVL / ETH)) * 1 * 0.1 = 7.62 ETH
+
+Checks out.
+
 
 ### Case 2: X increases 20%, EO increases 25%
 
@@ -62,6 +68,12 @@ Value of the hedged long at exit in
  - OVL terms: 80 OVL * (1 + 0.2) + 20 OVL * (1 + 5 * 0.25) = 141 OVL
  - ETH terms: 141 OVL / (1.25 OVL / ETH) = 112.8 ETH
 
- for a profit of 112.8 ETH - 100 ETH = 12.8 ETH. The 20% gain from the X feed position has been reduced to a gain of 12.8% in ETH terms.
+for a profit of 112.8 ETH - 100 ETH = 12.8 ETH. The 20% gain from the X feed position has been reduced to a gain of 12.8% in ETH terms.
 
- Hedged portfolio protects the gains in ETH terms even more significantly.
+Hedged portfolio protects the gains in ETH terms even more significantly.
+
+##### Check Hedged PnL Formula
+
+ - ETH terms: PnL = (0.8 * 100 OVL / (1.25 OVL / ETH)) * 1 * 0.2 = 12.8 ETH
+
+Checks out.
