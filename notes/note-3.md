@@ -16,13 +16,13 @@ Issue to address with this note:
 
 ## Context
 
-In order to take positions on markets offered by the protocol, traders need to stake the settlement currency of the system (OVL). For traders that don't want price exposure to OVL but still wish to take a position on a market, they should be able to construct a "portfolio" that hedges out OVL price risk with respect to a quote currency like ETH. Below, I'll address how to construct this type of portfolio as a combination of different positions on separate Overlay markets.
+In order to take positions on markets offered by the protocol, traders need to lock the settlement currency of the system (OVL). For traders that don't want price exposure to OVL but still wish to take a position on a market, they should be able to construct a "portfolio" that hedges out OVL price risk with respect to a quote currency like ETH. Below, I'll address how to construct this type of portfolio as a combination of different positions on separate Overlay markets.
 
-Assume our initial liquidity mining phase is successful, and we're able to bootstrap $20M+ in liquidity on spot markets for the OVL-ETH pair. A [manipulation-resistant TWAP](note-2) on OVL-ETH can then be offered as an additional market to trade on Overlay. There are significant benefits to this:
+Assume our initial liquidity mining phase is successful, and we're able to bootstrap $20M+ in liquidity on spot markets for the OVL-ETH pair. A [manipulation-resistant TWAP](note-2) on ETH-OVL can then be offered as an additional market to trade on Overlay. There are significant benefits to this:
 
-1. I can lever up long on OVL-ETH price exposure using OVL on Overlay.
+1. I can lever up on OVL price exposure using OVL on Overlay.
 
-2. I can hedge away some price exposure to OVL on my other Overlay positions by shorting with appropriate leverage the OVL-ETH feed.
+2. I can hedge away some price exposure to OVL on my other Overlay positions by longing the ETH-OVL feed (inverse market) with appropriate leverage.
 
 The second point is key to understanding how we'll construct this "portfolio" of positions.
 
@@ -31,71 +31,65 @@ The second point is key to understanding how we'll construct this "portfolio" of
 
 ### Summary
 
-To hedge out some price exposure to \\( q \cdot n \\) OVL staked in a market position (where \\( 0 < q < 1 \\)), enter into an additional short position of \\( (1-q) \cdot n \\) staked on the OVL-ETH market with leverage of \\( 1/(1-q) \\). It is an imperfect hedge given the quanto nature of the original market position, but will partially work to first order in price fluctuations on the OVL-ETH TWAP.
+To hedge out some price exposure to \\( q \cdot n \\) OVL locked in a market position (where \\( 0 < q < 1 \\)), enter into an additional long position of \\( (1-q) \cdot n \\) locked on the ETH-OVL market with leverage of \\( 1/(1-q) \\). It is an imperfect hedge given the quanto nature of the original market position.
 
 ### Portfolio Construction
 
 Assume I have a total of \\( n \\) OVL to trade with, and I want to take a position out on an Overlay market feed \\( X \\) while hedging out OVL price risk.
 
-I stake an OVL amount \\( q \cdot n \\) with leverage \\( l^X \\) on an Overlay market feed \\( X \\), where \\( 0 < q < 1 \\). I have an OVL amount \\( (1 - q) \cdot n \\) left to use for hedging to keep my PnL in ETH terms. For the purposes of this note, ignore [funding payments](note-1) between longs and shorts.
+I lock an OVL amount \\( q \cdot n \\) with leverage \\( l_X \\) on an Overlay market feed \\( X \\), where \\( 0 < q < 1 \\). I have an OVL amount \\( (1 - q) \cdot n \\) left to use for hedging to attempt to keep my PnL in ETH terms. For the purposes of this note, ignore [funding payments](note-1) between longs and shorts.
 
 My payoff for the \\( X \\) feed position **in OVL terms** is
 
-\\[ \mathrm{PO}\_{k}^X = q \cdot n \cdot \bigg[ 1 + l^X \cdot (\pm)^{X} \cdot \bigg( \frac{P^X_k}{P^X_0} - 1 \bigg) \bigg] \\]
+\\[ \mathrm{PO}\_{X}(t) = q \cdot n \cdot \bigg[ 1 + l_X (\pm)_{X} \cdot \bigg( \frac{P\_X(t)}{P_X(0)} - 1 \bigg) \bigg] \\]
 
-where \\( (\pm)^{X} = 1 \\) if I took out a long and \\( (\pm)^X = -1 \\) if I took out a short. \\( P^{X}_k = P^{X}(t_k) \\) is the value of the \\( X \\) feed at time \\( t_k \\), \\( k \\) blocks after I take my positions. \\( P^{X}_0 = P^{X}(t_0) \\) is the value of the feed that I lock in for my \\( X \\) market position when I build the "portfolio".
+where \\( (\pm)_{X} = 1 \\) if I took out a long on the \\( X \\) market and \\( (\pm)_X = -1 \\) if I took out a short. \\( P\_{X}(t) \\) is the value of the \\( X \\) feed \\( t \\) blocks after I lock in my position.
 
-To attempt to hedge, I use the rest of my OVL to take out an additional short position with leverage \\( l^{OE} \\) on the OVL-ETH market offered by the protocol. My payoff for this hedge **in OVL terms** is
+To attempt to hedge, I use the rest of my OVL to take out an additional short position with leverage \\( l \\) on the ETH-OVL market offered by the protocol. My payoff for this hedge **in OVL terms** is
 
-\\[ \mathrm{PO}\_{k}^{OE} = (1-q) \cdot n \cdot \bigg[ 1 - l^{OE} \cdot \bigg( \frac{P^{OE}_k}{P^{OE}_0} - 1 \bigg) \bigg] \\]
+\\[ \mathrm{PO}\_{EO} (t) = (1-q) \cdot n \cdot \bigg[ 1 + l \cdot \bigg( \frac{P(t)}{P(0)} - 1 \bigg) \bigg] \\]
 
-where \\( P^{OE}_k \\) is the value of the OVL-ETH TWAP feed at time \\( t_k \\).
+where \\( P(t) \\) is the value of the ETH-OVL TWAP feed \\( t \\) blocks after I lock in my position (i.e. [number of OVL] / [number of ETH] on spot).
 
-For simplicity's sake, assume the 1 hour TWAP for the OVL-ETH feed is approximately equal to the current spot OVL-ETH price. Then the value of my "portfolio" **in ETH terms** is
+For simplicity's sake, assume the 1 hour TWAP for the ETH-OVL feed is approximately equal to the current spot ETH-OVL price. Then the value of my "portfolio" **in ETH terms** is
 
-\\[ V_k = P^{OE}\_k \cdot \bigg( \mathrm{PO}\_k^{X} + \mathrm{PO}\_k^{OE} \bigg) \\]
+\\[ V (t) = \frac{1}{P(t)} \cdot \bigg( \mathrm{PO}\_{X} (t) + \mathrm{PO}\_{EO} (t) \bigg) \\]
 
 Total cost to construct the portfolio **in ETH terms**
 
-\\[ C = P^{OE}\_0 \cdot n \\]
+\\[ C = \frac{n}{P(0)} \\]
 
 and my PnL for the "portfolio" **in ETH terms** (\\( \mathrm{PnL} = V - C \\))
 
-\\[ \mathrm{PnL}\_k =  P^{OE}\_k \cdot \bigg( \mathrm{PO}^X_k + \mathrm{PO}\_k^{OE} \bigg) - P^{OE}\_0 \cdot n \\]
+\\[ \mathrm{PnL}(t) =  \frac{1}{P(t)} \cdot \bigg( \mathrm{PO}_X (t) + \mathrm{PO}\_{EO} (t) \bigg) - \frac{n}{P(0)} \\]
 
-We want to examine what happens to the PnL in ETH terms when the price of OVL vs ETH changes an amount \\( \epsilon_k \\). Take \\( P^{OE}_k = P^{OE}_0 \cdot (1 + \epsilon_k) \\) such that the OVL-ETH feed price has changed \\( \epsilon_k \\) from time \\( t_0 \\) to \\( t_k \\). PnL for the "portfolio" **in ETH terms** reduces to
+We want to examine what happens to the PnL in ETH terms when the price of ETH vs OVL changes an amount \\( \epsilon \\). Take \\( P(t) = P(0) \cdot (1 + \epsilon) \\) such that the ETH-OVL feed price has changed \\( \epsilon \\) from time \\( 0 \\) to \\( t \\). Similarly, assume \\( P_X(t) = P_X(0) \cdot (1 + \epsilon_X) \\) such that the \\( X \\) market price has changed \\( \epsilon_X \\) from time \\( 0 \\) to \\( t \\). PnL for the "portfolio" **in ETH terms** reduces to
 
-\\[
-\begin{eqnarray}
-\mathrm{PnL}\_k = P^{OE}\_0 \cdot n \cdot \bigg[ (1 + \epsilon_k) \cdot q \cdot l^X \cdot (\pm)^{X} \cdot \bigg(\frac{P^X_k}{P^X_0} - 1 \bigg) \\\\\\
-\+ \epsilon\_k \cdot \bigg(1 - (1 - q) \cdot l^{OE} \bigg) \\\\\\
-\- (1-q) \cdot l^{OE} \cdot \epsilon^2_k \bigg]
-\end{eqnarray}
-\\]
+\\[ \mathrm{PnL}(t) = \frac{n}{P(t)} \cdot \bigg[ (\pm)\_{X} \cdot q \cdot l\_{X} \cdot \epsilon\_{X} + \epsilon \cdot \bigg(l \cdot (1 - q) - 1 \bigg) \bigg] \\]
 
-where take \\( \epsilon_k \cdot ( P^X_k / P^X_0 - 1 ) \\) as second order in price changes (albeit a strong assumption). To eliminate first order terms, set leverage for the hedge to
+To partially eliminate \\( \epsilon \\) terms, set leverage for the hedge to
 
-\\[ l^{OE} = \frac{1}{1-q} \\]
+\\[ l = \frac{1}{1-q} \\]
 
-and then PnL **in ETH terms** becomes
+Then PnL **in ETH terms** becomes
 
-\\[ \mathrm{PnL}\_k = P^{OE}\_0 \cdot n \cdot \bigg[ (1 + \epsilon_k) \cdot q \cdot l^X \cdot (\pm)^X \cdot \bigg(\frac{P^X_k}{P^X_k} - 1 \bigg) - \epsilon^2_k \bigg] \\]
+\\[ \mathrm{PnL}(t) = \frac{q \cdot n}{P(t)} \cdot (\pm)\_{X} \cdot l\_{X} \cdot \epsilon\_{X} \\]
 
-Given the initial amount staked in the \\( X \\) feed position **in ETH terms** is \\( P^{OE}\_0 \cdot q \cdot n \\), PnL is partially hedged to first order in OVL-ETH price changes for the "portfolio". However, it still carries significant exposure for large changes in \\( \epsilon_k \\), and so is rather imperfect as a hedge.
+Given the amount of collateral locked in the \\( X \\) feed position **in ETH terms** at time \\( t \\) is \\( \frac{q \cdot n}{P(t)} \\), PnL is partially hedged with respect to changes in ETH-OVL price. However, it still carries significant exposure for large changes in \\( \epsilon \\) through \\( P(t) \\), and so is a rather imperfect as a hedge.
 
 
 ### Concrete Numbers
 
 We'll start with a relatively conservative case where prices only change a few percentage points to show the benefits of the hedge. Then, move on to a more extreme and likely case, showing why the hedge isn't great for more volatile scenarios.
 
-Assume we have \\( n = 100 \\) OVL to trade with, and we decide to long the \\( X \\) feed with 80 OVL at 1x leverage for a \\( q = 0.8 \\). As we enter the position, take the price of OVL to be at parity with ETH such that 1 OVL = 1 ETH, so we're effectively staking 80 ETH worth of OVL on \\( X \\).
+Assume we have \\( n = 100 \\) OVL to trade with, and we decide to long the \\( X \\) feed with 80 OVL at 1x leverage for a \\( q = 0.8 \\). As we enter the position, take the price of OVL to be at parity with ETH such that 1 OVL = 1 ETH, so we're effectively locking 80 ETH worth of OVL on \\( X \\).
 
-#### Case 1: \\(X \uparrow 10\% \\), \\(OE \downarrow 5\%\\)
+#### Case 1: \\(X \uparrow 10\% \\), \\(EO \uparrow 5\%\\)
 
 Let's look at what happens to our PnL when:
 
  - The X feed increases 10%
- - But OVL-ETH decreases 5%
+ - But the ETH-OVL feed increases 5% (OVL becomes less valuable)
 
 Begin with the unhedged long. Value of the position **in OVL terms** will be
 
@@ -113,12 +107,12 @@ Now, add in the hedge with a \\( l^{OE} = 1/(1-q) = 5 \mathrm{x} \\) short on th
 
 which gives a total portfolio value **in ETH terms** of 107.35 ETH. Total PnL is then the OVL equivalent of 7.35 ETH on the combination, preserving most of the anticipated profit from the long. Sanity check by plugging into the expression for \\( \mathrm{PnL}_{k} \\) from the previous section works out.
 
-#### Case 2: \\(X \uparrow 20\% \\), \\(OE \downarrow 25\%\\)
+#### Case 2: \\(X \uparrow 20\% \\), \\(EO \uparrow 25\%\\)
 
 Similarly, what happens when:
 
  - The X feed increases 20%
- - But OVL-ETH decreases 25%
+ - But the ETH-OVL feed increases 25% (OVL becomes less valuable)
 
 Unhedged long **in OVL terms**
 
