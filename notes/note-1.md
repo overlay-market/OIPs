@@ -32,7 +32,7 @@ There's a good argument to be made for the benefits of fixing the price to the o
 
 ## Imbalance and Currency Supply
 
-Assume the same fixed price locked in by all positions entered into between \\( t^\*\_0 < t < t^\* \\), and assume only one market. For argument's sake, take that Overlay market to be the Uni/SushiSwap TWAP for the price of ETH in OVL terms: ETH-OVL (i.e. # OVL / # ETH).
+Assume the same fixed price locked in by all positions entered into between \\( t^\*\_0 < t < t^\* \\), and assume only one market. For argument's sake, take that Overlay market to be the Uni/SushiSwap TWAP for the price of ETH in OVL terms: ETH-OVL (units of OVL/ETH).
 
 
 #### Summary
@@ -87,7 +87,7 @@ These payments from the larger to the smaller open interest ultimately incentivi
 
 ### Case 1: OI Long < OI Short
 
-When \\( \mathrm{OI}\_{imb} < 0 \\), traders who want to earn yield on their ETH can 1x long ETH-OVL on Overlay, lock in the ETH value of their staked OVL ("synthetic ETH"), and get paid to take the long side of the ETH-OVL market through continuous funding. Thus, traders who prefer to denominate **in ETH terms** and wish to increase their ETH balance will complete for these funding payments until \\( \mathrm{OI}\_{imb} \to 0 \\).
+When \\( \mathrm{OI}\_{imb} < 0 \\), traders who want to earn yield on their ETH can 1x long ETH-OVL on Overlay, lock in the ETH value of their staked OVL ("synthetic ETH"), and get paid to take the long side of the ETH-OVL market through continuous funding. Thus, traders who prefer to denominate **in ETH terms** and wish to increase their ETH balance will compete for these funding payments until \\( \mathrm{OI}\_{imb} \to 0 \\).
 
 #### Portfolio A: High-Yield "Synthetic ETH"
 
@@ -105,7 +105,7 @@ where \\( n \\) is the number of OVL purchased on the spot market and \\( P_0 \\
 
 where \\( N(t) \\) is the amount of collateral attributed to our position from the collateral pool. The funding payment will probably be computed each oracle fetch rather than each block, as oracle times may vary by market and are a natural 'heartbeat'.  Consequently, let us assume there are \\(m \\) funding payments accrued between \\(t_0\\) and \\(t\\), and that each one takes place at some time \\(t_i\\) for \\(i = 1,2,\ldots,m\\). Additionally assume, for this note, that all positions are taken without leverage \\(  L_{jli} = 1 \\), such that a user's share of each funding payment is taken from or accrues to their OVL collateral staked. For our long position, the time evolution of our collateral share when factoring in funding payments is
 
-\\[ N(t) = n \cdot \bigg( 1 + \frac{\mathrm{FP}(0)}{\mathrm{OI}\_s(0)} \bigg) \cdots \bigg( 1 + \frac{\mathrm{FP}(m-1)}{\mathrm{OI}\_s(m-1)} \bigg) = n \cdot \prod_{i=0}^{m-1} \bigg[ 1 + f_l(i) \bigg] \\]
+\\[ N(t) = n \cdot \bigg( 1 + \frac{\mathrm{FP}(0)}{\mathrm{OI}\_l(0)} \bigg) \cdots \bigg( 1 + \frac{\mathrm{FP}(m-1)}{\mathrm{OI}\_l(m-1)} \bigg) = n \cdot \prod_{i=0}^{m-1} \bigg[ 1 + f_l(i) \bigg] \\]
 
 Thus, the profit/loss **in ETH terms** at time \\(t \\) will be given by \\(\mathrm{PnL} = V - C\\), yielding:
 
@@ -119,14 +119,16 @@ Then, our PnL in ETH terms for the 1x long to balance the system is
 
 \\[ \mathrm{PnL}(t) = \frac{n}{P_0} \cdot \bigg[ \prod_{i=0}^{m-1} \bigg( 1 + f_l(i) \bigg) - 1  \bigg] \\]
 
-which is simply getting paid funding on top of our initial ETH balance of \\( n/P_0 \\) to go long the ETH-OVL feed (bearish OVL, bullish ETH). This is always profitable for the trader that prefers ETH, when imbalance is toward the OVL bull side: shorts outweigh longs on ETH-OVL.
+which is simply getting paid funding on top of our initial ETH balance of \\( n/P_0 \\) to go long the ETH-OVL feed (bearish OVL, bullish ETH). This is always profitable for the trader that prefers ETH, when imbalance is toward the OVL bull side: shorts outweigh longs on ETH-OVL. Rate of return \\( r_{l} \\) for this strategy on the initial ETH capital \\( C \\) is
+
+\\[ r_l (t) = \prod_{i=0}^{m-1} \bigg( 1 + f_l(i) \bigg) - 1 \\]
 
 
 ### Case 2: OI Long > OI Short
 
 #### Summary
 
-When \\( \mathrm{OI}\_{imb} = \mathrm{OI}\_l - \mathrm{OI}\_s > 0 \\), traders who want to earn yield on their OVL can 1x short ETH-OVL on Overlay with half of their OVL position while selling the other half into ETH. Their aggregate "portfolio" will grow in OVL terms through continuous funding payments ("synthetic OVL"). Thus, traders who prefer to denominate **in OVL terms** and wish to increase their OVL balance will complete for these funding payments until \\( \mathrm{OI}\_{imb} \to 0 \\).
+When \\( \mathrm{OI}\_{imb} = \mathrm{OI}\_l - \mathrm{OI}\_s > 0 \\), traders who want to earn yield on their OVL can 1x short ETH-OVL on Overlay with half of their OVL position while selling the other half into ETH. Their aggregate "portfolio" will grow in OVL terms through continuous funding payments ("synthetic OVL"). Thus, traders who prefer to denominate **in OVL terms** and wish to increase their OVL balance will compete for these funding payments until \\( \mathrm{OI}\_{imb} \to 0 \\).
 
 #### The Setup
 
@@ -156,8 +158,11 @@ Going through the same exercise as in the previous case with \\( P(t) = P_0 \cdo
 
 \\[ \mathrm{PnL}(t) = \frac{n}{2} \cdot (1 - \epsilon) \cdot \bigg[ \prod_{i=0}^{m-1} \bigg( 1 + f_s (i) \bigg) - 1 \bigg] \\]
 
-which is simply getting paid funding on top of our initial OVL balance of to go short the ETH-OVL feed (bullish OVL, bearish ETH). This is profitable for the trader that prefers OVL, when \\( \epsilon < 1 \\) and imbalance is toward the OVL bear side: longs outweigh shorts on ETH-OVL.
+which is simply getting paid funding on top of our initial OVL balance of to go short the ETH-OVL feed (bullish OVL, bearish ETH). This is profitable for the trader that prefers OVL, when \\( \epsilon < 1 \\) and imbalance is toward the OVL bear side: longs outweigh shorts on ETH-OVL. Rate of return \\( r_{s} \\) for this strategy on the initial OVL capital \\( C \\) is
 
+\\[ r_s (t) = \frac{1 - \epsilon}{2} \cdot \prod_{i=0}^{m-1} \bigg[ \bigg( 1 + f_s(i) \bigg) - 1 \bigg] \\]
+
+which is still sensitive to changes in the ETH-OVL feed, but remains profitable as long as price deviations are less than 100% to the ETH bull side.
 
 ## Public Strategies
 
@@ -175,7 +180,7 @@ If we define \\( 0 < \ell < 1 \\) such that
 
 \\[ \mathrm{OI}\_{imb}(m) = \ell \cdot \mathrm{OI}\_{imb}(0)\\]
 
-then we can explictly solve for \\(k \\) as a function of \\( \ell, m\\). The below gives a table where the leftmost column is \\( \ell \\), and values of \\( m \\) from 1 through 9 are given. Intuitively, it tells us what value of \\( k \\) we need to pick in order to have \\( \ell \\) imbalance left after \\( m \\) funding payments.
+then we can explictly solve for \\(k \\) as a function of \\( \ell, m\\). Below, we give a table where the leftmost column is \\( \ell \\), and values of \\( m \\) are from 1 through 9. Intuitively, it tells us what value of \\( k \\) we need to pick in order to have \\( \ell \\) imbalance left after \\( m \\) funding payments.
 
 | \\(\ell \\) | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 |
 | --- | ----- | ----- | ----- | ----- | ----- | ----- | ----- | ----- | ----- |

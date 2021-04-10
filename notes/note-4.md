@@ -64,7 +64,7 @@ Take \\( P : \Omega \to \mathbb{R} \\) to be a random variable on the probabilit
 
 \\[ P_t = P_0 e^{\mu \cdot t + \sigma \cdot W_t} \\]
 
-such that the feed exhibits Geometric Brownian motion (GBM) when \\( W_t \\) is a Wiener process. Assume GBM for now even though DeFi price feeds will be far more fat-tailed, particularly for feeds with stablecoins as the quote currency (we'll have to be more conservative with \\( k \\) values chosen). \\( dP_t = P_t \cdot [ (\mu + \frac{\sigma^2}{2}) \cdot dt + \sigma \cdot dW_t ] \\) and PnL at time \\( t_n \\) from this hypothetical long position reduces to
+such that the feed exhibits Geometric Brownian motion (GBM) when \\( W_t \\) is a Wiener process. Assume GBM for now even though DeFi price feeds will be far more fat-tailed (we'll have to be more conservative with \\( k \\) values chosen). \\( dP_t = P_t \cdot [ (\mu + \frac{\sigma^2}{2}) \cdot dt + \sigma \cdot dW_t ] \\) and PnL at time \\( t_n \\) from this hypothetical long position reduces to
 
 \\[ {\mathrm{PnL}\_{imb}}_n = {\mathrm{OI}\_{imb}}\_{0} \cdot ( 1 - 2k )^n \cdot \bigg[ e^{\mu \cdot n \cdot T + \sigma \cdot W\_{n \cdot T}}  - 1 \bigg] \\]
 
