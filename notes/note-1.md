@@ -24,15 +24,15 @@ For each feed, there should be at least two sets of traders with different prefe
 
 ## Problems with Floating Price
 
-Floating the price has been ok, but introduced a large amount of additional complexity. Below, we want to explore whether we can offer opportunities for traders to construct "portfolios" that offer consistent yield while using a **fixed price** fetched directly from the oracle i.e., lock price of a new position built at a time \\( t \\) would be the price at the next oracle fetch \\( t^\* \\), where \\( t^\*\_0 < t < t^\* \\). Here the star denotes an oracle fetch.
+Floating the price has been ok, but introduced a large amount of additional complexity. Below, we want to explore whether we can offer opportunities for traders to construct "portfolios" that offer consistent yield while using a **fixed price** fetched directly from the oracle i.e., lock price of a new position built at a time \\( t \\) would be the price at the next oracle fetch \\( t^\* \\), where \\( t^\*\_0 < t \leq t^\* \\). Here the star denotes an oracle fetch.
 
-We'll go into the mechanisms for accomplishing filling at price \\( P(t^\*) = P^\* \\) even though \\( P(t_0) = P_0 \\) is all of the information we have at time \\( t \\) in a separate note. The strategy in short would be: if the oracle is fetched at \\(t = t_n\\), then the first trader in `n+1`th update interval of the feed settles all of the trades for the prior `n`th update interval (i.e. sets the price \\(P_n^\*\\) ), so all trades from \\( t^\*\_0 < t < t_n^\* \\) settle at the same price).
+We'll go into the mechanisms for accomplishing filling at price \\( P(t^\*) = P^\* \\) even though \\( P(t_0) = P_0 \\) is all of the information we have at time \\( t \\) in a separate note. The strategy in short would be: if the oracle is fetched at \\(t = t^\*\\), then the first trader in `n+1`th update interval of the feed settles all of the trades for the prior `n`th update interval (i.e. sets the price \\(P^\*\\) ), so all trades from \\( t^\*\_0 < t \leq t^\* \\) settle at the same price).
 
 There's a good argument to be made for the benefits of fixing the price to the oracle fetch. It reduces the number of problems we have to solve from two to one. With a price fixed directly to each oracle fetch, we only have to worry about the stability of the currency supply, since arbitrage opportunities from price tracking the reference feed may not actually solve our stability problems, while also introducing other problems such as e.g., what should the price impact per OVL be.
 
 ## Imbalance and Currency Supply
 
-Assume the same fixed price locked in by all positions entered into between \\( t^\*\_0 < t < t^\* \\), and assume only one market. For argument's sake, take that Overlay market to be the Uni/SushiSwap TWAP for the price of ETH in OVL terms: ETH-OVL (units of OVL/ETH).
+Assume the same fixed price locked in by all positions entered into between \\( t^\*\_0 < t \leq t^\* \\), and assume only one market. For argument's sake, take that Overlay market to be the Uni/SushiSwap TWAP for the price of ETH in OVL terms: ETH-OVL (units of OVL/ETH).
 
 
 #### Summary
@@ -95,36 +95,21 @@ Assume as traders, we want to make yield on our ETH. We can take the traditional
 
 We buy OVL with our ETH on the spot market. Take out a 1x long position on the Overlay ETH-OVL market to lock in the notional value of our staked OVL in ETH terms. Then, this long position gets paid the funding amount above as PnL. And we will rack up funding payments until we exit, or when enough other traders take the long side so funding dries up.
 
-For argument's sake we ignore fees for now. Because we prefer ETH, we care about our cost, value, and PnL in ETH terms. The value in ETH terms to enter the 1x long ETH-OVL trade on Overlay is simply the cost to buy OVL on the spot market, at time \\(t_0\\).
+For argument's sake we ignore fees for now. Because we prefer ETH, we care about our cost, value, and PnL in ETH terms. The cost in ETH terms to enter the 1x long ETH-OVL trade on Overlay is simply the cost to buy \\( n \\) OVL on the spot market, at time \\(t_0\\).
 
-\\[ V_0 = \frac{n}{P_0} \\]
+\\[ C = V_0 = \frac{n}{P_0} \\]
 
-where \\( n \\) is the number of OVL purchased on the spot market and \\( P_0 \\) is the price of ETH in OVL terms (units of OVL/ETH) when we enter the position. At time \\( t \\), the current value in ETH terms of our 1x long Overlay contract is
+where \\( P_0 \\) is the price of ETH in OVL terms (units of OVL/ETH) when we enter the position. At time \\( t \\), the current value in ETH terms of our 1x long Overlay contract is
 
-$$\begin{eqnarray} V(t) &=& \frac{N(t)}{P(t)} \cdot \bigg[ 1 + \frac{P(t) - P_0}{P_0} \bigg]\\
-&=& \frac{N(t)}{P_0}
-\end{eqnarray}
-$$
+\\[ V(t) = \frac{N(t)}{P(t)} \cdot \bigg[ 1 + \frac{P(t) - P_0}{P_0} \bigg] = \frac{N(t)}{P_0} \\]
 
-<!-- \\[ V(t) = \frac{N(t)}{P_0}. -->
-<!-- <!-1- %\cdot \bigg[ 1 + \frac{P(t) - P_0}{P_0} \bigg]. -1-> -->
-<!-- \\] -->
-where \\( N(t) \\) is the size of our position. Note that the ETH value is locked in, and so is independent of $$P(t)$$.  Any changes in value must come from changing $$N(t)$$.
-<!-- amount of collateral attributed to our position from the collateral pool. -->
+where \\( N(t) \\) is the size of our position. Note that the ETH value is locked in, and so is independent of \\(P(t)\\). Any changes in value must come from changing \\(N(t)\\).
 
 The funding payment will probably be computed each oracle fetch rather than each block, as oracle times may vary by market and are a natural 'heartbeat'.  Consequently, let us assume there are \\(m \\) funding payments accrued between \\(t_0\\) and \\(t\\), and that each one takes place at some time \\(t_i\\) for \\(i = 1,2,\ldots,m\\). Additionally assume, for this note, that all positions are taken without leverage (that is,  \\(  L_{jli} = 1 \\)), such that a user's share of each funding payment is taken from or accrues to their OVL collateral staked. For our long position, the time evolution of our position size when factoring in funding payments is
 
 \\[ N(t) = n \cdot \bigg( 1 + \frac{\mathrm{FP}(0)}{\mathrm{OI}\_l(0)} \bigg) \cdots \bigg( 1 + \frac{\mathrm{FP}(m-1)}{\mathrm{OI}\_l(m-1)} \bigg) = n \cdot \prod_{i=1}^m \bigg[ 1 + f_l(i) \bigg] \\]
 
-Thus, the profit/loss **in ETH terms** at time \\(t \\) will be given by \\(\mathrm{PnL} = V(t) - V_0\\), yielding a PnL that changes only upon funding payments. After the $$m$$th payment, it is:
-
-<!-- \\[\mathrm{PnL}(t) =  \frac{n}{P(t)} \cdot \prod_{i=1}^m\bigg( 1 + f_l(i) \bigg) \cdot \bigg[ 1 + \bigg( \frac{P(t)}{P_0} - 1 \bigg) \bigg] - \frac{n}{P_0} \\] -->
-
-<!-- Let -->
-
-<!-- \\[ P(t) = P_0 \cdot (1 + \epsilon) \\] -->
-
-<!-- Then, our PnL in ETH terms for the 1x long to balance the system is -->
+Thus, the profit/loss **in ETH terms** at time \\(t \\) will be given by \\(\mathrm{PnL} = V(t) - C\\), yielding a PnL that changes only upon funding payments. After the $$m$$th payment, it is:
 
 \\[ \mathrm{PnL}(m) = \frac{n}{P_0} \cdot \bigg[ \prod_{i=1}^m \bigg( 1 + f_l(i) \bigg) - 1  \bigg].\\]
 
@@ -149,7 +134,7 @@ Again we make a relatively simple trade to lock in funding. If we have \\( n \\)
 
 Cost to enter the trade **in OVL terms** is just the number of OVL:
 
-\\[ V_0 = n \\]
+\\[ C = V_0 = n \\]
 
 Payoff for the 1x short is
 
