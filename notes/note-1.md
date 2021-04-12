@@ -147,9 +147,9 @@ Assume now that \\( \mathrm{OI}\_{imb} = \mathrm{OI}\_l - \mathrm{OI}\_s > 0 \\)
 
 Again we make a relatively simple trade to lock in funding. If we have \\( n \\) OVL to start, we take out a 1x short position on the Overlay ETH-OVL market with \\( n / 2 \\) staked and swap \\( n / 2 \\) for ETH on the spot market. Because this trader prefers OVL, we care about our cost, value, and PnL in OVL terms.
 
-Cost to enter the trade **in OVL terms** is
+Cost to enter the trade **in OVL terms** is just the number of OVL:
 
-\\[ C = n \\]
+\\[ V_0 = n \\]
 
 Payoff for the 1x short is
 
@@ -167,7 +167,7 @@ Going through the same exercise as in the previous case with \\( P(t) = P_0 \cdo
 
 \\[ \mathrm{PnL}(t) = \frac{n}{2} \cdot (1 - \epsilon) \cdot \bigg[ \prod_{i=0}^{m-1} \bigg( 1 + f_s (i) \bigg) - 1 \bigg] \\]
 
-which is simply getting paid funding on top of our initial OVL balance of to go short the ETH-OVL feed (bullish OVL, bearish ETH). This is profitable for the trader that prefers OVL, when \\( \epsilon < 1 \\) and imbalance is toward the OVL bear side: longs outweigh shorts on ETH-OVL. Rate of return \\( r_{s} \\) for this strategy on the initial OVL capital \\( C \\) is
+which is simply getting paid funding on top of our initial OVL balance of to go short the ETH-OVL feed (bullish OVL, bearish ETH). This is profitable for the trader that prefers OVL, when \\( \epsilon < 1 \\) and imbalance is toward the OVL bear side: longs outweigh shorts on ETH-OVL. Rate of return \\( r_{s} \\) for this strategy on the initial OVL capital \\( V_0 \\) is
 
 \\[ r_s (t) = \frac{1 - \epsilon}{2} \cdot \prod_{i=0}^{m-1} \bigg[ \bigg( 1 + f_s(i) \bigg) - 1 \bigg] \\]
 

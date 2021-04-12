@@ -6,12 +6,7 @@ from collections import defaultdict
 import unittest
 import pytest
 
-np.random.seed(seed=1)
 
-
-#    px is the price of OVL-ETH,
-#    if it is > 1, OVL is more valuable than ETH
-#    ie it requres tyhat many OVL to buy 1 ETH
 
 def fromETH(amt, px):
     return amt*px
@@ -23,7 +18,6 @@ def toOVL(amt, px):
 def fromOVL(amt, px):
     return toETH(amt, px)
 
-
 def px_from_ret(px0: float, ret: float) -> float:
     '''get the new price given a return'''
     ret = ret/100
@@ -32,11 +26,36 @@ def px_from_ret(px0: float, ret: float) -> float:
 def pnl(amt, ret):
     return amt * (1 + ret/100)
 
+def get_imbalance(longs, shorts):
+    return longs - shorts
+
+def funding(k, imb):
+    return k*imb
+
+def funding_rate(k, imb, side_oi):
+    '''side_oi is volume of long or short side'''
+    return k*imb/side_oi
+
 
 amt_OVL = 100
 amt_ETH = 1
 
 class TestOIP1(unittest.TestCase):
+
+    @unittest.skip('fix')
+    def test_util_fcns(self):
+        assert fromOVL(N/2, p0) == 5
+        assert fromETH(5, p0) == 50
+        assert fromETH(fromOVL(N, p0), p0) == N
+        assert fromOVL(fromETH(N, p0), p0) == N
+
+        assert np.isclose(px_from_ret(p0, 50), .15)
+        assert np.isclose(px_from_ret(p0, 200), .3)
+        assert np.isclose(px_from_ret(p0, -50), .05)
+
+        assert pnl(100, 50) == 150
+        assert pnl(100, -50) == 50
+
 
     def test_price(self):
         #ETH is expensive rwt OVL: if ETH = $2000, then OVL = $20
@@ -84,37 +103,76 @@ class TestOIP1(unittest.TestCase):
      the current value in ETH terms of our 1x long Overlay contract is
     \\[ V(t) = \frac{N(t)}{P(t)} \cdot \bigg[ 1 + \frac{P(t) - P_0}{P_0} \bigg].\\]
         '''
-        #fix N(t) = N = amt_OVL
+        #fix value N(t) = N = amt_OVL
         V = lambda P1, P0: (amt_OVL/P1)*(1 + (P1-P0)/P0)
 
         #ETH is expensive rwt OVL: if ETH = $2000, then OVL = $20
         P0 = 100
         self.assertTrue(V(P0,P0) == toETH(amt_OVL, P0))
-        #case1 - P1 > P0
         #ETH becomes twice as expensive rwt OVL: if ETH = $2000, then OVL = $10
         P1 = px_from_ret(P0, 100)
-        #V should bekkk
         self.assertTrue(V(P1,P0) == toETH(amt_OVL, P0))
-
-        # self.assertTrue(V(P1,P0) == )
-
-
-        #case2 - P1 < P0
+        #ETH becomes twice as expensive rwt OVL: if ETH = $2000, then OVL = $10
+        P2 = px_from_ret(P0, -50)
+        self.assertTrue(V(P2,P0) == toETH(amt_OVL, P0))
 
 
-    @unittest.skip('fix')
-    def test_util_fcns(self):
-        assert fromOVL(N/2, p0) == 5
-        assert fromETH(5, p0) == 50
-        assert fromETH(fromOVL(N, p0), p0) == N
-        assert fromOVL(fromETH(N, p0), p0) == N
+    def test_funding_formula(self):
+        '''
+        For our long position, the time evolution of our position size when factoring in funding payments is
 
-        assert np.isclose(px_from_ret(p0, 50), .15)
-        assert np.isclose(px_from_ret(p0, 200), .3)
-        assert np.isclose(px_from_ret(p0, -50), .05)
+        \\[ N(t) = n \cdot \prod_{i=0}^{m-1} \bigg[ 1 + f_l(i) \bigg] \\]
+        '''
+        for k in np.arange(.01, .5, .1):
+            for iter_oi_long in np.arange(1,100,10):
+                for iter_oi_short in np.arange(1, 100, 10):
+                    oi_long = iter_oi_long
+                    oi_short = iter_oi_short
 
-        assert pnl(100, 50) == 150
-        assert pnl(100, -50) == 50
+                    all_funding_payments = []
+                    all_funding_rates_short = []
+                    all_funding_rates_long = []
+
+                    for i in range(100): #100 funding payments
+                        imb = get_imbalance(oi_long, oi_short)
+
+                        all_funding_rates_short.append(funding_rate(k, imb, oi_short))
+                        #NOTE: need negative sign to capture direction of funding
+                        all_funding_rates_long.append(-funding_rate(k, imb, oi_long))
+
+                        payment = funding(k, imb)
+                        all_funding_payments.append(payment)
+
+                        oi_long -= payment
+                        oi_short += payment
+
+                    F = sum(all_funding_payments)
+
+                    all_funding_returns_short = [1 + r for r in all_funding_rates_short]
+                    all_funding_returns_long = [1 + r for r in all_funding_rates_long]
+
+                    final_oi_short = iter_oi_short*(np.prod(all_funding_returns_short))
+                    final_oi_long = iter_oi_long*(np.prod(all_funding_returns_long))
+
+                    self.assertTrue(np.isclose(iter_oi_short + F, final_oi_short))
+                    self.assertTrue(np.isclose(iter_oi_long - F, final_oi_long))
+
+
+    def test_payoff(self):
+        '''
+        Payoff for the 1x short is
+        \\[ \mathrm{PO}(t) = \frac{N(t)}{2} \cdot \bigg[ 1 - \frac{P(t) - P_0}{P_0} \bigg] \\]
+        '''
+        V = lambda P1, P0: amt_OVL/2 * (1 - (P1 - P0)/P0)
+        #ETH is expensive rwt OVL: if ETH = $2000, then OVL = $20
+        P0 = 100
+        self.assertTrue(V(P0,P0) == amt_OVL/2)
+        #ETH becomes twice as expensive rwt OVL: if ETH = $2000, then OVL = $10
+        P1 = px_from_ret(P0, 100)
+        self.assertTrue(V(P1,P0) == toETH(amt_OVL, P0))
+        #ETH becomes twice as expensive rwt OVL: if ETH = $2000, then OVL = $10
+        P2 = px_from_ret(P0, -50)
+        self.assertTrue(V(P2,P0) == toETH(amt_OVL, P0))
 
 
 
