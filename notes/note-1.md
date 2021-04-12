@@ -93,35 +93,44 @@ When \\( \mathrm{OI}\_{imb} < 0 \\), traders who want to earn yield on their ETH
 
 Assume as traders, we want to make yield on our ETH. We can take the traditional funding trade as an example, and execute a similar trade on the Overlay ETH-OVL market.
 
-We buy OVL with our ETH on the spot market. Take out a 1x long position on the Overlay ETH-OVL market to lock in the notional value of our staked OVL in ETH terms. Then, this long position gets paid the funding amount above as PnL. And we will rack up funding payments until we exit at some time in the future \\( t_n \\) or when enough other traders take the long side so funding dries up.
+We buy OVL with our ETH on the spot market. Take out a 1x long position on the Overlay ETH-OVL market to lock in the notional value of our staked OVL in ETH terms. Then, this long position gets paid the funding amount above as PnL. And we will rack up funding payments until we exit, or when enough other traders take the long side so funding dries up.
 
-For argument's sake we ignore fees for now. Because we prefer ETH, we care about our cost, value, and PnL in ETH terms. The cost in ETH terms to enter the 1x long ETH-OVL trade on Overlay is simply the cost to buy OVL on the spot market, at time \\(t_0\\).
+For argument's sake we ignore fees for now. Because we prefer ETH, we care about our cost, value, and PnL in ETH terms. The value in ETH terms to enter the 1x long ETH-OVL trade on Overlay is simply the cost to buy OVL on the spot market, at time \\(t_0\\).
 
-\\[ C = \frac{n}{P_0} \\]
+\\[ V_0 = \frac{n}{P_0} \\]
 
 where \\( n \\) is the number of OVL purchased on the spot market and \\( P_0 \\) is the price of ETH in OVL terms (units of OVL/ETH) when we enter the position. At time \\( t \\), the current value in ETH terms of our 1x long Overlay contract is
 
-\\[ V(t) = \frac{N(t)}{P(t)} \cdot \bigg[ 1 + \frac{P(t) - P_0}{P_0} \bigg].\\]
+$$\begin{eqnarray} V(t) &=& \frac{N(t)}{P(t)} \cdot \bigg[ 1 + \frac{P(t) - P_0}{P_0} \bigg]\\
+&=& \frac{N(t)}{P_0}
+\end{eqnarray}
+$$
 
-where \\( N(t) \\) is the amount of collateral attributed to our position from the collateral pool. The funding payment will probably be computed each oracle fetch rather than each block, as oracle times may vary by market and are a natural 'heartbeat'.  Consequently, let us assume there are \\(m \\) funding payments accrued between \\(t_0\\) and \\(t\\), and that each one takes place at some time \\(t_i\\) for \\(i = 1,2,\ldots,m\\). Additionally assume, for this note, that all positions are taken without leverage \\(  L_{jli} = 1 \\), such that a user's share of each funding payment is taken from or accrues to their OVL collateral staked. For our long position, the time evolution of our collateral share when factoring in funding payments is
+<!-- \\[ V(t) = \frac{N(t)}{P_0}. -->
+<!-- <!-1- %\cdot \bigg[ 1 + \frac{P(t) - P_0}{P_0} \bigg]. -1-> -->
+<!-- \\] -->
+where \\( N(t) \\) is the size of our position. Note that the ETH value is locked in, and so is independent of $$P(t)$$.  Any changes in value must come from changing $$N(t)$$.
+<!-- amount of collateral attributed to our position from the collateral pool. -->
+
+The funding payment will probably be computed each oracle fetch rather than each block, as oracle times may vary by market and are a natural 'heartbeat'.  Consequently, let us assume there are \\(m \\) funding payments accrued between \\(t_0\\) and \\(t\\), and that each one takes place at some time \\(t_i\\) for \\(i = 1,2,\ldots,m\\). Additionally assume, for this note, that all positions are taken without leverage (that is,  \\(  L_{jli} = 1 \\)), such that a user's share of each funding payment is taken from or accrues to their OVL collateral staked. For our long position, the time evolution of our position size when factoring in funding payments is
 
 \\[ N(t) = n \cdot \bigg( 1 + \frac{\mathrm{FP}(0)}{\mathrm{OI}\_l(0)} \bigg) \cdots \bigg( 1 + \frac{\mathrm{FP}(m-1)}{\mathrm{OI}\_l(m-1)} \bigg) = n \cdot \prod_{i=0}^{m-1} \bigg[ 1 + f_l(i) \bigg] \\]
 
-Thus, the profit/loss **in ETH terms** at time \\(t \\) will be given by \\(\mathrm{PnL} = V - C\\), yielding:
+Thus, the profit/loss **in ETH terms** at time \\(t \\) will be given by \\(\mathrm{PnL} = V(t) - V_0\\), yielding a PnL that changes only upon funding payments. After the $$m$$th payment, it is:
 
-\\[\mathrm{PnL}(t) =  \frac{n}{P(t)} \cdot \prod_{i=0}^{m-1}\bigg( 1 + f_l(i) \bigg) \cdot \bigg[ 1 + \bigg( \frac{P(t)}{P_0} - 1 \bigg) \bigg] - \frac{n}{P_0} \\]
+<!-- \\[\mathrm{PnL}(t) =  \frac{n}{P(t)} \cdot \prod_{i=0}^{m-1}\bigg( 1 + f_l(i) \bigg) \cdot \bigg[ 1 + \bigg( \frac{P(t)}{P_0} - 1 \bigg) \bigg] - \frac{n}{P_0} \\] -->
 
-Let
+<!-- Let -->
 
-\\[ P(t) = P_0 \cdot (1 + \epsilon) \\]
+<!-- \\[ P(t) = P_0 \cdot (1 + \epsilon) \\] -->
 
-Then, our PnL in ETH terms for the 1x long to balance the system is
+<!-- Then, our PnL in ETH terms for the 1x long to balance the system is -->
 
-\\[ \mathrm{PnL}(t) = \frac{n}{P_0} \cdot \bigg[ \prod_{i=0}^{m-1} \bigg( 1 + f_l(i) \bigg) - 1  \bigg] \\]
+\\[ \mathrm{PnL}(m) = \frac{n}{P_0} \cdot \bigg[ \prod_{i=0}^{m-1} \bigg( 1 + f_l(i) \bigg) - 1  \bigg].\\]
 
-which is simply getting paid funding on top of our initial ETH balance of \\( n/P_0 \\) to go long the ETH-OVL feed (bearish OVL, bullish ETH). This is always profitable for the trader that prefers ETH, when imbalance is toward the OVL bull side: shorts outweigh longs on ETH-OVL. Rate of return \\( r_{l} \\) for this strategy on the initial ETH capital \\( C \\) is
+This is simply getting paid funding on top of our initial ETH balance of \\( n/P_0 \\) to go long the ETH-OVL feed (bearish OVL, bullish ETH). This is always profitable for the trader that prefers ETH, when imbalance is toward the OVL bull side: shorts outweigh longs on ETH-OVL. Rate of return \\( r_{l} \\) for this strategy on the initial ETH capital \\( V_0 \\) is
 
-\\[ r_l (t) = \prod_{i=0}^{m-1} \bigg( 1 + f_l(i) \bigg) - 1 \\]
+\\[ r_l (m) = \prod_{i=0}^{m-1} \bigg( 1 + f_l(i) \bigg) - 1. \\]
 
 
 ### Case 2: OI Long > OI Short
