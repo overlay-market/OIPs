@@ -114,11 +114,11 @@ where \\( N(t) \\) is the size of our position. Note that the ETH value is locke
 
 The funding payment will probably be computed each oracle fetch rather than each block, as oracle times may vary by market and are a natural 'heartbeat'.  Consequently, let us assume there are \\(m \\) funding payments accrued between \\(t_0\\) and \\(t\\), and that each one takes place at some time \\(t_i\\) for \\(i = 1,2,\ldots,m\\). Additionally assume, for this note, that all positions are taken without leverage (that is,  \\(  L_{jli} = 1 \\)), such that a user's share of each funding payment is taken from or accrues to their OVL collateral staked. For our long position, the time evolution of our position size when factoring in funding payments is
 
-\\[ N(t) = n \cdot \bigg( 1 + \frac{\mathrm{FP}(0)}{\mathrm{OI}\_l(0)} \bigg) \cdots \bigg( 1 + \frac{\mathrm{FP}(m-1)}{\mathrm{OI}\_l(m-1)} \bigg) = n \cdot \prod_{i=0}^{m-1} \bigg[ 1 + f_l(i) \bigg] \\]
+\\[ N(t) = n \cdot \bigg( 1 + \frac{\mathrm{FP}(0)}{\mathrm{OI}\_l(0)} \bigg) \cdots \bigg( 1 + \frac{\mathrm{FP}(m-1)}{\mathrm{OI}\_l(m-1)} \bigg) = n \cdot \prod_{i=1}^m \bigg[ 1 + f_l(i) \bigg] \\]
 
 Thus, the profit/loss **in ETH terms** at time \\(t \\) will be given by \\(\mathrm{PnL} = V(t) - V_0\\), yielding a PnL that changes only upon funding payments. After the $$m$$th payment, it is:
 
-<!-- \\[\mathrm{PnL}(t) =  \frac{n}{P(t)} \cdot \prod_{i=0}^{m-1}\bigg( 1 + f_l(i) \bigg) \cdot \bigg[ 1 + \bigg( \frac{P(t)}{P_0} - 1 \bigg) \bigg] - \frac{n}{P_0} \\] -->
+<!-- \\[\mathrm{PnL}(t) =  \frac{n}{P(t)} \cdot \prod_{i=1}^m\bigg( 1 + f_l(i) \bigg) \cdot \bigg[ 1 + \bigg( \frac{P(t)}{P_0} - 1 \bigg) \bigg] - \frac{n}{P_0} \\] -->
 
 <!-- Let -->
 
@@ -126,11 +126,11 @@ Thus, the profit/loss **in ETH terms** at time \\(t \\) will be given by \\(\mat
 
 <!-- Then, our PnL in ETH terms for the 1x long to balance the system is -->
 
-\\[ \mathrm{PnL}(m) = \frac{n}{P_0} \cdot \bigg[ \prod_{i=0}^{m-1} \bigg( 1 + f_l(i) \bigg) - 1  \bigg].\\]
+\\[ \mathrm{PnL}(m) = \frac{n}{P_0} \cdot \bigg[ \prod_{i=1}^m \bigg( 1 + f_l(i) \bigg) - 1  \bigg].\\]
 
 This is simply getting paid funding on top of our initial ETH balance of \\( n/P_0 \\) to go long the ETH-OVL feed (bearish OVL, bullish ETH). This is always profitable for the trader that prefers ETH, when imbalance is toward the OVL bull side: shorts outweigh longs on ETH-OVL. Rate of return \\( r_{l} \\) for this strategy on the initial ETH capital \\( V_0 \\) is
 
-\\[ r_l (m) = \prod_{i=0}^{m-1} \bigg( 1 + f_l(i) \bigg) - 1. \\]
+\\[ r_l (m) = \prod_{i=1}^m \bigg( 1 + f_l(i) \bigg) - 1. \\]
 
 
 ### Case 2: OI Long > OI Short
@@ -161,15 +161,15 @@ and value of the spot ETH in OVL terms at time \\( t\\) is \\( (n / 2) \cdot (P(
 
 Similar to the prior case, assume for this note that funding only affects the user's collateral (disregard leverage considerations), such that
 
-\\[ N(t) = n \cdot \prod_{i=0}^{m-1} \bigg( 1 + f_s (i) \bigg) \\]
+\\[ N(t) = n \cdot \prod_{i=1}^m \bigg( 1 + f_s (i) \bigg) \\]
 
 Going through the same exercise as in the previous case with \\( P(t) = P_0 \cdot (1 + \epsilon) \\) gives a PnL of
 
-\\[ \mathrm{PnL}(t) = \frac{n}{2} \cdot (1 - \epsilon) \cdot \bigg[ \prod_{i=0}^{m-1} \bigg( 1 + f_s (i) \bigg) - 1 \bigg] \\]
+\\[ \mathrm{PnL}(t) = \frac{n}{2} \cdot (1 - \epsilon) \cdot \bigg[ \prod_{i=1}^m \bigg( 1 + f_s (i) \bigg) - 1 \bigg] \\]
 
 which is simply getting paid funding on top of our initial OVL balance of to go short the ETH-OVL feed (bullish OVL, bearish ETH). This is profitable for the trader that prefers OVL, when \\( \epsilon < 1 \\) and imbalance is toward the OVL bear side: longs outweigh shorts on ETH-OVL. Rate of return \\( r_{s} \\) for this strategy on the initial OVL capital \\( V_0 \\) is
 
-\\[ r_s (t) = \frac{1 - \epsilon}{2} \cdot \prod_{i=0}^{m-1} \bigg[ \bigg( 1 + f_s(i) \bigg) - 1 \bigg] \\]
+\\[ r_s (t) = \frac{1 - \epsilon}{2} \cdot \prod_{i=1}^m \bigg[ \bigg( 1 + f_s(i) \bigg) - 1 \bigg] \\]
 
 which is still sensitive to changes in the ETH-OVL feed, but remains profitable as long as price deviations are less than 100% to the ETH bull side.
 
@@ -181,7 +181,7 @@ What's even more interesting is these are simple trades that anyone should be ab
 
 ## Setting \\( k \\)
 
-We will explore the required value of \\( k \\) in more depth in [risk to the system](note-4). However, for now we note that (assuming no trades are made) the next value of the imbalance, calculated after funding, satisfies the recurrence relation  \\( \mathrm{OI}\_{imb}(m+1) = \mathrm{OI}\_{imb}(m)(1 -2k)\\). This may easily be solved, yielding
+We will explore the required value of \\( k \\) in more depth in [risk to the system](note-4). However, for now we note that (assuming no trades are made) the next value of the imbalance, calculated after funding, satisfies the recurrence relation  \\( \mathrm{OI}\_{imb}(m+1) = \mathrm{OI}\_{imb}(m)(1 -2k)\\). This may easily be solved, yielding for the $$m$$th funding payment (where 0 means no funding has been made):
 
 \\[ \mathrm{OI}\_{imb}(m) = \mathrm{OI}\_{imb}(0)\cdot \bigg(1 -2k\bigg)^m  \\]
 

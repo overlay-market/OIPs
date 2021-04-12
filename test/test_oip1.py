@@ -42,16 +42,17 @@ amt_ETH = 1
 
 class TestOIP1(unittest.TestCase):
 
-    @unittest.skip('fix')
     def test_util_fcns(self):
-        assert fromOVL(N/2, p0) == 5
-        assert fromETH(5, p0) == 50
-        assert fromETH(fromOVL(N, p0), p0) == N
-        assert fromOVL(fromETH(N, p0), p0) == N
+        #ETH is expensive rwt OVL: if ETH = $2000, then OVL = $20
+        P0 = 100
+        assert toETH(amt_OVL, P0) == 1
+        assert fromETH(amt_ETH, P0) == P0
+        assert fromETH(fromOVL(amt_OVL, P0), P0) == amt_OVL
+        assert fromOVL(fromETH(amt_OVL, P0), P0) == amt_OVL
 
-        assert np.isclose(px_from_ret(p0, 50), .15)
-        assert np.isclose(px_from_ret(p0, 200), .3)
-        assert np.isclose(px_from_ret(p0, -50), .05)
+        assert np.isclose(px_from_ret(P0, 50), 150)
+        assert np.isclose(px_from_ret(P0, 200), 300)
+        assert np.isclose(px_from_ret(P0, -50), 50)
 
         assert pnl(100, 50) == 150
         assert pnl(100, -50) == 50
@@ -112,7 +113,7 @@ class TestOIP1(unittest.TestCase):
         #ETH becomes twice as expensive rwt OVL: if ETH = $2000, then OVL = $10
         P1 = px_from_ret(P0, 100)
         self.assertTrue(V(P1,P0) == toETH(amt_OVL, P0))
-        #ETH becomes twice as expensive rwt OVL: if ETH = $2000, then OVL = $10
+        #ETH becomes 1/2 as expensive rwt OVL: if ETH = $2000, then OVL = $40
         P2 = px_from_ret(P0, -50)
         self.assertTrue(V(P2,P0) == toETH(amt_OVL, P0))
 
@@ -158,7 +159,7 @@ class TestOIP1(unittest.TestCase):
                     self.assertTrue(np.isclose(iter_oi_long - F, final_oi_long))
 
 
-    def test_payoff(self):
+    def test_short_payoff(self):
         '''
         Payoff for the 1x short is
         \\[ \mathrm{PO}(t) = \frac{N(t)}{2} \cdot \bigg[ 1 - \frac{P(t) - P_0}{P_0} \bigg] \\]
@@ -168,12 +169,30 @@ class TestOIP1(unittest.TestCase):
         P0 = 100
         self.assertTrue(V(P0,P0) == amt_OVL/2)
         #ETH becomes twice as expensive rwt OVL: if ETH = $2000, then OVL = $10
+        #we should have 0 OVL left
         P1 = px_from_ret(P0, 100)
-        self.assertTrue(V(P1,P0) == toETH(amt_OVL, P0))
-        #ETH becomes twice as expensive rwt OVL: if ETH = $2000, then OVL = $10
+        self.assertTrue(V(P1,P0) == 0)
+        #ETH becomes 1/2 as expensive rwt OVL: if ETH = $2000, then OVL = $40
+        #we should get a return of 50% on our OVL
         P2 = px_from_ret(P0, -50)
-        self.assertTrue(V(P2,P0) == toETH(amt_OVL, P0))
+        self.assertTrue(V(P2,P0) == 1.5*amt_OVL/2)
 
+    def test_short_eth_value(self):
+        '''
+        and value of the spot ETH in OVL terms at time \\( t\\) is \\( (n / 2) \cdot (P(t) / P_0) \\).
+        '''
+        V = lambda P1, P0: amt_OVL/2 * (P1/P0)
+        #ETH is expensive rwt OVL: if ETH = $2000, then OVL = $20
+        P0 = 100
+        self.assertTrue(V(P0,P0) == amt_OVL/2)
+        #ETH becomes twice as expensive rwt OVL: if ETH = $2000, then OVL = $10
+        #we should have 100 OVL in ETH
+        P1 = px_from_ret(P0, 100)
+        self.assertTrue(V(P1,P0) == amt_OVL)
+        #ETH becomes 1/2 as expensive rwt OVL: if ETH = $2000, then OVL = $40
+        #we should get a return of 50%  in OVL terms
+        P2 = px_from_ret(P0, -50)
+        self.assertTrue(V(P2,P0) == amt_OVL/4)
 
 
 
