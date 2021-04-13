@@ -1,8 +1,5 @@
 import typing as tp
 import numpy as np
-import sympy as sp
-import matplotlib.pyplot as plt
-from collections import defaultdict
 import unittest
 import pytest
 
