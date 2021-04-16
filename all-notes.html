@@ -1,7 +1,0 @@
----
-layout: page
-title: Notes
----
-
-{% assign notes=site.pages|where_exp:"page","page.note > 0" %} {% include
-notetable.html notes=notes %}

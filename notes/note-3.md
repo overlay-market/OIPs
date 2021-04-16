@@ -3,7 +3,7 @@ note: 3
 oip-num: 1
 title: Hedging OVL Exposure
 status: WIP
-author: Michael Feldman (@mikeyrf)
+author: Michael Feldman (@mikeyrf), Adam Kay (@mcillkay)
 discussions-to: oip-1
 created: 2021-03-02
 updated: N/A
@@ -16,7 +16,7 @@ Issue to address with this note:
 
 ## Context
 
-In order to take positions on markets offered by the protocol, traders need to lock the settlement currency of the system (OVL). For traders that don't want price exposure to OVL but still wish to take a position on a market, they should be able to construct a "portfolio" that hedges out OVL price risk with respect to another currency like ETH. Below, I'll address how to construct this type of portfolio as a combination of different positions on separate Overlay markets.
+In order to take positions on markets offered by the protocol, traders need to lock the settlement currency of the system (OVL). For traders that don't want price exposure to OVL but still wish to take a position on a market, they should be able to construct a "portfolio" that hedges out OVL price risk with respect to another currency like ETH. Below, we address how to construct this type of portfolio as a combination of different positions on separate Overlay markets.
 
 Assume our initial liquidity mining phase is successful, and we're able to bootstrap $20M+ in liquidity on spot markets for the OVL-ETH pair. A [manipulation-resistant TWAP](note-2) on ETH-OVL can then be offered as an additional (inverse) market to trade on Overlay. There are significant benefits to this:
 
@@ -33,7 +33,7 @@ The second point is key to understanding how we'll construct this "portfolio" of
 
 To hedge out some price exposure to \\( q \cdot n \\) OVL locked in a market position (where \\( 0 < q < 1 \\)), enter into an additional long position of \\( (1-q) \cdot n \\) locked on the ETH-OVL market with leverage of \\( 1/(1-q) \\). It is an imperfect hedge given the quanto nature of the original market position.
 
-### Portfolio Construction
+### portfolio construction
 
 Assume we have a total of \\( n \\) OVL to trade with, and we want to take a position out on an Overlay market feed \\( X \\) while hedging out OVL price risk.
 
@@ -41,11 +41,11 @@ We lock an OVL amount \\( q \cdot n \\) with leverage \\( l_X \\) on the \\( X \
 
 For this note, ignore [funding payments](note-1) between longs and shorts, and, for simplicity's sake, assume the 1 hour TWAP for the ETH-OVL feed is approximately equal to the current spot ETH-OVL price. Payoff, "portfolio" value, and PnL functions are **in ETH terms** given we care about making more ETH if we're looking to hedge out OVL exposure.
 
-Payoff \\( \mathrm{PO}\_{X} \\) for the \\( X \\) feed position is
+We will write $$P_E$$ and $$P_X$$ for the price of the ETH and X feeds, respectively. Payoff \\( \mathrm{PO}\_{X} \\) for the \\( X \\) feed position is
 
-\\[ \mathrm{PO}\_{X}(t) = \frac{q \cdot n}{P(t)} \cdot \bigg[ 1 + (\pm)_{X} \cdot l_X \cdot \bigg( \frac{P\_X(t)}{P_X(0)} - 1 \bigg) \bigg] \\]
+\\[ \mathrm{PO}\_{X}(t) = \frac{q \cdot n}{P_E(t)} \cdot \bigg[  \pm\_{X} \cdot l_X \cdot \bigg( \frac{P\_X(t)}{P_X(0)} - 1 \bigg)  + 1 \bigg] \\]
 
-where \\( (\pm)_{X} = 1 \\) if we took out a long on the \\( X \\) market and \\( (\pm)_X = -1 \\) if we took out a short. \\( P\_{X}(t) \\) is the value of the \\( X \\) feed \\( t \\) blocks after we lock in our position. \\( P(t) \\) is the value of the ETH-OVL TWAP feed \\( t \\) blocks after we lock in our position (units of OVL/ETH).
+where \\( (\pm)\_{X} = 1 \\) if we took out a long on the \\( X \\) market and \\( (\pm)\_X = -1 \\) if we took out a short. \\( P\_{X}(t) \\) is the value of the \\( X \\) feed \\( t \\) blocks after we lock in our position. \\( P(t) \\) is the value of the ETH-OVL TWAP feed \\( t \\) blocks after we lock in our position (units of OVL/ETH).
 
 To attempt to hedge, we use the rest of our OVL to take out an additional long position with leverage \\( l \\) on the ETH-OVL market offered by the protocol (long since it is an inverse market). Payoff \\( \mathrm{PO}\_{EO} \\) for this hedge is
 
@@ -82,19 +82,19 @@ Compared to the ETH PnL we wish to replicate, \\( \frac{n}{P(0)} \cdot (\pm)\_{X
 
 ### Unhedged vs Hedged
 
-Compare the difference in PnL between the hedged and unhedged portfolios. For unhedged, simply take \\( q \to 1 \\) in the expressions above to obtain \\( \mathrm{PnL}\|\_{u}(t) = \frac{n}{P(t)} \cdot [ (\pm)_X \cdot l_X \cdot \epsilon\_X - \epsilon ] \\). Hedged \\( \mathrm{PnL}\|\_{h}(t) \\) is our expression above. Thus,
+Compare the difference in PnL between the hedged and unhedged portfolios. For unhedged, simply take \\( q \to 1 \\) in the expressions above to obtain \\( \mathrm{PnL}\|\_{u}(t) = \frac{n}{P(t)} \cdot [ (\pm)\_X \cdot l_X \cdot \epsilon\_X - \epsilon ] \\). Hedged \\( \mathrm{PnL}\|\_{h}(t) \\) is our expression above. Thus,
 
-\\[ \mathrm{PnL}\|\_{u}(t) - \mathrm{PnL}\|\_{h}(t) = \frac{n}{P(t)} \cdot \bigg[ (1-q) \cdot (\pm)_X \cdot l_X \cdot \epsilon\_X - \epsilon \bigg] \\]
+\\[ \mathrm{PnL}\|\_{u}(t) - \mathrm{PnL}\|\_{h}(t) = \frac{n}{P(t)} \cdot \bigg[ (1-q) \cdot (\pm)\_X \cdot l_X \cdot \epsilon\_X - \epsilon \bigg] \\]
 
 The less capital we lock in the hedge (\\(q \to 1 \\)), the more the difference in PnL between the unhedged and hedged portfolios reduces to the linear price exposure to ETH-OVL feed, \\( \epsilon \\), we wish to hedge out.
 
 When does the hedge pay off? The condition for the hedge to preserve more ETH profit, \\( \mathrm{PnL}\|\_{u} < \mathrm{PnL}\|\_{h} \\), occurs when
 
-\\[ (1 - q) \cdot (\pm)_{X} \cdot l_X \cdot \epsilon\_X - \epsilon < 0 \\]
+\\[ (1 - q) \cdot (\pm)\_{X} \cdot l_X \cdot \epsilon\_X - \epsilon < 0 \\]
 
 or when the ETH-OVL price feed increases
 
-\\[ \epsilon > \frac{l_X}{l} \cdot (\pm)_X \cdot \epsilon_X \\]
+\\[ \epsilon > \frac{l_X}{l} \cdot (\pm)\_X \cdot \epsilon_X \\]
 
 where we've used \\( l = \frac{1}{1-q} \\) for the hedge. The more drastic the change in ETH-OVL, the more important the hedge becomes, particularly when OVL substantially decreases in value relative to ETH (\\( \epsilon \gg 0 \\)).
 
