@@ -53,10 +53,14 @@ The tuple $$(\iota , \tau)$$ stands for imbalance, and time (be it block time, o
 
 1. Read $$(\iota, \tau)$$. 
 
-2. If $$\iota \neq 0$$, compute funding payments between $\tau$ and $$t$$. Say $$m$$ oracle fetches have occurred between $$\tau$$ and $$t$$. So the funding is
+2. The passive pool is considered to have been trading the market alongside the $p$ traders, with size $$\alpha \iota$$. For example, $$\alpha = .33\$$. Compute the "virtual imbalance"  
+\\[\\]
+
+If $$\iota \neq 0$$, compute funding payments between $\tau$ and $$t$$. Say $$m$$ oracle fetches have occurred between $$\tau$$ and $$t$$. So the funding is
 \\[ F = \iota (1-2k)^m\\]
 
-3. Distribute $F$ pro rata between the $p$ traders as follows. Say $$\sum N_{ai} = P$$. Then we must have $$OI_{\hat{a}} - P = \iota$. The passive pool is considered to have been trading the market alongside the $p$ traders, with size $$\alpha \iota$$. For example, $$.33\iota$$. 
+3. Distribute $F$ pro rata between the $p$ traders as follows. Say $$\sum N_{ai} = P$$. Then we must have $$OI_{\hat{a}} - P = \iota$. 
+
 
 4. Funding is distributed among $p$ traders and the passive pool according to: 
 . , compute new $$(I, t)$$ and .   

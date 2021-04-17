@@ -36,7 +36,7 @@ class TestOIP1(unittest.TestCase):
 
 
 
-    def test_payoff(self):
+    def test_payoff_E(self):
         '''
         Payoff in ETH terms for X feed positions is:
         \\[ \mathrm{PO}\_{X}(t) = \frac{q \cdot n}{P(t)} \cdot \bigg[ 1 + (\pm)\_{X} \cdot l_X \cdot \bigg( \frac{P\_X(t)}{P_X(0)} - 1 \bigg) \bigg] \\]

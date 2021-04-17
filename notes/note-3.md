@@ -43,13 +43,13 @@ For this note, ignore [funding payments](note-1) between longs and shorts, and, 
 
 We will write $$P_E$$ and $$P_X$$ for the price of the ETH and X feeds, respectively. Payoff \\( \mathrm{PO}\_{X} \\) for the \\( X \\) feed position is
 
-\\[ \mathrm{PO}\_{X}(t) = \frac{q \cdot n}{P_E(t)} \cdot \bigg[  \pm\_{X} \cdot l_X \cdot \bigg( \frac{P\_X(t)}{P_X(0)} - 1 \bigg)  + 1 \bigg] \\]
+\\[ \mathrm{PO}\_{X}(t) = \frac{q \cdot n}{P_E(t)} \cdot \bigg[  (\pm)\_{X} \cdot l_X \cdot \bigg( \frac{P\_X(t)}{P_X(0)} - 1 \bigg)  + 1 \bigg] \\]
 
 where \\( (\pm)\_{X} = 1 \\) if we took out a long on the \\( X \\) market and \\( (\pm)\_X = -1 \\) if we took out a short. \\( P\_{X}(t) \\) is the value of the \\( X \\) feed \\( t \\) blocks after we lock in our position. \\( P(t) \\) is the value of the ETH-OVL TWAP feed \\( t \\) blocks after we lock in our position (units of OVL/ETH).
 
-To attempt to hedge, we use the rest of our OVL to take out an additional long position with leverage \\( l \\) on the ETH-OVL market offered by the protocol (long since it is an inverse market). Payoff \\( \mathrm{PO}\_{EO} \\) for this hedge is
+To attempt to hedge, we use the rest of our OVL to take out an additional long position with leverage \\( l_E\\) on the ETH-OVL market offered by the protocol (long since it is an inverse market). Payoff \\( \mathrm{PO}\_{EO} \\) for this hedge is
 
-\\[ \mathrm{PO}\_{EO} (t) = \frac{(1-q) \cdot n}{P(t)} \cdot \bigg[ 1 + l \cdot \bigg( \frac{P(t)}{P(0)} - 1 \bigg) \bigg] \\]
+\\[ \mathrm{PO}\_{EO} (t) = \frac{(1-q) \cdot n}{P_E(t)} \cdot \bigg[ l_E \cdot \bigg( \frac{P_E(t)}{P_E(0)} - 1 \bigg) + 1 \bigg] \\]
 
 and the value of our entire "portfolio" is
 
@@ -57,7 +57,7 @@ and the value of our entire "portfolio" is
 
 Total cost to construct the portfolio
 
-\\[ C = \frac{n}{P(0)} \\]
+\\[ C = \frac{n}{P_E(0)} \\]
 
 and PnL for the "portfolio"
 
@@ -65,11 +65,11 @@ and PnL for the "portfolio"
 
 Examine what happens to the PnL in ETH terms when the price of ETH vs OVL changes. Take \\( P(t) = P(0) \cdot (1 + \epsilon) \\) such that the ETH-OVL feed changes an amount \\( \epsilon \\) from time \\( 0 \\) to \\( t \\). Similarly, assume \\( P_X(t) = P_X(0) \cdot (1 + \epsilon_X) \\) such that the \\( X \\) feed changes an amount \\( \epsilon_X \\) from time \\( 0 \\) to \\( t \\). PnL for the "portfolio" reduces to
 
-\\[ \mathrm{PnL}(t) = \frac{n}{P(t)} \cdot \bigg[ (\pm)\_{X} \cdot q \cdot l\_{X} \cdot \epsilon\_{X} + \epsilon \cdot \bigg(l \cdot (1 - q) - 1 \bigg) \bigg] \\]
+\\[ \mathrm{PnL}(t) = \frac{n}{P_E(t)} \cdot \bigg[ (\pm)\_{X} \cdot q \cdot l\_{X} \cdot \epsilon\_{X} + \epsilon\_{E} \cdot \bigg(l_E \cdot (1 - q) - 1 \bigg) \bigg] \\]
 
 To partially eliminate \\( \epsilon \\) terms, set leverage for the hedge to
 
-\\[ l = \frac{1}{1-q} \\]
+\\[ l_E = \frac{1}{1-q} \\]
 
 PnL becomes
 
@@ -78,6 +78,45 @@ PnL becomes
 Given the amount of collateral locked in the \\( X \\) feed position **in ETH terms** at time \\( t \\) is \\( \frac{q \cdot n}{P(t)} \\), PnL is partially hedged with respect to changes in ETH-OVL price. However, it still carries significant exposure for large changes in \\( \epsilon \\) through \\( P(t) \\), and so is rather imperfect as a hedge. In other words, PnL still scales based on the value of the locked OVL collateral in ETH terms at the current time \\( t \\), \\( \frac{q \cdot n}{P(t)} \\), and not \\( \frac{q \cdot n}{P(0)} \\) as we would prefer.
 
 Compared to the ETH PnL we wish to replicate, \\( \frac{n}{P(0)} \cdot (\pm)\_{X} \cdot l\_{X} \cdot \epsilon\_{X} \\), our PnL is also scaled downward based on the proportion of capital \\( q \\) we choose to use in the \\( X \\) position vs the hedge. The less capital we lock in the hedge (i.e. \\( q \to 1 \\), \\( l \to \infty \\)), the more the hedged portfolio mimics the ETH PnL structure we desire. However, the more we increase our leverage on the hedge, the more we need to worry about the hedge getting liquidated.
+
+
+### A Full Hedge
+Expanding terms explicilty we get 
+\\[ \mathrm{PnL}(t) = \frac{n}{P_E(0)} \cdot \bigg[ 
+\frac{
+(\pm)\_{X} \cdot q \cdot l\_{X} \cdot \epsilon\_{X} + \epsilon\_{E} \cdot \bigg(l_E \cdot (1 - q) - 1 \bigg) }{1 + \epsilon_E}\bigg] \\]
+from which it follows that if \\(l_E \cdot (1 - q) - 1 = (\pm)\_X \cdot q \cdot l\_{X} \cdot \epsilon\_{X}\\), then  we will get 
+
+\\[ \mathrm{PnL}(t) = \frac{nq}{P_E(0)} \cdot \bigg[ (\pm)\_{X} \cdot l\_{X} \cdot \epsilon\_{X} \bigg] \\]
+a fully hedged position. 
+
+Let's write \\( (\pm)\_{X} l_X = \kappa\\), and $$x = \epsilon_X$$. The condition for the full hedge gives
+
+\\[q = \frac{l_E - 1}{\kappa x + l_E}.
+\\]
+
+This value of $$q$$ changes as $$x$$ changes. As the position goes further onside, the denominator grows and $$q$$ decreases. This is an undesirable UX. Instead, we would prefer that $$q$$ is constant with price changes and that the hedging leverage $$l_E$$ changes as a function of $$x$$. The condition for this to happen is (assuming that $$l_E$$ is a continuous function of $$x$$):
+\\[\partial_x \left( \frac{l_E - 1}{\kappa x + l_E} \right) = 0.
+\\]
+Performing the differentiation yields a fraction, the numerator of which must be zero by assumption. We thus obtain the first order ODE
+\\[ \frac{\partial l_E}{\partial x} = \frac{\kappa(1 - l_E)}{1 + \kappa x} \\]
+which is solved by 
+\\[l_E(x) = C(\kappa x + 1) + 1 \\]
+for some  constant $$C$$. Because $$q > 0$$, we will have $$C>0$$, and its value essentially sets the choice of initial leverage given to the hedging position (when $$x = 0$$).
+
+This shows that we have essentially linear scaling of leverage with price movement, with initial leverage value $$1 + C$$. As the position goes offside the required leverage  to hedge decreases, whereas when it goes onside the leverage increases. 
+<!-- %The slope of the line depends both on $$C$$ and $$l_X$$, and --> 
+
+### Example
+For a desired value of $$q$$, we can compute initial leverage easily
+\\[l_E = \frac{1}{1-q}\\]
+
+For a completely unleveraged long position on the $$X$$ market, we have $$\kappa x = \epsilon_X$$, and for $$q = .5$$, we must initially set our hedging leverage to 2, which sets $$C = 1$$. Our leverage then scales dynamically as 
+
+\\[l_E = \epsilon_X + 2\\]
+
+If we double our money on the $$X$$ market, our leverage on OVL-ETH goes from 2 to 3. 
+
 
 
 ### Unhedged vs Hedged
