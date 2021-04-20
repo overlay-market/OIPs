@@ -1,6 +1,6 @@
 ---
-note: n 
-oip-num: n
+note: 5 
+oip-num: 5
 title: Pooling Stability Funds 
 status: WIP
 author: Adam Kay (@mcillkay), Michael Feldman (@mikeyrf) 
