@@ -245,7 +245,7 @@ This value of $$q$$ changes as $$x$$ changes. As the position goes further onsid
 \\[\partial_x \left( \frac{l_E - 1}{\lambda x + l_E} \right) = 0.
 \\]
 Performing the differentiation yields a fraction, the numerator of which must be zero by assumption. We thus obtain the first order ODE
-\\[ \frac{\partial l_E}{\partial x} = \frac{\lambda(1 - l_E)}{1 + \lambda x} \\]
+\\[ \frac{\partial l_E}{\partial x} = \frac{\lambda(l_E - 1)}{ \lambda x+ 1} \\]
 which is solved by 
 \\[l_E(x) = A(\lambda x + 1) + 1 \\]
 for some  constant $$A$$. Because $$q > 0$$, we will have $$A>0$$, and its value essentially sets the choice of initial leverage given to the hedging position (when $$x = 0$$).
