@@ -31,9 +31,9 @@ The second point is key to understanding how we'll construct this "portfolio" of
 
 ### Summary
 
-To hedge out some price exposure to \\( q \cdot n \\) OVL locked in a market position (where \\( 0 < q < 1 \\)), enter into an additional long position of \\( (1-q) \cdot n \\) locked on the ETH-OVL market with leverage of \\( 1/(1-q) \\). It is an imperfect hedge given the quanto nature of the original market position.
+To hedge out some price exposure to \\( q \cdot n \\) OVL locked in a market position (where \\( 0 < q < 1 \\)), enter into an additional long position of \\( (1-q) \cdot n \\) locked on the ETH-OVL market with leverage of \\( 1/(1-q) \\). This is not handled by the contract -- the trader must do this manually. It is an imperfect hedge given the quanto nature of the original market position.
 
-### portfolio construction
+### Portfolio construction
 
 Assume we have a total of \\( n \\) OVL to trade with, and we want to take a position out on an Overlay market feed \\( X \\) while hedging out OVL price risk.
 
@@ -81,23 +81,23 @@ Compared to the ETH PnL we wish to replicate, \\( \frac{n}{P_E(0)} \cdot (\pm)\_
 
 
 
-### Unhedged vs Hedged
+<!-- ### Unhedged vs Hedged -->
 
-Compare the difference in PnL between the hedged and unhedged portfolios. For unhedged, simply take \\( q \to 1 \\) in the expressions above to obtain \\( \mathrm{PnL}\|\_{u}(t) = \frac{n}{P_E(t)} \cdot [ (\pm)\_X \cdot l_X \cdot \epsilon\_X - \epsilon_E ] \\). Hedged \\( \mathrm{PnL}\|\_{h}(t) \\) is our expression above. Thus,
+<!-- Compare the difference in PnL between the hedged and unhedged portfolios. For unhedged, simply take \\( q \to 1 \\) in the expressions above to obtain \\( \mathrm{PnL}\|\_{u}(t) = \frac{n}{P_E(t)} \cdot [ (\pm)\_X \cdot l_X \cdot \epsilon\_X - \epsilon_E ] \\). Hedged \\( \mathrm{PnL}\|\_{h}(t) \\) is our expression above. Thus, -->
 
-\\[ \mathrm{PnL}\|\_{u}(t) - \mathrm{PnL}\|\_{h}(t) = \frac{n}{P_E(t)} \cdot \bigg[ (1-q) \cdot (\pm)\_X \cdot l_X \cdot \epsilon\_X - \epsilon_E \bigg] \\]
+<!-- \\[ \mathrm{PnL}\|\_{u}(t) - \mathrm{PnL}\|\_{h}(t) = \frac{n(1-q)}{P_E(t)} \cdot \bigg[ (\pm)\_X \cdot l_X \cdot \epsilon\_X - \epsilon_E \cdot l_E \bigg] \\] -->
 
-The less capital we lock in the hedge (\\(q \to 1 \\)), the more the difference in PnL between the unhedged and hedged portfolios reduces to the linear price exposure to ETH-OVL feed, \\( \epsilon \\), we wish to hedge out.
+<!-- The less capital we lock in the hedge (\\(q \to 1 \\)), the more the difference in PnL between the unhedged and hedged portfolios reduces to the linear price exposure to ETH-OVL feed, \\( \epsilon \\), we wish to hedge out. -->
 
-When does the hedge pay off? The condition for the hedge to preserve more ETH profit, \\( \mathrm{PnL}\|\_{u} < \mathrm{PnL}\|\_{h} \\), occurs when
+<!-- When does the hedge pay off? The condition for the hedge to preserve more ETH profit, \\( \mathrm{PnL}\|\_{u} < \mathrm{PnL}\|\_{h} \\), occurs when -->
 
-\\[ (1 - q) \cdot (\pm)\_{X} \cdot l_X \cdot \epsilon\_X - \epsilon_E < 0 \\]
+<!-- \\[ (1 - q) \cdot (\pm)\_{X} \cdot l_X \cdot \epsilon\_X - \epsilon_E < 0 \\] -->
 
-or when the ETH-OVL price feed increases
+<!-- or when the ETH-OVL price feed increases -->
 
-\\[ \epsilon_E > \frac{l_X}{l_E} \cdot (\pm)\_X \cdot \epsilon_X \\]
+<!-- \\[ \epsilon_E > \frac{l_X}{l_E} \cdot (\pm)\_X \cdot \epsilon_X \\] -->
 
-where we've used \\( l_E = \frac{1}{1-q} \\) for the hedge. The more drastic the change in ETH-OVL, the more important the hedge becomes, particularly when OVL substantially decreases in value relative to ETH (\\( \epsilon_E \gg 0 \\)).
+<!-- where we've used \\( l_E = \frac{1}{1-q} \\) for the hedge. The more drastic the change in ETH-OVL, the more important the hedge becomes, particularly when OVL substantially decreases in value relative to ETH (\\( \epsilon_E \gg 0 \\)). -->
 
 ### Concrete Numbers
 
