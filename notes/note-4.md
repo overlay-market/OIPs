@@ -72,7 +72,7 @@ One can view the risk to the system at time \\( t = 0 \\) due to the long imbala
 
 \\[ \mathrm{PnL} (m) = {\mathrm{OI}\_{imb}} (m) \cdot \bigg[ \frac{P (m)}{P(0)} - 1 \bigg] \\]
 
-where \\( P(i) \\) is the market value fetched from the oracle at time \\( i \\). An easy way to arrive at this is to sum the unrealized PnL of all the long *and* short positions that have each been built at time \\( 0 \\).
+where \\( P(i) \\) is the market value fetched from the oracle at time \\( i \\). An easy way to arrive at this is to sum the unrealized PnL at time \\( m \\) of all the long *and* short positions that have each been built at time \\( 0 \\).
 
 Take \\( P : \Omega \to \mathbb{R} \\) to be a random variable on the probability space \\( (\Omega, \mathcal{F}, \mathrm{P}) \\) driven by a stochastic process \\( W_t \\)
 
@@ -82,11 +82,15 @@ Assume the feed exhibits [Geometric Brownian motion (GBM)](https://en.wikipedia.
 
 PnL to be minted/burned at time \\( m \\) for this hypothetical long position reduces to
 
-\\[ \mathrm{PnL} (m) = {\mathrm{OI}\_{imb}}(0) \cdot \bigg( 1 - 2k \bigg)^m \cdot \bigg[ e^{\mu m T + \sigma W\_{m T}}  - 1 \bigg] \\]
+\\[ \mathrm{PnL} (m) = {\mathrm{OI}\_{imb}}(0) \cdot d^{-m} \cdot \bigg[ e^{\mu m T + \sigma W\_{m T}}  - 1 \bigg] \\]
 
-where \\( T \\) is the length of time between funding payments.
+where \\( T \\) is the length of time between funding payments and
 
-The protocol itself is liable for this imbalance PnL. Our approach to minimizing the risk borne by passive OVL holders will be to choose a \\( k \\) that substantially reduces the expected payout due to this positional imbalance within a finite number of time intervals \\( m \\), assuming an acceptable confidence level \\( \alpha \\).
+\\[ d \equiv \frac{1}{1 - 2k} \\]
+
+with \\( d \in \[ 1, \infty \) \\). In terms of \\( l \\) from [note 1](https://oips.overlay.market/notes/note-1), \\( l(m) = d^{-m} \\).
+
+The protocol itself is liable for this imbalance PnL. Our approach to minimizing the risk borne by passive OVL holders will be to choose a \\( k \\) that substantially reduces the expected payout due to positional imbalance within a finite number of time intervals \\( m \\), assuming an acceptable confidence level \\( \alpha \\).
 
 ### Limiting Behavior
 
@@ -110,31 +114,15 @@ where \\( 1 - \alpha \\) is the probability the imbalance PnL is less than an am
 
 #### Expected Value
 
-Taking the expected value of above
+The expected value of the imbalance PnL at time \\( m \\) is
 
-\\[ \mathbb{E}[ {\mathrm{PnL}\_{imb}}\_n \| \mathcal{F}_{n} ] = {\mathrm{OI}\_{imb}}\_{0} \cdot ( 1 - 2k )^n \cdot \bigg[ e^{\mu \cdot n \cdot T} \cdot \mathbb{E}[e^{\sigma \cdot W\_{n \cdot T}}]  - 1 \bigg] \\]
+\\[ \mathbb{E}[ \mathrm{PnL}(m) \| \mathcal{F}_{m} ] = \mathrm{OI}\_{imb}(0) \cdot d^{-m} \cdot \bigg[ \bigg(e^{(\mu + \sigma^2 / 2) T} \bigg)^m - 1 \bigg] \\]
 
-But, using \\( W_{n \cdot T} \sim \mathcal{N}(0, n \cdot T) \\) and the PDF of the [normal distribution](https://en.wikipedia.org/wiki/Normal_distribution), \\( \mathbb{E}[e^{\sigma \cdot W\_{n \cdot T}}] = (1 / \sqrt{2 \pi}) \int_{\mathbb{R}} dz \; e^{\sigma \cdot \sqrt{n \cdot T} \cdot z - z^2 / 2} = e^{\sigma^2 \cdot n \cdot T / 2} \cdot (1 / \sqrt{2 \pi}) \int_{\mathbb{R}} dz' \; e^{- z'^2 / 2} = e^{\sigma^2 \cdot n \cdot T / 2} \\), simplifying our expression for the expected value the system needs to pay out for the imbalance to
+using the linearity of the expectation and the identity \\( \mathbb{E}[ e^{\sigma W_{t}} \| \mathcal{F}_{t} ] = e^{\frac{\sigma^2 t}{2}} \\) for GBM. Over longer time horizons, the expected value to be paid out by the protocol will approach zero when
 
-\\[ \mathbb{E}[ {\mathrm{PnL}\_{imb}}\_n \| \mathcal{F}_{n} ] = {\mathrm{OI}\_{imb}}\_{0} \cdot ( 1 - 2k )^n \cdot \bigg[ \bigg(e^{(\mu + \sigma^2 / 2) \cdot T} \bigg)^n  - 1 \bigg] \\]
+\\[ d > e^{(\mu + \sigma^2 / 2)T} \\]
 
-Let \\( a = \frac{1}{1 - 2k} \\), where \\( a \in [1, \infty) \\):
-
-\\[ \mathbb{E}[ {\mathrm{PnL}\_{imb}}\_n \| \mathcal{F}_{n} ] = {\mathrm{OI}\_{imb}}\_{0} \cdot a^{-n} \cdot \bigg[ \bigg(e^{(\mu + \sigma^2 / 2) \cdot T} \bigg)^n  - 1 \bigg] \\]
-
-This reduces our task to choosing an appropriate value for \\( a \gg e^{(\mu + \sigma^2 / 2) \cdot T} \\) such that the expected value of the imbalance profit significantly decays over time as more blocks go by. Take
-
-\\[ a = b \cdot e^{(\mu + \sigma^2 / 2) \cdot T} \\]
-
-where \\( b \in (1, \infty) \\). As \\( n \to \infty \\),
-
-\\[ \lim_{n\to\infty} \mathbb{E}[ {\mathrm{PnL}\_{imb}}\_n \| \mathcal{F}_{n} ] = {\mathrm{OI}\_{imb}}\_{0} \cdot \bigg( \frac{e^{(\mu + \sigma^2 / 2) \cdot T}}{a} \bigg)^n = \frac{ {\mathrm{OI}\_{imb}}\_0 }{b^n} = 0 \\]
-
-producing the behavior we want when \\( b > 1 \\). In terms of \\( k \\)
-
-\\[ k = \frac{1}{2} \cdot \bigg[ 1 - \frac{1}{b \cdot e^{(\mu + \sigma^2 / 2) \cdot T}} \bigg] \\]
-
-Notice, this relates our chosen value for \\( k \\) to properties of the underlying feed (i.e. drift and volatility).
+This condition requires that, per funding interval, the decay in open interest imbalance \\( d^{-1} \\) outpace the expected drift in market price \\( \mathbb{E}[ \frac{P(i)}{P(i-1)} \| \mathcal{F}_{i} ] \\).
 
 
 #### Value at Risk
