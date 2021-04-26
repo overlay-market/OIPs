@@ -18,7 +18,7 @@ Two issues to address with this note:
 
 ## Context
 
-The goal of [funding payments](note-1) are to incentivize a balanced set of positions on each market offered by the protocol so that passive OVL holders, who effectively act as the counterparty to all unbalanced trades in the system, are protected from significant unexpected dilution. This ensures the supply of the settlement currency (OVL) remains relatively stable over longer periods of time -- stable in the sense of governance having the ability to predict the expected worst case inflation rate within a certain degree of confidence due to unbalanced trades on markets.
+[Funding payments](note-1) are meant to incentivize a balanced set of positions on each market offered by the protocol so that passive OVL holders, who effectively act as the counterparty to all unbalanced trades in the system, are protected from significant unexpected dilution. This ensures the supply of the settlement currency (OVL) remains relatively stable over longer periods of time -- stable in the sense of governance having the ability to predict the expected worst case inflation rate within a certain degree of confidence due to unbalanced trades on markets.
 
 For better or for worse, governance is given the ability to tune the rate \\( k \\) at which funding flows from longs to shorts or shorts to longs to balance the open interest on a market over time. The purpose of this note is to provide guidance on what to set the value of \\( k \\) to.
 
@@ -26,13 +26,13 @@ As \\( k \\) is the rate at which open interest on a market rebalances, it is di
 
 ### Background
 
-Return to the functional form of our [funding payments](note-1)
+Return to the functional form of our funding payments
 
 \\[ \mathrm{FP} (t) = k \cdot \mathrm{OI}\_{imb}(t) \\]
 
 where \\( {\mathrm{OI}\_{imb}} (t) = {\mathrm{OI}_l} (t) - {\mathrm{OI}_s} (t) \\) is the open interest imbalance between the long \\( l \\) and short \\( s \\) side on a market at time \\( t \\).
 
-We define position \\( j \\)'s contribution to the open interest on side \\( a \in \\{ l, s \\} \\) as the product of the OVL locked \\( N_{ja} \\) and leverage used \\( L_{ja} \\). The total open interest on a side is the sum over all positions:
+We define position \\( j \\)'s contribution to the open interest on side \\( a \in \\{ l, s \\} \\) as the product of the OVL collateral locked \\( N_{ja} \\) and leverage used \\( L_{ja} \\). The total open interest on a side is the sum over all positions:
 
 \\[ \mathrm{OI}_a (t) = \sum\_{j} N\_{ja} L\_{ja}  \\]
 
@@ -47,7 +47,7 @@ For further simplicity, assume no more positions are built or unwound on either 
 
 ### Imbalance Over Time
 
-What does the evolution of the imbalance look like when we factor in funding payments up to fetch \\( m \\)? In terms of the prior period \\( m-1 \\), open interest on the long side after paying the funding payment will be
+What does the evolution of the imbalance look like when we factor in funding payments up to fetch \\( m \\)? In terms of the prior period \\( m-1 \\), open interest on the long side after paying funding will be
 
 \\[ {\mathrm{OI}\_{l}} (m) = {\mathrm{OI}\_{l}}(m-1) - \mathrm{FP}(m-1) \\]
 
@@ -72,21 +72,41 @@ One can view the risk to the system at time \\( t = 0 \\) due to the long imbala
 
 \\[ \mathrm{PnL} (m) = {\mathrm{OI}\_{imb}} (m) \cdot \bigg[ \frac{P (m)}{P(0)} - 1 \bigg] \\]
 
-where \\( P(i) \\) is the market value fetched from the oracle at time \\( i \\).
+where \\( P(i) \\) is the market value fetched from the oracle at time \\( i \\). An easy way to arrive at this is to sum the unrealized PnL of all the long *and* short positions that have each been built at time \\( 0 \\).
 
 Take \\( P : \Omega \to \mathbb{R} \\) to be a random variable on the probability space \\( (\Omega, \mathcal{F}, \mathrm{P}) \\) driven by a stochastic process \\( W_t \\)
 
 \\[ P(t) = P(0) e^{\mu t + \sigma W_t} \\]
 
-such that the feed exhibits Geometric Brownian motion (GBM) when \\( W_t \\) is a Wiener process. Assume GBM for now even though DeFi price feeds will be far more fat-tailed (we'll have to be more conservative with \\( k \\) values chosen). PnL to be minted/burned at time \\( m \\) for this hypothetical long position reduces to
+Assume the feed exhibits [Geometric Brownian motion (GBM)](https://en.wikipedia.org/wiki/Geometric_Brownian_motion) such that \\( W_t \\) is a Wiener process, with a word of caution: DeFi price feeds will likely be fat-tailed, so governance should be more conservative with \\( k \\) values chosen.
+
+PnL to be minted/burned at time \\( m \\) for this hypothetical long position reduces to
 
 \\[ \mathrm{PnL} (m) = {\mathrm{OI}\_{imb}}(0) \cdot \bigg( 1 - 2k \bigg)^m \cdot \bigg[ e^{\mu m T + \sigma W\_{m T}}  - 1 \bigg] \\]
 
 where \\( T \\) is the length of time between funding payments.
 
-The protocol itself is liable for this imbalance PnL, and passive OVL holders effectively act as the counterparty through dilution caused by Overlay's token mint/burn mechanism. Our approach to minimizing the risk borne by passive OVL holders will be to choose a \\( k \\) that substantially reduces the expected payout associated with this hypothetical imbalance position within a finite number of time intervals.
+The protocol itself is liable for this imbalance PnL. Our approach to minimizing the risk borne by passive OVL holders will be to choose a \\( k \\) that substantially reduces the expected payout due to this positional imbalance within a finite number of time intervals \\( m \\), assuming an acceptable confidence level \\( \alpha \\).
 
 ### Limiting Behavior
+
+First, let's put bounds on \\( k \\) based on the long-run behavior we wish to enforce. \\( k \\) should be chosen such that a market's risk to the system will be reduced to almost nothing the more time that passes by.
+
+This translates to two potential requirements over longer time horizons:
+
+1. [Expected value](https://en.wikipedia.org/wiki/Expected_value) of the imbalance PnL should approach zero:
+\\[ \lim_{m \to \infty} \mathbb{E}[ \mathrm{PnL}(m) \| \mathcal{F}_{m} ] = 0 \\]
+
+2. [Value at risk](https://en.wikipedia.org/wiki/Value_at_risk) to the system due to the imbalance should approach zero:
+\\[ \lim_{m \to \infty} \mathrm{VaR}_{\alpha}(m) = 0 \\]
+
+where we define our market's value at risk metric to be the maximum amount of excess OVL we expect the system to print at some future time \\( m \\), with a given level of certainty \\( \alpha \\).
+
+Mathematically,
+
+\\[ 1 - \alpha = \mathbb{P}[ \mathrm{PnL}(m) \leq \mathrm{VaR}_{\alpha}(m) ] \\]
+
+where \\( 1 - \alpha \\) is the probability the imbalance PnL is less than an amount \\( \mathrm{VaR}_{\alpha}(m) \\) at time \\( m \\). VaR estimates can be found through this expression.
 
 #### Expected Value
 
