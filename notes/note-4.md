@@ -18,59 +18,79 @@ Two issues to address with this note:
 
 ## Context
 
-Return to the functional form of our [funding payments](note-1) \\( \mathrm{FP}_n \\)
+The goal of [funding payments](note-1) are to incentivize a balanced set of positions on each market offered by the protocol so that passive OVL holders, who effectively act as the counterparty to all unbalanced trades in the system, are protected from significant unexpected dilution. This ensures the supply of the settlement currency (OVL) remains relatively stable over longer periods of time -- stable in the sense of governance having the ability to predict the expected worst case inflation rate within a certain degree of confidence due to unbalanced trades on markets.
 
-\\[ \mathrm{FP}\_n = k \cdot \mathrm{OI}\_{imb}(t_n) \\]
+For better or for worse, governance is given the ability to tune the rate \\( k \\) at which funding flows from longs to shorts or shorts to longs to balance the open interest on a market over time. The purpose of this note is to provide guidance on what to set the value of \\( k \\) to.
 
-where \\( {\mathrm{OI}\_{imb}}_n = {\mathrm{OI}_l}_n - {\mathrm{OI}_s}_n \\) is the open interest imbalance between the long and short side on a market at time \\( t_n \\).
+As \\( k \\) is the rate at which open interest on a market rebalances, it is directly linked with the time it takes to draw down the risk associated with an imbalanced book. Thus, we suggest \\( k \\) be related to the risk the underlying feed adds to the system and inherently passive OVL holders through the currency supply.
 
-We need some guidance on what to set the value of \\( k \\) as for every update period. \\( k \\) dictates the rate at which funds flow from longs to shorts or shorts to longs to rebalance the system and draw down the risk associated with an imbalanced book. Thus, \\( k \\) should be related to the risk the underlying feed adds to the system and inherently passive OVL holders through the currency supply.
+### Background
 
-To start, consider the case where \\( \mathrm{OI}_{imb} > 0 \\) so longs outweigh shorts. For simplicity, assume no more positions are built or unwound on either side such that the total open interest remains a constant: \\( \mathrm{OI}_l + \mathrm{OI}_s = \mathrm{const} \\). The latter assumption will skew our risk estimates, but likely to the more conservative side given funding incentives should trend towards a more balanced book over time.
+Return to the functional form of our [funding payments](note-1)
+
+\\[ \mathrm{FP} (t) = k \cdot \mathrm{OI}\_{imb}(t) \\]
+
+where \\( {\mathrm{OI}\_{imb}} (t) = {\mathrm{OI}_l} (t) - {\mathrm{OI}_s} (t) \\) is the open interest imbalance between the long \\( l \\) and short \\( s \\) side on a market at time \\( t \\).
+
+We define position \\( j \\)'s contribution to the open interest on side \\( a \in \\{ l, s \\} \\) as the product of the OVL locked \\( N_{ja} \\) and leverage used \\( L_{ja} \\). The total open interest on a side is the sum over all positions:
+
+\\[ \mathrm{OI}_a (t) = \sum\_{j} N\_{ja} L\_{ja}  \\]
+
+Funding payments are made from longs to shorts when \\( \mathrm{OI}\_l > \mathrm{OI}\_s \\), and shorts to longs when \\( \mathrm{OI}\_l < \mathrm{OI}\_s \\). These are paid out intermittently at every oracle fetch \\( i \in \\{ 0, 1, ..., m \\} \\) between time \\( 0 \\) and \\( t \\).
+
+For this note, consider the case where \\( \mathrm{OI}_{imb} > 0 \\) so longs outweigh shorts. Our results will be the same when \\( {\mathrm{OI}}\_{imb} < 0 \\).
+
+For further simplicity, assume no more positions are built or unwound on either side such that the total open interest remains a constant: \\( \mathrm{OI}_l + \mathrm{OI}_s = \mathrm{const} \\). The latter assumption will skew our risk estimates, but likely to the more conservative side as funding incentives should trend towards a more balanced book. It also allows us to map time 1:1 with each discrete oracle fetch \\( t = i \\).
 
 
 ## Risk-Based Approach to Balancing Markets
 
 ### Imbalance Over Time
 
-What does the evolution of the imbalance look like over time  when we factor in funding payments? Given open interest on a market for the long side of \\( \mathrm{OI}_l \\) and short side of \\( \mathrm{OI}_s \\), take the imbalance on the market at time \\( t_n \\) to be \\( {\mathrm{OI}\_{imb}}\_n = {\mathrm{OI}_l}_n - {\mathrm{OI}_s}_n > 0 \\). In terms of the prior period \\( t\_{n-1} \\), open interest on the long side after paying the funding payment will be
+What does the evolution of the imbalance look like when we factor in funding payments up to fetch \\( m \\)? In terms of the prior period \\( m-1 \\), open interest on the long side after paying the funding payment will be
 
-\\[ {\mathrm{OI}\_{l}}_n = {\mathrm{OI}\_{l}}\_{n-1} - \mathrm{FP}\_{n-1} \\]
+\\[ {\mathrm{OI}\_{l}} (m) = {\mathrm{OI}\_{l}}(m-1) - \mathrm{FP}(m-1) \\]
 
 and short side after receiving funding
 
-\\[ {\mathrm{OI}\_{s}}_n = {\mathrm{OI}\_{s}}\_{n-1} + \mathrm{FP}\_{n-1} \\]
+\\[ {\mathrm{OI}\_{s}} (m) = {\mathrm{OI}\_{s}}(m-1) + \mathrm{FP}(m-1) \\]
 
-Subtracting the two and expanding \\( \mathrm{FP}_{n-1} \\) gives the time evolution of the imbalance from block \\( n-1 \\) to block \\( n \\)
+Subtracting the two and expanding \\( \mathrm{FP}(m-1) \\) gives the time evolution of the imbalance from \\( m-1 \\) to \\( m \\)
 
-\\[ {\mathrm{OI}\_{imb}}_n = {\mathrm{OI}\_{imb}}\_{n-1} \cdot ( 1 - 2k ) \\]
+\\[ {\mathrm{OI}\_{imb}}(m) = {\mathrm{OI}\_{imb}} (m-1) \cdot \bigg( 1 - 2k \bigg) \\]
 
-Rinse and repeat \\( n \\) times to get the time evolution as a function of the value of the open interest imbalance when traders initially enter their positions
+Rinse and repeat \\( m \\) times to get the time evolution as a function of the open interest imbalance when traders initially enter their positions
 
-\\[ {\mathrm{OI}\_{imb}}_n = {\mathrm{OI}\_{imb}}\_{0} \cdot ( 1 - 2k )^n \\]
+\\[ {\mathrm{OI}\_{imb}} (m) = {\mathrm{OI}\_{imb}}(0) \cdot \bigg( 1 - 2k \bigg)^m \\]
 
 where \\( k \in [0, \frac{1}{2}] \\).
 
 
 ### Risk to the System
 
-One can view the risk to the system at time \\( t_0 \\) due to the long imbalance created on this market as the expected PnL the system would need to pay out to a long position with notional \\( {\mathrm{OI}_{imb}}_0 > 0 \\) at some time in the future \\( t_n \\):
+One can view the risk to the system at time \\( t = 0 \\) due to the long imbalance created on this market as the expected PnL the system would need to pay out to a long position with notional \\( {\mathrm{OI}_{imb}} (0) > 0 \\) at some time in the future \\( t = m \\):
 
-\\[ {\mathrm{PnL}\_{imb}}_n = {\mathrm{OI}\_{imb}}\_{n} \cdot \bigg[ \frac{P_n}{P_0} - 1 \bigg] \\]
+\\[ \mathrm{PnL} (m) = {\mathrm{OI}\_{imb}} (m) \cdot \bigg[ \frac{P (m)}{P(0)} - 1 \bigg] \\]
 
-where \\( P_n = P(t_n) \\) is the future value of the underlying feed at time \\( t_n \\) and \\( P_0 \\) the value at the current time \\( t_0 \\). Our results will also be the same when \\( {\mathrm{OI}_{imb}}_0 < 0 \\).
+where \\( P(i) \\) is the market value fetched from the oracle at time \\( i \\).
 
 Take \\( P : \Omega \to \mathbb{R} \\) to be a random variable on the probability space \\( (\Omega, \mathcal{F}, \mathrm{P}) \\) driven by a stochastic process \\( W_t \\)
 
-\\[ P_t = P_0 e^{\mu \cdot t + \sigma \cdot W_t} \\]
+\\[ P(t) = P(0) e^{\mu t + \sigma W_t} \\]
 
-such that the feed exhibits Geometric Brownian motion (GBM) when \\( W_t \\) is a Wiener process. Assume GBM for now even though DeFi price feeds will be far more fat-tailed (we'll have to be more conservative with \\( k \\) values chosen). \\( dP_t = P_t \cdot [ (\mu + \frac{\sigma^2}{2}) \cdot dt + \sigma \cdot dW_t ] \\) and PnL at time \\( t_n \\) from this hypothetical long position reduces to
+such that the feed exhibits Geometric Brownian motion (GBM) when \\( W_t \\) is a Wiener process. Assume GBM for now even though DeFi price feeds will be far more fat-tailed (we'll have to be more conservative with \\( k \\) values chosen). PnL to be minted/burned at time \\( m \\) for this hypothetical long position reduces to
 
-\\[ {\mathrm{PnL}\_{imb}}_n = {\mathrm{OI}\_{imb}}\_{0} \cdot ( 1 - 2k )^n \cdot \bigg[ e^{\mu \cdot n \cdot T + \sigma \cdot W\_{n \cdot T}}  - 1 \bigg] \\]
+\\[ \mathrm{PnL} (m) = {\mathrm{OI}\_{imb}}(0) \cdot \bigg( 1 - 2k \bigg)^m \cdot \bigg[ e^{\mu m T + \sigma W\_{m T}}  - 1 \bigg] \\]
 
-where \\( t_n - t_0 = n \cdot T \\) and \\( T \\) is the length of time between funding payments.
+where \\( T \\) is the length of time between funding payments.
 
-Our approach will be to choose a \\( k \\) that minimizes the expected value of the PnL, \\( \mathbb{E}[ {\mathrm{PnL}\_{imb}}\_n \| \mathcal{F}_{n} ] \\), for this "position" within a finite number \\( n \\) time intervals to reduce risk to the system. Taking the expected value of above
+The protocol itself is liable for this imbalance PnL, and passive OVL holders effectively act as the counterparty through dilution caused by Overlay's token mint/burn mechanism. Our approach to minimizing the risk borne by passive OVL holders will be to choose a \\( k \\) that substantially reduces the expected payout associated with this hypothetical imbalance position within a finite number of time intervals.
+
+### Limiting Behavior
+
+#### Expected Value
+
+Taking the expected value of above
 
 \\[ \mathbb{E}[ {\mathrm{PnL}\_{imb}}\_n \| \mathcal{F}_{n} ] = {\mathrm{OI}\_{imb}}\_{0} \cdot ( 1 - 2k )^n \cdot \bigg[ e^{\mu \cdot n \cdot T} \cdot \mathbb{E}[e^{\sigma \cdot W\_{n \cdot T}}]  - 1 \bigg] \\]
 
@@ -97,7 +117,7 @@ producing the behavior we want when \\( b > 1 \\). In terms of \\( k \\)
 Notice, this relates our chosen value for \\( k \\) to properties of the underlying feed (i.e. drift and volatility).
 
 
-### Value at Risk
+#### Value at Risk
 
 Expanding further, we can examine the value at risk (VaR) to the system for paying out PnL on this hypothetical long position due to our market's imbalance. Note, the protocol and passive OVL holders are taking the other side, so what we really want is the probability \\( 1 - \alpha \\) this imbalance PnL is less than an amount \\( \mathrm{VaR}_{\alpha, n} \\):
 
@@ -171,23 +191,21 @@ and \\( \lim_{n\to\infty} \mathbb{E}[ {\mathrm{PnL}\_{imb}}\_n \| \mathcal{F}_{n
 
 ### Determining \\( \mu \\) and \\( \sigma^2 \\)
 
-We'll use maximum likelihood estimation (MLE) from on-chain samples to find our \\( \mu \\) and \\( \sigma^2 \\) values. At launch, we should have these simply inform our chosen \\( k \\) values over rolling time periods versus automating completely, and allow governance to tweak funding rates given existing risk conditions. So more as guidelines for funding rates in the current time period, given assumptions of GBM won't be accurate over longer time horizons.
+We'll use maximum likelihood estimation (MLE) from on-chain samples to find our \\( \mu \\) and \\( \sigma^2 \\) values. At launch, we should have these simply inform our chosen \\( k \\) values over rolling time periods versus automating completely, and allow governance to tweak funding rates given existing risk conditions.
 
-Assume \\( T \\) is the `periodSize` of a [sliding window TWAP oracle](note-2), such that funding is paid upon every price update of an Overlay market, versus per block (results will be the same). Let
+Assume \\( T \\) is the `periodSize` of a [sliding window TWAP oracle](note-2), such that funding is paid upon every price update of an Overlay market. Let
 
-\\[ R_i = \ln \bigg( \frac{P_i}{P_{i-1}} \bigg) = \mu \cdot T + \sigma \cdot [ W_{i \cdot T} - W_{(i-1) \cdot T} ] \sim \mathcal{N}(\mu \cdot T, \sigma^2 \cdot T) \\]
+\\[ R(i) = \ln \bigg[ \frac{P(i)}{P(i-1)} \bigg] = \mu T + \sigma [ W_{i T} - W_{(i-1) T} ] \sim \mathcal{N}(\mu T, \sigma^2  T) \\]
 
-Sampling \\( N+1 \\) of these windows over a length of time \\( (N + 1) \cdot T \\) for \\( (r_1, r_2, ..., r_{N}) \\) values of \\( R \\) gives MLEs
+Sampling \\( N+1 \\) of these windows over a length of time \\( (N + 1) \cdot T \\) gives \\( (r_1, r_2, ..., r_{N}) \\) values of \\( R \\) with MLEs
 
-\\[ \hat{\mu} = \frac{1}{N \cdot T} \cdot \sum_{i = 1}^N r_i \\]
+\\[ \hat{\mu} = \frac{1}{N \cdot T} \sum_{i = 1}^N r_i \\]
 
 and
 
-\\[ \hat{\sigma}^2 = \frac{1}{N \cdot T} \cdot \sum_{i = 1}^N (r_i - \hat{\mu} \cdot T)^2 \\]
+\\[ \hat{\sigma}^2 = \frac{1}{N \cdot T} \sum_{i = 1}^N (r_i - \hat{\mu} T)^2 \\]
 
 to inform our governance-determined value for \\( k \\).
-
-With our proposed feeds at launch likely coming from an implementation of Keep3r Network's [Keep3rV1Oracle](https://github.com/keep3r-network/keep3r.network/blob/master/contracts/jobs/Keep3rV1Oracle.sol#L685) with SushiSwap TWAPs as the underlying, we should be able to calculate these rolling estimations [on-chain](https://github.com/keep3r-network/keep3r.network/blob/master/contracts/Keep3rV1Volatility.sol#L268).
 
 
 ### Concrete Numbers
@@ -199,6 +217,11 @@ The analysis above only examines value at risk to the system on an individual ma
 
 \\[ 1 - \alpha = \mathbb{P}\bigg[ \sum_{j=1}^{N} {\mathrm{OI}\_{imb}}\_{j} (t_0) \cdot a^{-n}\_{j} \cdot \bigg( e^{\mu_j \cdot n \cdot T + \sigma_j \cdot W\_{n \cdot T}}  - 1 \bigg) \leq \mathrm{VaR}_{\alpha, n} \bigg] \\]
 
-where \\( (\mu_j, \sigma_j, a_j) \\) are the relevant parameters for market \\( j \\) assuming \\( N \\) total markets offered by the protocol. 
+where \\( (\mu_j, \sigma_j, a_j) \\) are the relevant parameters for market \\( j \\) assuming \\( N \\) total markets offered by the protocol.
+
+
+## Acknowledgments
+
+[Daniel Wasserman](https://github.com/dwasse) for pushing the idea that funding be related to the risk a market feed adds to the system.
 
 <!-- TODO: Should really be looking at "portfolio" of markets we're offering and VaR from combination of feeds! sum of log normals isn't closed form (?) so more annoying. Do this later ... -->
