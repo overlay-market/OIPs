@@ -20,7 +20,7 @@ Two issues to address with this note:
 
 [Funding payments](note-1) are meant to incentivize a balanced set of positions on each market offered by the protocol so that passive OVL holders, who effectively act as the counterparty to all unbalanced trades in the system, are protected from significant unexpected dilution. This ensures the supply of the settlement currency (OVL) remains relatively stable over longer periods of time -- stable in the sense of governance having the ability to predict the expected worst case inflation rate within a certain degree of confidence due to unbalanced trades on markets.
 
-For better or for worse, governance is given the ability to tune the rate \\( k \\) at which funding flows from longs to shorts or shorts to longs to balance the open interest on a market over time. The purpose of this note is to provide guidance on what to set the value of \\( k \\) to.
+For better or worse, governance is given the ability to tune the per-market rate \\( k \\) at which funding flows from longs to shorts or shorts to longs to balance the open interest on a market over time. The purpose of this note is to provide guidance on what to set the value of \\( k \\) to.
 
 As \\( k \\) is the rate at which open interest on a market rebalances, it is directly linked with the time it takes to draw down the risk associated with an imbalanced book. Thus, we suggest \\( k \\) be related to the risk the underlying feed adds to the system and inherently passive OVL holders through the currency supply.
 
@@ -88,7 +88,7 @@ where \\( T \\) is the length of time between funding payments and
 
 \\[ d \equiv \frac{1}{1 - 2k} \\]
 
-with \\( d \in \[ 1, \infty \) \\). In terms of \\( l \\) from [note 1](https://oips.overlay.market/notes/note-1), \\( l(m) = d^{-m} \\).
+with \\( d \in \[ 1, \infty \) \\). In terms of \\( l \\) from [note 1](note-1), \\( l(m) = d^{-m} \\).
 
 The protocol itself is liable for this imbalance PnL. Our approach to minimizing the risk borne by passive OVL holders will be to choose a \\( k \\) that substantially reduces the expected payout due to positional imbalance within a finite number of time intervals \\( m \\), assuming an acceptable confidence level \\( \alpha \\).
 
@@ -104,9 +104,9 @@ This translates to two potential requirements over longer time horizons:
 2. [Value at risk](https://en.wikipedia.org/wiki/Value_at_risk) to the system due to the imbalance should approach zero:
 \\[ \lim_{m \to \infty} \mathrm{VaR}_{\alpha}(m) = 0 \\]
 
-where we define our market's value at risk metric to be the maximum amount of excess OVL we expect the system to print at some future time \\( m \\), with a given level of certainty \\( \alpha \\).
+where we define our market's value at risk metric to be the worst case amount of excess OVL we expect the system to print at some future time \\( m \\), with a given level of certainty \\( \alpha \\).
 
-Mathematically,
+Formally,
 
 \\[ 1 - \alpha = \mathbb{P}[ \mathrm{PnL}(m) \leq \mathrm{VaR}_{\alpha}(m) ] \\]
 
@@ -127,37 +127,29 @@ This condition requires that, per funding interval, the decay in open interest i
 
 #### Value at Risk
 
-Expanding further, we can examine the value at risk (VaR) to the system for paying out PnL on this hypothetical long position due to our market's imbalance. Note, the protocol and passive OVL holders are taking the other side, so what we really want is the probability \\( 1 - \alpha \\) this imbalance PnL is less than an amount \\( \mathrm{VaR}_{\alpha, n} \\):
+Our value at risk metric due to a market's open interest imbalance can be found from the assertion that \\( 1-\alpha \\) be the probability the imbalance PnL is less than the VaR amount at time \\( m \\). After some manipulation, our more formal expression for \\( \mathbb{P}[ \mathrm{PnL}(m) \leq \mathrm{VaR}_{\alpha}(m) ] \\) becomes
 
-\\[ 1 - \alpha = \mathbb{P}[ {\mathrm{PnL}\_{imb}}\_n \leq \mathrm{VaR}_{\alpha, n} ] \\]
+\\[ 1 - \alpha = \Phi \bigg( \frac{1}{\sigma \sqrt{m T}} \cdot \bigg[ \ln \bigg( 1 + d^{m} \cdot \frac{\mathrm{VaR}\_{\alpha}(m)}{\mathrm{OI}\_{imb}(0)} \bigg) - \mu m T \bigg] \bigg) \\]
 
-where we abuse notation here given the [usual definition of VaR](https://en.wikipedia.org/wiki/Value_at_risk). From the prior section,
+where \\( \Phi (z) = \mathbb{P}[ Z \leq z ] \\) is the [CDF](https://en.wikipedia.org/wiki/Cumulative_distribution_function) of the standard normal distribution \\( Z \sim \mathcal{N}(0, 1) \\). We've also used the normality of [Wiener process](https://en.wikipedia.org/wiki/Wiener_process) increments \\( W_{t+u} - W_t \sim \mathcal{N}(0, u) \\). In terms of VaR,
 
-\\[ 1 - \alpha = \mathbb{P}\bigg[{\mathrm{OI}\_{imb}}\_{0} \cdot a^{-n} \cdot \bigg( e^{\mu \cdot n \cdot T + \sigma \cdot W\_{n \cdot T}}  - 1 \bigg) \leq \mathrm{VaR}_{\alpha, n} \bigg] \\]
+\\[ \mathrm{VaR}\_{\alpha} (m) = \mathrm{OI}\_{imb}(0) \cdot d^{-m} \cdot \bigg[ e^{\mu m T + \sigma \sqrt{m T} \cdot {\Phi}^{-1}(1-\alpha)} - 1 \bigg] \\]
 
-which reduces to
+which is, with probability \\( 1-\alpha \\), the worst case amount of excess OVL the system is likely to print by time \\( m \\).
 
-\\[ 1 - \alpha = \Phi \bigg( \frac{1}{\sigma \cdot \sqrt{n \cdot T}} \cdot \bigg[ \ln \bigg( 1 + a^{n} \cdot \tilde{\mathrm{VaR}}_{\alpha, n} \bigg) - \mu \cdot n \cdot T \bigg] \bigg) \\]
+Our analysis for longer time horizons will be slightly more complex than above. As \\( m \to \infty \\), VaR will approach zero when
 
-\\( \tilde{\mathrm{VaR}}_{\alpha, n} = \frac{\mathrm{VaR}\_{\alpha, n}}{ {\mathrm{OI}\_{imb}}\_{0} } \\) is normalized for the original imbalance amount and \\( \Phi (z) = \mathbb{P}[ Z \leq z ] \\) is the CDF of the standard normal distribution \\( Z \sim \mathcal{N}(0, 1) \\). Inverting this, one finds the normalized upper bound for the PnL to be paid out \\( n \\) blocks in the future, \\( \tilde{\mathrm{VaR}}\_{\alpha, n} \\), as a function of the (\\( 1 - \alpha \\))-quantile:
+\\[ d^m > e^{\mu m T + \sigma \sqrt{mT} \cdot \Phi^{-1}(1-\alpha)} \\]
 
-\\[ \tilde{\mathrm{VaR}}_{\alpha, n} = a^{-n} \cdot \bigg[ e^{\mu \cdot n \cdot T + \sigma \cdot \sqrt{n \cdot T} \cdot {\Phi}^{-1}(1-\alpha)} - 1 \bigg] \\]
+To remove dependence of this condition on \\( m \\) while remaining conservative, notice
 
-Anticipated VaR to the system also scales with \\( a^{-n} \\), supporting a choice of \\( a \gg e^{(\mu + \sigma^2 / 2) \cdot T} \\). Similar to the analysis above, we want VaR to decrease over time as more blocks go by, such that the limit approaches zero as \\( n \to \infty \\). This puts a lower bound on acceptable values for \\( b \\).
+\\[ e^{\sigma m \sqrt{T} \cdot \Phi^{-1}(1-\alpha)} \geq e^{\sigma \sqrt{mT} \cdot \Phi^{-1}(1-\alpha)} \\]
 
-Substituting for \\( a \\),
+for integer \\( m \\). Therefore the more stringent condition of
 
-\\[ \tilde{\mathrm{VaR}}_{\alpha, n} = \frac{1}{b^{n}} \cdot \frac{e^{\sigma \cdot \sqrt{n \cdot T} \cdot {\Phi}^{-1}(1-\alpha)}}{e^{\frac{\sigma^2}{2} \cdot n \cdot T}} - \frac{1}{a^{n}} \\]
+\\[ d > e^{\mu T + \sigma \sqrt{T} \cdot \Phi^{-1}(1-\alpha)} \\]
 
-The first term is what we need to worry about, tuning \\( b \\) such that it appropriately decays to zero for large \\( n \\). Notice, since \\( n \geq 0 \\),
-
-\\[ \frac{1}{b^{n}} \cdot \frac{e^{\sigma \cdot \sqrt{n \cdot T} \cdot {\Phi}^{-1}(1-\alpha)}}{e^{\frac{\sigma^2}{2} \cdot n \cdot T}} \leq \bigg( \frac{1}{b} \cdot \frac{e^{\sigma \cdot \sqrt{T} \cdot {\Phi}^{-1}(1-\alpha)}}{e^{\frac{\sigma^2}{2} \cdot T}} \bigg)^n \\]
-
-which means having the right-hand side of this inequality go to zero for \\( n \to \infty \\) will lead to the first term in our expression for VaR also approaching zero. This occurs when the term in parentheses on the right-hand side is less than 1 or
-
-\\[ b > e^{\sigma \cdot \sqrt{T} \cdot {\Phi}^{-1}(1-\alpha) - \frac{\sigma^2}{2} \cdot T} \\]
-
-giving us a lower bound on \\( b \\) for a confidence level of \\( 1 - \alpha \\) on our VaR to decay to zero as \\( n \to \infty \\). Let \\( b_{\alpha} = e^{\sigma \cdot \sqrt{T} \cdot {\Phi}^{-1}(1-\alpha) - \frac{\sigma^2}{2} \cdot T} \\). If our chosen value for \\( b >  b_{\alpha} \\), we'll have with confidence \\( 1 - \alpha \\) \\( \lim_{n\to\infty} \tilde{\mathrm{VaR}}_{\alpha, n} = 0 \\).
+will also have VaR drop off to zero over longer time horizons. The choice of \\( \alpha \\) dictates how large the lower bound on \\( d \\) is vs the expected value condition.
 
 
 ### Choice of \\( k \\)
@@ -221,15 +213,13 @@ to inform our governance-determined value for \\( k \\).
 
 ## Considerations
 
-The analysis above only examines value at risk to the system on an individual market-by-market level. While useful, it is not entirely accurate at the macro level. We should really examine the "portfolio" of markets we're offering and the total value at risk to the system caused by the *sum of imbalances* on each individual market
+The analysis above only examines value at risk to the system on an individual market-by-market basis. While useful, it is not entirely accurate at the macro level. We should really examine the "portfolio" of markets we're offering and the total value at risk to the system caused by the *sum of imbalances* on each individual market
 
-\\[ 1 - \alpha = \mathbb{P}\bigg[ \sum_{j=1}^{N} {\mathrm{OI}\_{imb}}\_{j} (t_0) \cdot a^{-n}\_{j} \cdot \bigg( e^{\mu_j \cdot n \cdot T + \sigma_j \cdot W\_{n \cdot T}}  - 1 \bigg) \leq \mathrm{VaR}_{\alpha, n} \bigg] \\]
+\\[ 1 - \alpha = \mathbb{P}\bigg[ \sum_{k=1}^{N} {\mathrm{OI}\_{imb}}\_{k} (0) \cdot d^{-m}\_{k} \cdot \bigg( e^{\mu_k m T + \sigma_k \cdot W\_{m T}}  - 1 \bigg) \leq \mathrm{VaR}_{\alpha} (m) \bigg] \\]
 
-where \\( (\mu_j, \sigma_j, a_j) \\) are the relevant parameters for market \\( j \\) assuming \\( N \\) total markets offered by the protocol.
+where \\( (\mu_k, \sigma_k, d_k) \\) are the relevant parameters for market \\( k \\) assuming \\( N \\) total markets offered by the protocol.
 
 
 ## Acknowledgments
 
-[Daniel Wasserman](https://github.com/dwasse) for pushing the idea that funding be related to the risk a market feed adds to the system.
-
-<!-- TODO: Should really be looking at "portfolio" of markets we're offering and VaR from combination of feeds! sum of log normals isn't closed form (?) so more annoying. Do this later ... -->
+[Daniel Wasserman](https://github.com/dwasse) for pushing to directly relate funding with risk.
