@@ -18,7 +18,7 @@ Two issues to address with this note:
 
 ## Context
 
-[Funding payments](note-1) are meant to incentivize a balanced set of positions on each market offered by the protocol so that passive OVL holders, who effectively act as the counterparty to all unbalanced trades in the system, are protected from significant unexpected dilution. This ensures the supply of the settlement currency (OVL) remains relatively stable over longer periods of time -- stable in the sense of governance having the ability to predict the expected worst case inflation rate within a certain degree of confidence due to unbalanced trades on markets.
+[Funding payments](note-1) are meant to incentivize a balanced set of positions on each market offered by the protocol so that passive OVL holders, who effectively act as the counterparty to all unbalanced trades in the system, are protected from significant unexpected dilution. This ensures the supply of the settlement currency (OVL) remains relatively stable over longer periods of time -- stable in the sense of governance having the ability to predict the expected worst case inflation rate with a certain degree of confidence due to unbalanced trades on markets.
 
 For better or worse, governance is given the ability to tune the per-market rate \\( k \\) at which funding flows from longs to shorts or shorts to longs to balance the open interest on a market over time. The purpose of this note is to provide guidance on what to set the value of \\( k \\) to.
 
@@ -104,7 +104,7 @@ This translates to two potential requirements over longer time horizons:
 2. [Value at risk](https://en.wikipedia.org/wiki/Value_at_risk) to the system due to the imbalance should approach zero:
 \\[ \lim_{m \to \infty} \mathrm{VaR}_{\alpha}(m) = 0 \\]
 
-where we define our market's value at risk metric to be the worst case amount of excess OVL we expect the system to print at some future time \\( m \\), with a given level of certainty \\( \alpha \\).
+where we define our market's value at risk metric to be the worst case amount of excess OVL we expect the system to print at some future time \\( m \\), with a given level of uncertainty \\( \alpha \\).
 
 Formally,
 
@@ -127,7 +127,7 @@ This condition requires that, per funding interval, the decay in open interest i
 
 #### Value at Risk
 
-Our value at risk metric due to a market's open interest imbalance can be found from the assertion that \\( 1-\alpha \\) be the probability the imbalance PnL is less than the VaR amount at time \\( m \\). After some manipulation, our more formal expression for \\( \mathbb{P}[ \mathrm{PnL}(m) \leq \mathrm{VaR}_{\alpha}(m) ] \\) becomes
+Our value at risk metric due to a market's open interest imbalance can be found from the assertion that \\( 1-\alpha \\) be the probability the imbalance PnL is less than the VaR amount at time \\( m \\). After some manipulation, the more formal expression for \\( \mathbb{P}[ \mathrm{PnL}(m) \leq \mathrm{VaR}_{\alpha}(m) ] \\) becomes
 
 \\[ 1 - \alpha = \Phi \bigg( \frac{1}{\sigma \sqrt{m T}} \cdot \bigg[ \ln \bigg( 1 + d^{m} \cdot \frac{\mathrm{VaR}\_{\alpha}(m)}{\mathrm{OI}\_{imb}(0)} \bigg) - \mu m T \bigg] \bigg) \\]
 
@@ -154,39 +154,21 @@ will also have VaR drop off to zero over longer time horizons. The choice of \\(
 
 ### Choice of \\( k \\)
 
-The conditions on \\( k \\) imposed above ensure the appropriate limiting behavior as \\( n \to \infty \\), such that funding payments effectively zero out risk to the system over longer time horizons. However, our choice for an exact value of \\( k \\) should be set by our risk tolerance for the amount of OVL we'd be willing to let the system print *over shorter timeframes* if all excess notional causing the imbalance were to unwind at the same time *before* funding is able to fully rebalance the system.
+The conditions on our per-market parameter \\( k \\) imposed above ensure the appropriate limiting behavior as \\( m \to \infty \\): funding payments effectively zero out risk to the system over longer time horizons. However, our choice for an exact value of \\( k \\) for each market should be set by our risk tolerance for the amount of OVL we'd be willing to let the system print *over shorter timeframes*, if all excess notional causing the imbalance were to unwind at the same time *before* funding is able to fully rebalance trades on the market.
 
-Thus, we wish to ensure the normalized value at risk to the system due to a particular market some finite number of blocks \\( n \\) into the future is equal to a threshold level \\( \tilde{\mathrm{VaR}}_{\alpha, n} = \tilde{\epsilon}\_{\alpha, n} \\) with confidence \\( 1 - \alpha \\). Assume we impose a cap on the notional imbalance on a market at \\( \| {\mathrm{OI}\_{imb}}_0 \| = \mathrm{OI}\_{imb}\|\_{\mathrm{max}} \\), such that no more positions can be built if the notional to be added to the overweight side would cause the cap to be breached (i.e. \\( - \mathrm{OI}\_{imb}\|\_{\mathrm{max}} \leq \mathrm{OI}\_{imb} \leq \mathrm{OI}\_{imb}\|\_{\mathrm{max}} \\)).
+This translates to setting a market's \\( k \\) value such that the maximum value at risk to the system due to trading on the market, some finite number of blocks \\( m \\) into the future, is equal to a threshold level \\( \mathrm{VaR}\_{\alpha, max} (m) = V\_{\alpha, m} \\) with confidence \\( 1 - \alpha \\). Assume we impose a cap \\( C \\) on the notional allowed on either side of a market
 
-Max value at risk for this market \\( n \\) periods into the future is then (still assuming \\( \mathrm{OI}\_{imb} > 0 \\))
+\\[ \mathrm{OI}_a (t) \leq C  \\]
 
-\\[ \mathrm{VaR}_{\alpha, n}\|\_{\mathrm{max}} = \tilde{\epsilon}\_{\alpha, n} \cdot \mathrm{OI}\_{imb}\|\_{\mathrm{max}} \\]
+where \\( a \in \\{ l, s \\} \\). The initial state \\( \\{ \mathrm{OI}\_{l}(0), \mathrm{OI}\_{s}(0) \\} \\) that causes the maximum value at risk to the system is one in which the initial imbalance is largest: i.e., when there's zero notional on one of the sides and the other side has notional equal to the cap. Then, the initial imbalance will also equal the cap \\( \mathrm{OI}\_{imb}(0) = C \\), when value at risk to the system is greatest. Maximum value at risk to the system \\( \mathrm{VaR}\_{\alpha, max} (m) \\) at some time \\( m \\) in the future becomes
 
-and max inflation \\( i_{\alpha, n}\|\_{\mathrm{max}} \\) of the total currency supply \\( \mathrm{TS}_0 \\) produced by this hypothetical amount at risk is
+\\[ \mathrm{VaR}\_{\alpha, max} (m) = C \cdot d^{-m} \cdot \bigg[ e^{\mu m T + \sigma \sqrt{m T} \cdot {\Phi}^{-1}(1-\alpha)} - 1 \bigg] \\]
 
-\\[ i_{\alpha, n}\|\_{\mathrm{max}} = \frac{\mathrm{VaR}_{\alpha, n}\|\_{\mathrm{max}}}{\mathrm{TS}_0} = \frac{\tilde{\epsilon}\_{\alpha, n} \cdot \mathrm{OI}\_{imb}\|\_{\mathrm{max}}}{\mathrm{TS}_0} \\]
+Setting \\( \mathrm{VaR}\_{\alpha, max} (m) \\) to our threshold level and manipulating
 
-Take the imbalance cap to be some fixed percentage \\( c_{\mathrm{max}} \in [0, 1] \\) of the total supply such that \\( \mathrm{OI}\_{imb}\|\_{\mathrm{max}} = c_{\mathrm{max}} \cdot \mathrm{TS}_0 \\). Max inflation rate \\( n \\) blocks into the future then reduces to
+\\[ d = \bigg\\{ \frac{C}{V_{\alpha, m}} \cdot \bigg[ e^{\mu m T + \sigma \sqrt{m T} \cdot {\Phi}^{-1}(1-\alpha)} - 1 \bigg] \bigg\\}^{1/m} \\]
 
-\\[ i_{\alpha, n}\|\_{\mathrm{max}} = \tilde{\epsilon}\_{\alpha, n} \cdot c_{\mathrm{max}} \\]
-
-showing our chosen threshold risk level \\( \tilde{\epsilon}\_{\alpha, n} \\) is directly proportional to the hypothetical inflation rate we're willing to tolerate with \\( 1 - \alpha \\) confidence for the currency supply (which the cap helps to mitigate). So \\( i_{\alpha, n}\|\_{\mathrm{max}} \\) is ultimately what governance will target.
-
-How does this translate to a value to set for \\( k \\)? Return to the form of our targeted normalized value at risk for the system \\( \tilde{\mathrm{VaR}}_{\alpha, n} = \tilde{\epsilon}]\_{\alpha, n} \\), plug in for the max inflation rate to be tolerated for a market (adjusted for the cap)
-
-\\[ \frac{i_{\alpha, n}\|\_{\mathrm{max}}}{c_{\mathrm{max}}} = a^{-n} \cdot \bigg[ e^{\mu \cdot n \cdot T + \sigma \cdot \sqrt{n \cdot T} \cdot {\Phi}^{-1}(1-\alpha)} - 1 \bigg] \\]
-
-Solving for \\( a = a_{\alpha, n} \\) gives a guideline for our governance-set funding constant based on a tolerated inflation rate within \\( n \\) blocks due to the market at \\( 1-\alpha \\) confidence
-
-\\[ a_{\alpha, n} = \bigg[ \frac{c_{\mathrm{max}}}{i_{\alpha, n}\|\_{\mathrm{max}}} \cdot \bigg( e^{\mu \cdot n \cdot T + \sigma \cdot \sqrt{n \cdot T} \cdot {\Phi}^{-1}(1-\alpha)} - 1 \bigg) \bigg]^{1/n} \\]
-
-where \\( k_{\alpha, n} = \frac{1}{2} \cdot [ 1 - \frac{1}{a_{\alpha, n}} ] \\), with target conditions to ensure \\( \lim_{n\to\infty} \tilde{\mathrm{VaR}}\_{\alpha, n} = 0 \\)
-
-\\[ \frac{i_{\alpha, n}\|\_{\mathrm{max}}}{c_{\mathrm{max}}} < 1 - e^{-n \cdot ( \mu \cdot T + \sigma \cdot \sqrt{T} \cdot \Phi^{-1} (1 - \alpha) )} \\]
-
-and \\( \lim_{n\to\infty} \mathbb{E}[ {\mathrm{PnL}\_{imb}}\_n \| \mathcal{F}_{n} ] = 0 \\)
-
-\\[ \frac{i_{\alpha, n}\|\_{\mathrm{max}}}{c_{\mathrm{max}}} < e^{-\sigma^2 \cdot n \cdot T / 2} \cdot \bigg[ e^{\sigma \cdot \sqrt{n \cdot T} \cdot \Phi^{-1} (1 - \alpha)} - e^{-n \cdot \mu \cdot T} \bigg] \\]
+gives an expression for \\( d \\) (and \\( k \\)) in terms of the cap chosen \\( C \\) and the threshold amount of OVL \\( V_{\alpha, m} \\) we'd be willing to allow this market to print within \\( m \\) time periods. Thus, we are able to constrain the worst case rate of inflation due to the imbalance on this market with confidence \\( 1 - \alpha \\) simply by setting and updating \\( d \\) accordingly.
 
 
 ### Determining \\( \mu \\) and \\( \sigma^2 \\)
@@ -215,9 +197,9 @@ to inform our governance-determined value for \\( k \\).
 
 The analysis above only examines value at risk to the system on an individual market-by-market basis. While useful, it is not entirely accurate at the macro level. We should really examine the "portfolio" of markets we're offering and the total value at risk to the system caused by the *sum of imbalances* on each individual market
 
-\\[ 1 - \alpha = \mathbb{P}\bigg[ \sum_{k=1}^{N} {\mathrm{OI}\_{imb}}\_{k} (0) \cdot d^{-m}\_{k} \cdot \bigg( e^{\mu_k m T + \sigma_k \cdot W\_{m T}}  - 1 \bigg) \leq \mathrm{VaR}_{\alpha} (m) \bigg] \\]
+\\[ 1 - \alpha = \mathbb{P}\bigg[ \sum_{i=1}^{N} {\mathrm{OI}\_{imb}}\_{i} (0) \cdot d^{-m}\_{i} \cdot \bigg( e^{\mu_i m T + \sigma_i \cdot W\_{m T}}  - 1 \bigg) \leq \mathrm{VaR}_{\alpha} (m) \bigg] \\]
 
-where \\( (\mu_k, \sigma_k, d_k) \\) are the relevant parameters for market \\( k \\) assuming \\( N \\) total markets offered by the protocol.
+where \\( (\mu_i, \sigma_i, d_i) \\) are the relevant parameters for market \\( i \\) assuming \\( N \\) total markets offered by the protocol.
 
 
 ## Acknowledgments

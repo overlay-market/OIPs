@@ -1,7 +1,7 @@
 ---
 note: 5
 oip-num: 1
-title: Accounting in Market Contracts
+title: Bookkeeping in Market Contracts
 status: WIP
 author: Michael Feldman (@mikeyrf), Adam Kay (@mcillkay)
 discussions-to: oip-1
@@ -11,7 +11,7 @@ updated: N/A
 
 Issue to address with this note:
 
-- Outlining the accounting system within Overlay market contracts for a relatively gas-efficient peer-to-pool model
+- Outline the bookkeeping in Overlay market contracts
 
 
 ## Context
