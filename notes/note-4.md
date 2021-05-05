@@ -20,9 +20,9 @@ Two issues to address with this note:
 
 [Funding payments](note-1) are meant to incentivize a balanced set of positions on each market offered by the protocol so that passive OVL holders, who effectively act as the counterparty to all unbalanced trades in the system, are protected from significant unexpected dilution. This ensures the supply of the settlement currency (OVL) remains relatively stable over longer periods of time -- stable in the sense of governance having the ability to predict the expected worst case inflation rate with a certain degree of confidence due to unbalanced trades on markets.
 
-For better or worse, governance is given the ability to tune the per-market rate \\( k \\) at which funding flows from longs to shorts or shorts to longs to balance the open interest on a market over time. The purpose of this note is to provide guidance on what to set the value of \\( k \\) to.
+For better or worse, governance is given the ability to tune the per-market rate \\( k \\) at which funding flows from longs to shorts or shorts to longs to balance the open interest on a market over time. The purpose of this note is to provide guidance on what to set the value of \\( k \\) to for each individual market.
 
-As \\( k \\) is the rate at which open interest on a market rebalances, it is directly linked with the time it takes to draw down the risk associated with an imbalanced book. Thus, we suggest \\( k \\) be related to the risk the underlying feed adds to the system and inherently passive OVL holders through the currency supply.
+As \\( k \\) is the rate at which open interest on a market rebalances, it is directly linked with the time it takes to draw down the risk associated with an imbalanced book. Thus, we suggest \\( k \\) be related to the risk the underlying feed adds to the system and inherently passive OVL holders through the currency supply. Different markets will then have different \\( k \\) values, dependent on the distributional properties of the underlying feed itself.
 
 ### Background
 
@@ -84,13 +84,13 @@ PnL to be minted/burned at time \\( m \\) for this hypothetical long position re
 
 \\[ \mathrm{PnL} (m) = {\mathrm{OI}\_{imb}}(0) \cdot d^{-m} \cdot \bigg[ e^{\mu m T + \sigma W\_{m T}}  - 1 \bigg] \\]
 
-where \\( T \\) is the length of time between funding payments and
+where \\( T \\) is the length of time between oracle fetches and
 
 \\[ d \equiv \frac{1}{1 - 2k} \\]
 
 with \\( d \in \[ 1, \infty \) \\). In terms of \\( l \\) from [note 1](note-1), \\( l(m) = d^{-m} \\).
 
-The protocol itself is liable for this imbalance PnL. Our approach to minimizing the risk borne by passive OVL holders will be to choose a \\( k \\) that substantially reduces the expected payout due to positional imbalance within a finite number of time intervals \\( m \\), assuming an acceptable confidence level \\( \alpha \\).
+The protocol itself is liable for this imbalance PnL. Our approach to minimizing the risk borne by passive OVL holders will be to choose a \\( k \\) that substantially reduces the expected payout due to positional imbalance within a finite number of time intervals \\( m \\), assuming an acceptable level of uncertainty \\( \alpha \\).
 
 ### Limiting Behavior
 
@@ -135,7 +135,7 @@ where \\( \Phi (z) = \mathbb{P}[ Z \leq z ] \\) is the [CDF](https://en.wikipedi
 
 \\[ \mathrm{VaR}\_{\alpha} (m) = \mathrm{OI}\_{imb}(0) \cdot d^{-m} \cdot \bigg[ e^{\mu m T + \sigma \sqrt{m T} \cdot {\Phi}^{-1}(1-\alpha)} - 1 \bigg] \\]
 
-which is, with probability \\( 1-\alpha \\), the worst case amount of excess OVL the system is likely to print by time \\( m \\).
+which is, with probability \\( 1-\alpha \\), the worst case amount of excess OVL the system is likely to print by time \\( m \\), given initial imbalance state \\( \mathrm{OI}\_{imb}(0) \\).
 
 Our analysis for longer time horizons will be slightly more complex than above. As \\( m \to \infty \\), VaR will approach zero when
 
@@ -156,11 +156,11 @@ will also have VaR drop off to zero over longer time horizons. The choice of \\(
 
 The conditions on our per-market parameter \\( k \\) imposed above ensure the appropriate limiting behavior as \\( m \to \infty \\): funding payments effectively zero out risk to the system over longer time horizons. However, our choice for an exact value of \\( k \\) for each market should be set by our risk tolerance for the amount of OVL we'd be willing to let the system print *over shorter timeframes*, if all excess notional causing the imbalance were to unwind at the same time *before* funding is able to fully rebalance trades on the market.
 
-This translates to setting a market's \\( k \\) value such that the maximum value at risk to the system due to trading on the market, some finite number of blocks \\( m \\) into the future, is equal to a threshold level \\( \mathrm{VaR}\_{\alpha, max} (m) = V\_{\alpha, m} \\) with confidence \\( 1 - \alpha \\). Assume we impose a cap \\( C \\) on the notional allowed on either side of a market
+This translates to setting a market's \\( k \\) value such that the maximum value at risk to the system due to trading on the market, some finite number of blocks \\( m \\) into the future, is equal to a threshold level \\( V\_{\alpha, m} \\) with confidence \\( 1 - \alpha \\). Assume we impose a cap \\( C \\) on the notional allowed on either side of a market
 
 \\[ \mathrm{OI}_a (t) \leq C  \\]
 
-where \\( a \in \\{ l, s \\} \\). The initial state \\( \\{ \mathrm{OI}\_{l}(0), \mathrm{OI}\_{s}(0) \\} \\) that causes the maximum value at risk to the system is one in which the initial imbalance is largest: i.e., when there's zero notional on one of the sides and the other side has notional equal to the cap. Then, the initial imbalance will also equal the cap \\( \mathrm{OI}\_{imb}(0) = C \\), when value at risk to the system is greatest. Maximum value at risk to the system \\( \mathrm{VaR}\_{\alpha, max} (m) \\) at some time \\( m \\) in the future becomes
+where \\( a \in \\{ l, s \\} \\). The initial state \\( \\{ \mathrm{OI}\_{l}(0), \mathrm{OI}\_{s}(0) \\} \\) that causes the maximum value at risk to the system is one in which the initial imbalance is largest: i.e., when there's zero notional on one of the sides and the other side has notional equal to the cap. Then, the magnitude of the initial imbalance will also equal the cap \\( \|\mathrm{OI}\_{imb}(0)\| = C \\), when value at risk to the system is greatest. Our maximum value at risk to the system \\( \mathrm{VaR}\_{\alpha, max} (m) \\) at some time \\( m \\) in the future becomes
 
 \\[ \mathrm{VaR}\_{\alpha, max} (m) = C \cdot d^{-m} \cdot \bigg[ e^{\mu m T + \sigma \sqrt{m T} \cdot {\Phi}^{-1}(1-\alpha)} - 1 \bigg] \\]
 
@@ -173,13 +173,13 @@ gives an expression for \\( d \\) (and \\( k \\)) in terms of the cap chosen \\(
 
 ### Determining \\( \mu \\) and \\( \sigma^2 \\)
 
-We'll use maximum likelihood estimation (MLE) from on-chain samples to find our \\( \mu \\) and \\( \sigma^2 \\) values. At launch, we should have these simply inform our chosen \\( k \\) values over rolling time periods versus automating completely, and allow governance to tweak funding rates given existing risk conditions.
+We can use maximum likelihood estimation (MLE) from on-chain samples to find our GBM \\( \mu \\) and \\( \sigma^2 \\) values. At launch, we should have these simply inform our chosen \\( k \\) values over rolling time periods, and allow governance to tweak funding rates given existing risk conditions.
 
 Assume \\( T \\) is the `periodSize` of a [sliding window TWAP oracle](note-2), such that funding is paid upon every price update of an Overlay market. Let
 
 \\[ R(i) = \ln \bigg[ \frac{P(i)}{P(i-1)} \bigg] = \mu T + \sigma [ W_{i T} - W_{(i-1) T} ] \sim \mathcal{N}(\mu T, \sigma^2  T) \\]
 
-Sampling \\( N+1 \\) of these windows over a length of time \\( (N + 1) \cdot T \\) gives \\( (r_1, r_2, ..., r_{N}) \\) values of \\( R \\) with MLEs
+Sampling \\( N+1 \\) of these periods over a length of time \\( (N + 1) \cdot T \\) gives \\( (r_1, r_2, ..., r_{N}) \\) values of \\( R \\) with MLEs
 
 \\[ \hat{\mu} = \frac{1}{N \cdot T} \sum_{i = 1}^N r_i \\]
 
