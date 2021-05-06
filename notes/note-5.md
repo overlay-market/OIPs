@@ -22,6 +22,8 @@ To compensate traders for a profitable trade when they exit their position, the 
 
 Conversely, for an unprofitable trade, the market contract removes the amount of OVL associated with the realized losses from the circulating supply, by burning upon exit a portion of the initial OVL collateral locked. The market contract then returns to the trader an amount of OVL equal to the initial collateral locked minus the burnt losses.
 
+In this way, the passive OVL holder effectively acts as the counterparty to all unbalanced trades on Overlay markets through risk of dilution. This includes, in particular, spot OVL-ETH liquidity providers (LPs) that backstop liquidity for traders to enter and exit the system.
+
 A simple example, without leverage and [funding payments](note-1), to illustrate.
 
 At time \\( 0 \\),
