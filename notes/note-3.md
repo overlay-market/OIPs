@@ -178,7 +178,7 @@ but in ETH terms reduces to
 
 as ETH-OVL increases 25%. Given we initially had 100 ETH, PnL is then the OVL equivalent of 12.8 ETH on the combination.
 
-The 20% gain from the X feed position has been reduced to a *gain* of 12.8% in ETH terms. Compared to the loss without the hedge, the hedged portfolio protects a substantial portion of the gains. Instead of losing money on the unhedged position, we maintain a significant profit with the hedge.
+The 20% gain from the X feed position has been reduced to a *gain* of 12.8% in ETH terms. Compared to the loss without the hedge, the hedged portfolio protects a substantial portion of the gains. Instead of losing on the unhedged position, we maintain a significant profit with the hedge.
 
 Summarizing for the hedged portfolio:
 
@@ -243,4 +243,4 @@ For a completely unleveraged long position on the $$X$$ market, we have $$\lambd
 
 \\[l_E = \epsilon_X + 2\\]
 
-If we double our money on the $$X$$ market, our leverage on ETH-OVL goes from 2 to 3.
+If the $$X$$ market doubles, our leverage on ETH-OVL goes from 2 to 3.
