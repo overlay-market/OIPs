@@ -11,12 +11,12 @@ updated: N/A
 
 Issue to address with this note:
 
-- How do we provide opportunities for traders to make money by balancing the outstanding longs vs shorts on a market?
+- How do we provide opportunities for traders to earn rewards by balancing the outstanding longs vs shorts on a market?
 
 
 ## Stability with Fixed Pricing
 
-Our biggest problem with Overlay is ensuring the supply of the settlement currency (OVL) remains relatively stable over longer periods of time. The goal is to limit excessive inflation that would significantly dilute all passive OVL holders who effectively act as the counterparty to all unbalanced trades, including spot OVL-ETH LPs that backstop liquidity in the system. Ideally, traders should make money from stabilizing the system by taking the other side of any unbalanced trade. If we can arrange this, we likely have the appropriate incentivizes for longer time horizons.
+Our biggest problem with Overlay is ensuring the supply of the settlement currency (OVL) remains relatively stable over longer periods of time. The goal is to limit excessive inflation that would significantly dilute all passive OVL holders who effectively act as the counterparty to all unbalanced trades, including spot OVL-ETH LPs that backstop liquidity in the system. Ideally, traders should be rewarded for stabilizing the system by taking the other side of any unbalanced market. If we can arrange this, we likely have the appropriate incentivizes for longer time horizons.
 
 As well, keep in mind that different traders will have different preferences. For the example of an ETH-OVL feed (inverse market), some will look to make yield on their ETH, while others will look to make yield on their OVL.
 
@@ -54,7 +54,7 @@ We define the open interest on an entire market as above, summing over first \\(
 
 #### The Setup
 
-Say everyone is an OVL bull to begin with, such that they all go short the ETH-OVL feed (remember, inverse market).  We want some way to encourage traders to take the bear side of the trade, while ensuring that they make money in ETH terms. Then, they are making yield on their ETH and they don't care that they are long ETH-OVL. If everyone is an OVL bear, we want the same mechanism to work for those who want to make yield in OVL terms.
+Say everyone is an OVL bull to begin with, such that they all go short the ETH-OVL feed (remember, inverse market).  We want some way to encourage traders to take the bear side of the trade, while ensuring that they are rewarded in ETH terms. Then, they are making yield on their ETH and they don't care that they are long ETH-OVL. If everyone is an OVL bear, we want the same mechanism to work for those who want to make yield in OVL terms.
 
 This type of mechanism has already been designed before through funding payments, used as a way to incentivize having the futures price track the spot price. We should flip this on its head and instead *fix the price* but use the funding payment as a means to incentivize *balancing of position notionals* (Synthetix is also [exploring this](https://sips.synthetix.io/sips/sip-80#skew-funding-rate) for their futures product).
 
