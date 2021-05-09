@@ -22,7 +22,7 @@ Two issues to address with this note:
 
 For better or worse, governance is given the ability to tune the per-market rate \\( k \\) at which funding flows from longs to shorts or shorts to longs to balance the open interest on a market over time. The purpose of this note is to provide guidance on what to set the value of \\( k \\) to for each individual market.
 
-As \\( k \\) is the rate at which open interest on a market rebalances, it is directly linked with the time it takes to draw down the risk associated with an imbalanced book. Thus, we suggest \\( k \\) be related to the risk the underlying feed adds to the system and inherently passive OVL holders through the currency supply. Different markets will then have different \\( k \\) values, dependent on the distributional properties of the underlying feed itself.
+As \\( k \\) is the rate at which open interest on a market rebalances, it is directly linked with the time it takes to draw down the risk associated with an imbalanced book. Thus, we suggest \\( k \\) be related to the risk the underlying feed adds to the system and inherently passive OVL holders through the currency supply. Different markets will then have different \\( k \\) values, depending on the distributional properties of the underlying feed itself.
 
 ### Background
 
@@ -84,7 +84,7 @@ PnL to be minted/burned at time \\( m \\) for this hypothetical long position re
 
 \\[ \mathrm{PnL} (m) = {\mathrm{OI}\_{imb}}(0) \cdot d^{-m} \cdot \bigg[ e^{\mu m T + \sigma W\_{m T}}  - 1 \bigg] \\]
 
-where \\( T \\) is the length of time between oracle fetches and
+where \\( T \\) is the length of time between oracle fetches and we define
 
 \\[ d \equiv \frac{1}{1 - 2k} \\]
 
