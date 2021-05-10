@@ -137,19 +137,11 @@ where \\( \Phi (z) = \mathbb{P}[ Z \leq z ] \\) is the [CDF](https://en.wikipedi
 
 which is, with probability \\( 1-\alpha \\), the worst case amount of excess OVL the system is likely to print by time \\( m \\), given initial imbalance state \\( \mathrm{OI}\_{imb}(0) \\).
 
-Our analysis for longer time horizons will be slightly more complex than above. As \\( m \to \infty \\), VaR will approach zero when
+As \\( m \to \infty \\), VaR will approach zero when
 
 \\[ d^m > e^{\mu m T + \sigma \sqrt{mT} \cdot \Phi^{-1}(1-\alpha)} \\]
 
-To remove dependence of this condition on \\( m \\) while remaining conservative, notice
-
-\\[ e^{\sigma m \sqrt{T} \cdot \Phi^{-1}(1-\alpha)} \geq e^{\sigma \sqrt{mT} \cdot \Phi^{-1}(1-\alpha)} \\]
-
-for integer \\( m \\). Therefore the more stringent condition of
-
-\\[ d > e^{\mu T + \sigma \sqrt{T} \cdot \Phi^{-1}(1-\alpha)} \\]
-
-will also have VaR drop off to zero over longer time horizons. The choice of \\( \alpha \\) dictates how large the lower bound on \\( d \\) is vs the expected value condition.
+The choice of \\( \alpha \\) dictates how large the lower bound on \\( d \\) is vs the expected value condition.
 
 
 ### Choice of \\( k \\)
@@ -169,6 +161,10 @@ Setting \\( \mathrm{VaR}\_{\alpha, max} (m) \\) to our threshold level and manip
 \\[ d = \bigg\\{ \frac{C}{V_{\alpha, m}} \cdot \bigg[ e^{\mu m T + \sigma \sqrt{m T} \cdot {\Phi}^{-1}(1-\alpha)} - 1 \bigg] \bigg\\}^{1/m} \\]
 
 gives an expression for \\( d \\) (and \\( k \\)) in terms of the cap chosen \\( C \\) and the threshold amount of OVL \\( V_{\alpha, m} \\) we'd be willing to allow this market to print within \\( m \\) time periods. Thus, we are able to constrain the worst case rate of inflation due to the imbalance on this market with confidence \\( 1 - \alpha \\) simply by setting and updating \\( d \\) accordingly.
+
+Requiring \\( \mathrm{VaR} \to 0 \\) for large \\( m \\) bounds the value for the threshold level with respect to the cap
+
+\\[ \frac{C}{V\_{\alpha, m}} > 1 \\]
 
 
 ### Determining \\( \mu \\) and \\( \sigma^2 \\)
