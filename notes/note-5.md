@@ -55,9 +55,9 @@ When approaching a peer-to-pool model *with leverage and funding*, we must consi
 
 where \\( L_{aj} \\) is the initial leverage and \\( N_{aj}(0) \\) is the OVL collateral locked when \\( j \\) is first built.
 
-Without funding payments, a peer-to-pool model would be relatively simple to implement. The market contract would issue shares linked to a user's portion of the collateral locked and track the initial leverage set for their position to determine PnL values. No need to worry about theirs and others' position sizes changing over time. With funding payments, however, the situation becomes more complex because collateral *and* open interest act like pooled quantities. Aggregate open interest on a side, and thus a user's share of that open interest, changes over time.
+Without funding payments, a peer-to-pool model would be relatively simple to implement. The market contract would issue separate tokens linked to a user's portion of the collateral locked and track the initial leverage set for their position to determine PnL values. No need to worry about theirs and others' position sizes changing over time. With funding payments, however, the situation becomes more complex because collateral *and* open interest act like pooled quantities. Aggregate open interest on a side, and thus a user's share of that open interest, changes over time.
 
-### Shares of Open Interest
+### Share of Open Interest
 
 Funding payments are needed to balance the long vs short open interest on a market. In prior notes, we assumed the market contract could be called to execute simple periodic transfers, moving a portion of the aggregate open interest on the long (short) side to the aggregate open interest on the short (long) side. These funding payments draw down [risk to the system](note-4), eventually leading to a rebalancing of position sizes on a market given a long enough time horizon. The form taken for the funding payment at time \\( t \\) is
 
@@ -69,7 +69,7 @@ where \\( {\mathrm{OI}\_{imb}} (t) = {\mathrm{OI}_l} (t) - {\mathrm{OI}_s} (t) \
 
 How should this sequential transfer of *aggregate* open interest affect an individual user's share of the total collateral in the pool *and* their share of the open interest?
 
-Usually with funding payments, one would have longs (shorts) pay shorts (longs) directly from their locked collateral amounts, with their share of funding paid proportional to the amount of open interest their position contributes. However, this immediately causes issues when attempting to update open interest for our imbalance calculation, since the contract must loop through all allowed leverages and their shares of the total collateral pool for both sides, which is far from ideal. Further, analyzing systemic risk becomes far more complicated vs [our note on risk to the system](note-4).
+Usually with funding payments, one would have longs (shorts) pay shorts (longs) directly from their locked collateral amounts, with their share of funding paid proportional to the amount of open interest their position contributes. However, this immediately causes issues when attempting to update open interest for our imbalance calculation, since the contract must loop through all allowed leverages and their share of the total collateral pool for both sides, which is far from ideal. Further, analyzing systemic risk becomes far more complicated vs [our note on risk to the system](note-4).
 
 Assume a position's share of the aggregate open interest on a side stays constant through funding. Instead of taking from (adding to) each position's collateral, the market contract shifts the open interest attributed to each position. The time evolution of the aggregate open interest on a side from time \\( t \\) (before funding) to \\( t + 1 \\) (after funding) would be
 
@@ -87,17 +87,17 @@ After \\( m \\) funding payments, the aggregate open interest imbalance reduces 
 
 \\[ \mathrm{OI}\_{imb} (t+m) = \mathrm{OI}\_{imb} (t) \cdot ( 1 - 2k )^{m} \\]
 
-with open interest evening out between the long and short sides given enough time.
+with open interest evening out between the long and short sides given enough time. Total (long + short) open interest will be an invariant with respect to funding
+
+\\[ \mathrm{OI} = \mathrm{OI}\_{l} + \mathrm{OI}\_{s} = \mathrm{const} \\]
 
 Funding becomes simple to implement. Assume we pay funding in discrete intervals (e.g. every [``periodSize``](note-2) blocks). A call to distribute funding payments at time \\( t+m \\), \\( m \\) funding intervals after the last update, should adjust a market's aggregate open interest according to
 
-\\[ \mathrm{OI}\_{l} (t+m) = \frac{1}{2} \bigg[ \mathrm{OI}\_{l} (t) + \mathrm{OI}\_{s} (t) - (\mathrm{OI}\_{l} (t) - \mathrm{OI}\_{s} (t)) \cdot ( 1 - 2k )^{m} \bigg] \\]
+\\[ \mathrm{OI}\_{l} (t+m) = \frac{1}{2} \bigg[ \mathrm{OI}\_{l} (t) + \mathrm{OI}\_{s} (t) + (\mathrm{OI}\_{l} (t) - \mathrm{OI}\_{s} (t)) \cdot ( 1 - 2k )^{m} \bigg] \\]
 
-\\[ \mathrm{OI}\_{s} (t+m) = \frac{1}{2} \bigg[ \mathrm{OI}\_{l} (t) + \mathrm{OI}\_{s} (t) + (\mathrm{OI}\_{l} (t) - \mathrm{OI}\_{s} (t)) \cdot ( 1 - 2k )^{m} \bigg] \\]
+\\[ \mathrm{OI}\_{s} (t+m) = \frac{1}{2} \bigg[ \mathrm{OI}\_{l} (t) + \mathrm{OI}\_{s} (t) - (\mathrm{OI}\_{l} (t) - \mathrm{OI}\_{s} (t)) \cdot ( 1 - 2k )^{m} \bigg] \\]
 
-where \\( \\{\mathrm{OI}\_{l} (t), \mathrm{OI}\_{s} (t) \\} \\) are the values stored before the update. Total (long + short) open interest becomes an invariant with respect to funding
-
-\\[ \mathrm{OI} = \mathrm{OI}\_{l} + \mathrm{OI}\_{s} = \mathrm{const} \\]
+where \\( \\{\mathrm{OI}\_{l} (t), \mathrm{OI}\_{s} (t) \\} \\) are the values stored before the update and we've used the total open interest invariant to arrive at these expressions. <!-- TODO: edge cases of zero OI on a side -->
 
 If we, as user \\( i \\), own a portion of position \\( j \\) ([ERC-1155](https://eips.ethereum.org/EIPS/eip-1155)), our share of the aggregate open interest at any time will be
 
@@ -113,14 +113,29 @@ Our expression from prior notes for the value of position \\( j \\) at time \\( 
 
 \\[ V_{aj} (t) = N_{aj} (t) \; (\pm)_a \; \mathrm{OI}\_{aj} (t) \cdot \bigg( \frac{P(t)}{P(0)} - 1 \bigg) \\]
 
-when expressed in terms of share of collateral and open interest. \\( P(i) \\) is the market value fetched from the oracle a time \\( i \\) blocks after entry, with time \\( 0 \\) here used for this particular position's entry. \\( (\pm)\_a = +1 \\) for \\( a  = l \\) and \\( (\pm)\_a = -1 \\) for \\( a = s \\).
+when expressed in terms of share of collateral and open interest. \\( P(i) \\) is the market value fetched from the oracle a time \\( i \\) blocks after entry, with time \\( 0 \\) used here for this particular position's entry. \\( (\pm)\_a = +1 \\) for \\( a  = l \\) and \\( (\pm)\_a = -1 \\) for \\( a = s \\).
 
 What is the amount of collateral \\( N_{aj} (t) \\) to attribute to position \\( j \\) after funding payments are made? Given we are *not* taking directly from collateral amounts to pay for funding, the answer is not completely obvious. We also ideally want to update only pooled open interest amounts, without having to loop through each leverage type outstanding to update collateral amounts as well.
 
 Instead, define the debt position \\( j \\) owes to the system for using initial leverage \\( L_{aj} \\) as
 
-\\[ D_{aj} \equiv \mathrm{OI}\_{aj} (0) - N_{aj} (0) \\]
+\\[ D_{aj} \equiv \mathrm{OI}\_{aj} (0) - N_{aj} (0) = N_{aj} (0) \cdot (L_{aj} - 1) \\]
 
 The total debt associated with \\( j \\) is constant through funding, and does not need to be updated whenever payments are made. The value of position \\( j \\) at time \\( t \\) becomes
 
 \\[ V_{aj} (t) = \mathrm{OI}\_{aj} (t) \cdot \bigg[ 1 \; (\pm)\_a \; \bigg( \frac{P(t)}{P(0)} - 1 \bigg) \bigg] - D_{aj} \\]
+
+with the collateral allocated to position \\( j \\)
+
+\\[ N\_{aj} (t) \equiv \mathrm{OI}\_{aj} (t) - D_{aj} \\]
+
+
+### Position Tokens
+
+
+
+### Returns on Unwind
+
+
+
+### Open Leverage
