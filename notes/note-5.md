@@ -132,10 +132,20 @@ with the collateral allocated to position \\( j \\)
 
 ### Position Tokens
 
+*TODO:*
+
+1. Queueing up position builds at \\( T+1 \\) oracle fetch
+2. Price pointer for each different leverage variant settling at \\( T+1 \\). So prices are a list with elements potentially unfilled until next oracle fetch at \\( T+1 \\)
+3. Position \\( j \\) is attributed a number of shares \\( \mathrm{PS}\_{aj} \\) of the total open interest on side \\( a \\).
+4. On build, user \\( i \\) receives a share of position \\( j \\) and the collateral, debt, open interest associated with \\( j \\). Those positions are ERC1155, such that shares in a position are fungible (many users can own a portion of a position), but positions themselves are non-fungible.
+5. We track aggregate open interest on long and short sides. Each position \\( j \\) is attributed a certain number of shares of tracked aggregate open interest on a side, debt owed, and initial collateral staked
+6. After each update period (oracle fetch), a new set of positions with long/short side and offered leverages up to max lev get queued up for next oracle price fetch (\\( T+1 \\) settlement)
+7. Variables that evolve over time are limited to *only* aggregate open interest either long or short side.
+
+![Image of Token Bookkeeping](../assets/oip-1/bookkeeping.svg)
 
 
 ### Returns on Unwind
 
 
-
-### Open Leverage
+### Open Leverage and Liquidations
