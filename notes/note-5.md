@@ -109,11 +109,11 @@ where we define \\( \mathrm{S}\_{aij} \equiv \frac{\mathrm{OI}\_{aij}(t)}{\mathr
 
 A user's share of open interest *and* their share of the collateral locked in a market contract are needed to calculate the value of their position, and thus the amount of OVL to return to them at exit.
 
-Our expression from prior notes for the value of position \\( j \\) at time \\( t \\) is
+From prior notes, the value of position \\( j \\) at time \\( t \\) is
 
 \\[ V_{aj} (t) = N_{aj} (t) \; (\pm)_a \; \mathrm{OI}\_{aj} (t) \cdot \bigg( \frac{P(t)}{P(0)} - 1 \bigg) \\]
 
-when expressed in terms of share of collateral and open interest. \\( P(i) \\) is the market value fetched from the oracle a time \\( i \\) blocks after entry, with time \\( 0 \\) used here for this particular position's entry. \\( (\pm)\_a = +1 \\) for \\( a  = l \\) and \\( (\pm)\_a = -1 \\) for \\( a = s \\).
+when expressed in terms of share of collateral and open interest. \\( P(i) \\) is the market value fetched from the oracle \\( i \\) blocks after entry, with time \\( 0 \\) used here for this particular position's entry. \\( (\pm)\_a = +1 \\) for \\( a  = l \\) and \\( (\pm)\_a = -1 \\) for \\( a = s \\).
 
 What is the amount of collateral \\( N_{aj} (t) \\) to attribute to position \\( j \\) after funding payments are made? Given we are *not* taking directly from collateral amounts to pay for funding, the answer is not completely obvious. We also ideally want to update only pooled open interest amounts, without having to loop through each leverage type outstanding to update collateral amounts as well.
 
@@ -125,9 +125,23 @@ The total debt associated with \\( j \\) is constant through funding, and does n
 
 \\[ V_{aj} (t) = \mathrm{OI}\_{aj} (t) \cdot \bigg[ 1 \; (\pm)\_a \; \bigg( \frac{P(t)}{P(0)} - 1 \bigg) \bigg] - D_{aj} \\]
 
-with the collateral allocated to position \\( j \\)
+with the collateral allocated to position \\( j \\) at time \\( t \\)
 
 \\[ N\_{aj} (t) \equiv \mathrm{OI}\_{aj} (t) - D_{aj} \\]
+
+Thus, to assess position \\( j \\)'s value at any time \\( t \\), we only need to store the following static quantities (static as in they will *not* change through funding):
+
+- \\( \mathrm{PS}_{aj} \\) -- \\( j \\)'s share of the aggregate open interest on side \\( a \\)
+
+- \\( D_{aj} \\) -- \\( j \\)'s debt to the system
+
+- \\( N_{aj}(0) \\) -- \\( j \\)'s initial OVL collateral amount, which is the total cost to build the position
+
+- \\( P(0) \\) -- \\( j \\)'s entry price from the market's oracle feed
+
+where the last quantity assumes users can *not* add additional collateral to position \\( j \\) after entry. This requirement allows for a semi-fungible implementation: shares in a position are fungible (i.e. many users can own a portion of a position), but positions themselves are non-fungible with respect to each other. We recommend this approach, particularly with the ERC-1155 standard, because tokenization of each position offers composability with other DeFi protocols such as e.g., trading of Overlay position tokens on secondary markets.
+
+When building position \\( j \\), the system mints ...
 
 
 ### Position Tokens
