@@ -129,7 +129,7 @@ with the collateral allocated to position \\( j \\) at time \\( t \\)
 
 \\[ N\_{aj} (t) \equiv \mathrm{OI}\_{aj} (t) - D_{aj} \\]
 
-Thus, to assess position \\( j \\)'s value at any time \\( t \\), we only need to store the following static quantities (static as in they will *not* change through funding):
+Thus, to assess each position's value at any time \\( t \\), we only need to store the following static quantities for each position \\( j \\) (static as in they will *not* change through funding):
 
 - \\( \mathrm{PS}_{aj} \\) -- \\( j \\)'s share of the aggregate open interest on side \\( a \\)
 
@@ -139,9 +139,14 @@ Thus, to assess position \\( j \\)'s value at any time \\( t \\), we only need t
 
 - \\( P(0) \\) -- \\( j \\)'s entry price from the market's oracle feed
 
-where the last quantity assumes users can *not* add additional collateral to position \\( j \\) after entry. This requirement allows for a semi-fungible implementation: shares in a position are fungible (i.e. many users can own a portion of a position), but positions themselves are non-fungible with respect to each other. We recommend this approach, particularly with the ERC-1155 standard, because tokenization of each position offers composability with other DeFi protocols such as e.g., trading of Overlay position tokens on secondary markets.
+Dynamic pooled quantities are limited to the aggregate open interest on each side \\( \mathrm{OI}\_{aj}(t) \\).
 
-When building position \\( j \\), the system mints ...
+Attributing entry price \\( P(0) \\) as a static quantity to position \\( j \\) assumes users can *not* add additional collateral after build time \\( 0 \\). This requirement allows for a semi-fungible implementation: shares in a position are fungible (i.e. many users can own a portion of a position), but positions themselves are non-fungible with respect to each other. We recommend this approach, particularly with the ERC-1155 standard, because tokenization of each position offers composability with other DeFi protocols such as e.g., trading of Overlay position tokens on secondary markets.
+
+
+### Returns on Unwind
+
+When building position \\( j \\), the system mints ... This covers the edge case ...
 
 
 ### Position Tokens
@@ -159,7 +164,4 @@ When building position \\( j \\), the system mints ...
 ![Image of Token Bookkeeping](../assets/oip-1/bookkeeping.svg)
 
 
-### Returns on Unwind
-
-
-### Open Leverage and Liquidations
+### Open Margin and Liquidations
