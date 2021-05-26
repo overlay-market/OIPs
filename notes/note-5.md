@@ -129,24 +129,42 @@ with the collateral allocated to position \\( j \\) at time \\( t \\)
 
 \\[ N\_{aj} (t) \equiv \mathrm{OI}\_{aj} (t) - D_{aj} \\]
 
-Thus, to assess each position's value at any time \\( t \\), we only need to store the following static quantities for each position \\( j \\) (static as in they will *not* change through funding):
+Thus, to assess the value of a position at any time \\( t \\), we only need to store the following static quantities for each position \\( j \\) (static as in they will *not* change through funding):
 
 - \\( \mathrm{PS}_{aj} \\) -- \\( j \\)'s share of the aggregate open interest on side \\( a \\)
 
 - \\( D_{aj} \\) -- \\( j \\)'s debt to the system
 
-- \\( N_{aj}(0) \\) -- \\( j \\)'s initial OVL collateral amount, which is the total cost to build the position
+- \\( C_{aj} \\) -- \\( j \\)'s cost at build, which is the initial OVL collateral amount locked \\( N_{aj}(0) \\)
 
 - \\( P(0) \\) -- \\( j \\)'s entry price from the market's oracle feed
 
 Dynamic pooled quantities are limited to the aggregate open interest on each side \\( \mathrm{OI}\_{aj}(t) \\).
 
-Attributing entry price \\( P(0) \\) as a static quantity to position \\( j \\) assumes users can *not* add additional collateral after build time \\( 0 \\). This requirement allows for a semi-fungible implementation: shares in a position are fungible (i.e. many users can own a portion of a position), but positions themselves are non-fungible with respect to each other. We recommend this approach, particularly with the ERC-1155 standard, because tokenization of each position offers composability with other DeFi protocols such as e.g., trading of Overlay position tokens on secondary markets.
+Attributing entry price \\( P(0) \\) as a static quantity to position \\( j \\) assumes users can *not* add additional collateral after build time \\( 0 \\). This requirement allows for a semi-fungible implementation: shares in a position are fungible (i.e. many users can own a portion of a position), but positions themselves are non-fungible with respect to each other. We recommend this approach, particularly with the ERC-1155 standard, because tokenization of each position offers composability with other DeFi protocols.
 
 
 ### Returns on Unwind
 
-When building position \\( j \\), the system mints ... This covers the edge case ...
+When building position \\( j \\), the system mints to the market contract the debt \\( D\_{aj} \\) needed to fully realize position size \\( \mathrm{OI}_{aj}(0) \\). This covers the edge case with funding payment transfers when one side has aggregate open interest equal to zero (no positions outstanding). The system can then simply *burn* the funding payment to draw down risk, such that e.g.,
+
+\\[ \mathrm{OI}\_{lj}(t+m) = \mathrm{OI}\_{lj}(t) \cdot (1 - 2k)^m \\]
+
+\\[ \mathrm{OI}\_{sj}(t+m) = \mathrm{OI}\_{sj}(t) = 0 \\]
+
+since the market contract will have the OVL necessary to execute the burn.
+
+Fully realizing the position size at build, however, requires we also burn the equivalent amount of debt \\( D\_{aj} \\) at unwind, while factoring in any profit or loss. The PnL associated with position \\( j \\) at time \\( t \\) will be
+
+\\[\mathrm{PnL}\_{aj}(t) = V_{aj}(t) - C_{aj} = \mathrm{OI}\_{aj} (t) \cdot \bigg[ 1 \; (\pm)\_a \; \bigg( \frac{P(t)}{P(0)} - 1 \bigg) \bigg] - \mathrm{OI}_{aj}(0)\\]
+
+At unwind time \\( t \\), the market contract returns \\( V_{aj}(t) \\) in OVL to the user unwinding all of position \\( j \\) (assuming only one user owns shares in the position). If the profit for position \\( j \\) *exceeds the position's outstanding debt*, the system mints to the market contract the difference \\( \mathrm{PnL}\_{aj}(t) - D_{aj} \\) and returns the value of the position to the user. If the profit/loss is less than the debt, the system burns the difference \\( D_{aj} - \mathrm{PnL}\_{aj}(t) \\) and returns the remaining value of the position to the user.
+
+Factoring in multiple users owning shares of position \\( j \\) is trivial, with any profit/loss, value, cost and debt split pro-rata amongst each user \\( i \\). For example, the value returned to user \\( i \\) unwinding \\( \mathrm{S}_{aij} \\) shares in position \\( j \\) at time \\( t \\) is
+
+\\[ V_{aij}(t) = \mathrm{S}_{aij} \cdot V\_{aj}(t) \\]
+
+with the associated shares of the position also burned to prevent multiple redemptions. \\( \mathrm{S}_{aij} \\) are minted at build time.
 
 
 ### Position Tokens
