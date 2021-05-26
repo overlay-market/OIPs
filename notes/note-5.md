@@ -16,7 +16,7 @@ Issue to address with this note:
 
 ## Context
 
-Overlay allows traders to express a view on a data stream without the need for traditional counterparties to take the other side of their trade. The system accomplishes this through a peer-to-pool model. Traders lock the settlement currency of the system (OVL) in Overlay market contract pools at a time \\( 0 \\) and, in exchange, receive a position token detailing the attributes of their trade (collateral, leverage, long/short, entry value). At some time \\( t > 0 \\) in the future when they wish to exit their position, traders can burn the position token through the market contract, and the market contract will compensate them for their profit or loss with more or less OVL than what they initially locked.
+Overlay allows traders to express a view on a data stream without the need for traditional counterparties to take the other side of their trade. The system accomplishes this through a peer-to-pool model. Traders lock the settlement currency of the system (OVL) in Overlay market contract pools at a time \\( 0 \\) and, in exchange, receive a position token detailing the attributes of their trade. At some time \\( t > 0 \\) in the future when they wish to exit their position, traders can burn the position token through the market contract, and the market contract will compensate them for their profit or loss with more or less OVL than what they initially locked.
 
 To compensate traders for a profitable trade when they exit their position, the market contract mints the amount of OVL associated with the realized profits to the circulating supply. The market contract then returns to the trader the initial OVL collateral locked plus the newly minted OVL.
 
@@ -42,14 +42,14 @@ At a future time \\( t \\),
 
 If the \\( X \\) feed had gone down 20% instead, the market contract would have burned 2 OVL from the circulating supply and returned 8 OVL to us. The end state would have been a total circulating supply of 7,999,998 OVL, and we would have had a balance of 8 OVL.
 
-Things get more complex when we include leverage and funding into a peer-to-pool model, with multiple positions and traders to account for in a gas-efficient way. The purpose of this note is to outline the accounting with these dynamics at play.
+Things get more complex when we include leverage and funding into a peer-to-pool model, with multiple positions and traders to account for in a gas-efficient way. The purpose of this note is to outline the accounting with these dynamics.
 
 
 ## Dynamics with Leverage and Funding
 
 ### Approach
 
-When approaching a peer-to-pool model *with leverage and funding*, we must consider what the best way would be to track both a user's share of the locked OVL in the market contract as well as their total position size -- what we're calling a user's "open interest". We define the open interest attributed to a user when building a new position on the long \\( l \\) (short \\( s \\)) side to be the number \\( N \\) of OVL locked times the leverage \\( L \\). For a position \\( j \\) on side \\( a \in \\{ l, s \\} \\), let the open interest attributed at build time \\( 0 \\) be
+When approaching a peer-to-pool model with leverage and funding, we must consider what the best way would be to track both a user's share of the locked OVL collateral in the market contract as well as their total position size -- what we're calling a user's "open interest". We define the open interest attributed to a user when building a new position on the long \\( l \\) (short \\( s \\)) side to be the number \\( N \\) of OVL collateral locked times the leverage \\( L \\). For a position \\( j \\) on side \\( a \in \\{ l, s \\} \\), let the open interest attributed at build time \\( 0 \\) be
 
 \\[ \mathrm{OI}\_{aj} (0) = L_{aj} \cdot N_{aj}(0) \\]
 
@@ -63,13 +63,13 @@ Funding payments are needed to balance the long vs short open interest on a mark
 
 \\[ \mathrm{FP} (t) = k \cdot \mathrm{OI}\_{imb}(t) \\]
 
-where \\( {\mathrm{OI}\_{imb}} (t) = {\mathrm{OI}_l} (t) - {\mathrm{OI}_s} (t) \\) is the open interest imbalance between the long \\( l \\) and the short \\( s \\) side on a market, and \\( k \in [0, \frac{1}{2}] \\) is a per-market parameter adjustable by governance. Aggregate open interest on side \\( a \\) is simply the sum of the open interest attributed to each position on that side
+where \\( {\mathrm{OI}\_{imb}} (t) = {\mathrm{OI}_l} (t) - {\mathrm{OI}_s} (t) \\) is the aggregate open interest imbalance between the long \\( l \\) and the short \\( s \\) side on a market, and \\( k \in [0, \frac{1}{2}] \\) is a per-market parameter adjustable by governance. Aggregate open interest on side \\( a \\) is simply the sum of the open interest attributed to each position on that side
 
 \\[ \mathrm{OI}\_{a} = \sum_{j} \mathrm{OI}\_{aj} \\]
 
-How should this sequential transfer of *aggregate* open interest affect an individual user's share of the total collateral in the pool *and* their share of the open interest?
+How should this sequential transfer of aggregate open interest affect an individual user's share of the total collateral in the pool *and* their share of the open interest?
 
-Usually with funding payments, one would have longs (shorts) pay shorts (longs) directly from their locked collateral amounts, with their share of funding paid proportional to the amount of open interest their position contributes. However, this immediately causes issues when attempting to update open interest for our imbalance calculation, since the contract must loop through all allowed leverages and their share of the total collateral pool for both sides, which is far from ideal. Further, analyzing systemic risk becomes far more complicated vs [our note on risk to the system](note-4).
+Usually with funding payments, one would have longs (shorts) pay shorts (longs) directly from their locked collateral amounts, with their share of funding paid proportional to the amount of open interest attributed to their position. However, this immediately causes issues when attempting to update open interest for our imbalance calculation, since the contract must loop through all allowed leverages and their share of the total collateral pool for both sides, which is far from ideal. Further, analyzing systemic risk becomes far more complicated vs our note on risk to the system.
 
 Assume a position's share of the aggregate open interest on a side stays constant through funding. Instead of taking from (adding to) each position's collateral, the market contract shifts the open interest attributed to each position. The time evolution of the aggregate open interest on a side from time \\( t \\) (before funding) to \\( t + 1 \\) (after funding) would be
 
@@ -77,7 +77,7 @@ Assume a position's share of the aggregate open interest on a side stays constan
 
 \\[ \mathrm{OI}\_s (t+1) = \mathrm{OI}\_s (t) + \mathrm{FP}(t) \\]
 
-The amount a position pays (receives) each funding payment is then directly proportional to its pro-rata share of the open interest on a side
+The amount a position pays (receives) each funding payment is then directly proportional to its pro-rata share of the aggregate open interest on a side
 
 \\[ \mathrm{OI}\_{aj} (t+1) = \mathrm{OI}\_{aj} (t) \; (\mp)\_a \; \mathrm{PS}\_{aj} \cdot \mathrm{FP}(t) \\]
 
@@ -91,7 +91,7 @@ with open interest evening out between the long and short sides given enough tim
 
 \\[ \mathrm{OI} = \mathrm{OI}\_{l} + \mathrm{OI}\_{s} = \mathrm{const} \\]
 
-Funding becomes simple to implement. Assume we pay funding in discrete intervals (e.g. every [``periodSize``](note-2) blocks). A call to distribute funding payments at time \\( t+m \\), \\( m \\) funding intervals after the last update, should adjust a market's aggregate open interest according to
+Funding becomes simple to implement. Assume we pay funding in discrete intervals (e.g. every [``periodSize``](note-2) blocks at the oracle fetch). A call to distribute funding payments at time \\( t+m \\), \\( m \\) funding intervals after the last update, should adjust a market's aggregate open interest according to
 
 \\[ \mathrm{OI}\_{l} (t+m) = \frac{1}{2} \bigg[ \mathrm{OI}\_{l} (t) + \mathrm{OI}\_{s} (t) + (\mathrm{OI}\_{l} (t) - \mathrm{OI}\_{s} (t)) \cdot ( 1 - 2k )^{m} \bigg] \\]
 
