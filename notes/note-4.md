@@ -32,7 +32,7 @@ Return to the functional form of our funding payments
 
 where \\( {\mathrm{OI}\_{imb}} (t) = {\mathrm{OI}_l} (t) - {\mathrm{OI}_s} (t) \\) is the open interest imbalance between the long \\( l \\) and short \\( s \\) side on a market at time \\( t \\).
 
-We define position \\( j \\)'s contribution to the open interest on side \\( a \in \\{ l, s \\} \\) as the product of the OVL collateral locked \\( N_{ja} \\) and leverage used \\( L_{ja} \\). The total open interest on a side is the sum over all positions:
+We define position \\( j \\)'s contribution to the open interest on side \\( a \in \\{ l, s \\} \\) as the product of the OVL collateral locked \\( N_{aj} \\) and leverage used \\( L_{aj} \\). The total open interest on a side is the sum over all positions:
 
 \\[ \mathrm{OI}_a (t) = \sum\_{j} N\_{aj} L\_{aj}  \\]
 

@@ -109,11 +109,11 @@ where we define \\( \mathrm{S}\_{aij} \equiv \frac{\mathrm{OI}\_{aij}(t)}{\mathr
 
 A user's share of open interest *and* their share of the collateral locked in a market contract are needed to calculate the value of their position, and thus the amount of OVL to return to them at exit.
 
-Our expression from prior notes for the value of position \\( j \\) at time \\( t \\) is
+From prior notes, the value of position \\( j \\) at time \\( t \\) is
 
 \\[ V_{aj} (t) = N_{aj} (t) \; (\pm)_a \; \mathrm{OI}\_{aj} (t) \cdot \bigg( \frac{P(t)}{P(0)} - 1 \bigg) \\]
 
-when expressed in terms of share of collateral and open interest. \\( P(i) \\) is the market value fetched from the oracle a time \\( i \\) blocks after entry, with time \\( 0 \\) used here for this particular position's entry. \\( (\pm)\_a = +1 \\) for \\( a  = l \\) and \\( (\pm)\_a = -1 \\) for \\( a = s \\).
+when expressed in terms of share of collateral and open interest. \\( P(i) \\) is the market value fetched from the oracle \\( i \\) blocks after entry, with time \\( 0 \\) used here for this particular position's entry. \\( (\pm)\_a = +1 \\) for \\( a  = l \\) and \\( (\pm)\_a = -1 \\) for \\( a = s \\).
 
 What is the amount of collateral \\( N_{aj} (t) \\) to attribute to position \\( j \\) after funding payments are made? Given we are *not* taking directly from collateral amounts to pay for funding, the answer is not completely obvious. We also ideally want to update only pooled open interest amounts, without having to loop through each leverage type outstanding to update collateral amounts as well.
 
@@ -125,17 +125,61 @@ The total debt associated with \\( j \\) is constant through funding, and does n
 
 \\[ V_{aj} (t) = \mathrm{OI}\_{aj} (t) \cdot \bigg[ 1 \; (\pm)\_a \; \bigg( \frac{P(t)}{P(0)} - 1 \bigg) \bigg] - D_{aj} \\]
 
-with the collateral allocated to position \\( j \\)
+with the collateral allocated to position \\( j \\) at time \\( t \\)
 
 \\[ N\_{aj} (t) \equiv \mathrm{OI}\_{aj} (t) - D_{aj} \\]
 
+Thus, to assess the value of a position at any time \\( t \\), we only need to store the following static quantities for each position \\( j \\) (static as in they will *not* change through funding):
 
-### Position Tokens
+- \\( \mathrm{PS}_{aj} \\) -- \\( j \\)'s share of the aggregate open interest on side \\( a \\)
 
+- \\( D_{aj} \\) -- \\( j \\)'s debt to the system
+
+- \\( C_{aj} \\) -- \\( j \\)'s cost at build, which is the initial OVL collateral amount locked \\( N_{aj}(0) \\)
+
+- \\( P(0) \\) -- \\( j \\)'s entry price from the market's oracle feed
+
+Dynamic pooled quantities are limited to the aggregate open interest on each side \\( \mathrm{OI}\_{aj}(t) \\).
+
+Attributing entry price \\( P(0) \\) as a static quantity to position \\( j \\) assumes users can *not* add additional collateral after build time \\( 0 \\). This requirement allows for a semi-fungible implementation: shares in a position are fungible (i.e. many users can own a portion of a position), but positions themselves are non-fungible with respect to each other. We recommend this approach, particularly with the ERC-1155 standard, because tokenization of each position offers composability with other DeFi protocols.
 
 
 ### Returns on Unwind
 
+When building position \\( j \\), the system mints to the market contract the debt \\( D\_{aj} \\) needed to fully realize position size \\( \mathrm{OI}_{aj}(0) \\). This covers the edge case with funding payment transfers when one side has aggregate open interest equal to zero (no positions outstanding). The system can then simply *burn* the funding payment to draw down risk, such that e.g.,
+
+\\[ \mathrm{OI}\_{lj}(t+m) = \mathrm{OI}\_{lj}(t) \cdot (1 - 2k)^m \\]
+
+\\[ \mathrm{OI}\_{sj}(t+m) = \mathrm{OI}\_{sj}(t) = 0 \\]
+
+since the market contract will have the OVL necessary to execute the burn.
+
+Fully realizing the position size at build, however, requires we also burn the equivalent amount of debt \\( D\_{aj} \\) at unwind, while factoring in any profit or loss. The PnL associated with position \\( j \\) at time \\( t \\) will be
+
+\\[\mathrm{PnL}\_{aj}(t) = V_{aj}(t) - C_{aj} = \mathrm{OI}\_{aj} (t) \cdot \bigg[ 1 \; (\pm)\_a \; \bigg( \frac{P(t)}{P(0)} - 1 \bigg) \bigg] - \mathrm{OI}_{aj}(0)\\]
+
+At unwind time \\( t \\), the market contract returns \\( V_{aj}(t) \\) in OVL to the user unwinding all of position \\( j \\) (assuming only one user owns shares in the position). If the profit for position \\( j \\) *exceeds the position's outstanding debt*, the system mints to the market contract the difference \\( \mathrm{PnL}\_{aj}(t) - D_{aj} \\) and returns the value of the position to the user. If the profit/loss is less than the debt, the system burns the difference \\( D_{aj} - \mathrm{PnL}\_{aj}(t) \\) and returns the remaining value of the position to the user.
+
+Factoring in multiple users owning shares of position \\( j \\) is trivial, with any profit/loss, value, cost and debt split pro-rata amongst each user \\( i \\). For example, the value returned to user \\( i \\) unwinding \\( \mathrm{S}_{aij} \\) shares in position \\( j \\) at time \\( t \\) is
+
+\\[ V_{aij}(t) = \mathrm{S}_{aij} \cdot V\_{aj}(t) \\]
+
+with the associated shares of the position also burned to prevent multiple redemptions. \\( \mathrm{S}_{aij} \\) are minted at build time.
 
 
-### Open Leverage
+### Position Tokens
+
+*TODO:*
+
+1. Queueing up position builds at \\( T+1 \\) oracle fetch
+2. Price pointer for each different leverage variant settling at \\( T+1 \\). So prices are a list with elements potentially unfilled until next oracle fetch at \\( T+1 \\)
+3. Position \\( j \\) is attributed a number of shares \\( \mathrm{PS}\_{aj} \\) of the total open interest on side \\( a \\).
+4. On build, user \\( i \\) receives a share of position \\( j \\) and the collateral, debt, open interest associated with \\( j \\). Those positions are ERC1155, such that shares in a position are fungible (many users can own a portion of a position), but positions themselves are non-fungible.
+5. We track aggregate open interest on long and short sides. Each position \\( j \\) is attributed a certain number of shares of tracked aggregate open interest on a side, in addition to the total debt owed by and initial collateral staked in the position.
+6. After each update period (oracle fetch), a new set of positions for long and short sides as well as leverages up to \\( L_{\mathrm{max}} \\) get queued up for next oracle price fetch (\\( T+1 \\) settlement)
+7. Variables that evolve over time are limited to *only* aggregate open interest either long or short side.
+
+![Image of Token Bookkeeping](../assets/oip-1/bookkeeping.svg)
+
+
+### Open Margin and Liquidations
