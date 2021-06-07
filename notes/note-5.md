@@ -55,6 +55,14 @@ When approaching a peer-to-pool model with leverage and funding, we must conside
 
 where \\( L_{aj} \\) is the initial leverage and \\( N_{aj}(0) \\) is the OVL collateral locked when \\( j \\) is first built.
 
+Expanding on our previous example, if we're super bullish and want to build a position with 3x leverage
+
+At time 0,
+
+- We lock 10 OVL in a long position on the \\( X \\) feed with 3x leverage for a market entry price of \\( x = 100 \\)
+
+- The market contract marks our position as having an open interest (OI) of 30 OVL. It is backed by 10 OVL of collateral and has a debt of 20 OVL
+
 Without funding payments, a peer-to-pool model would be relatively simple to implement. The market contract would issue separate tokens linked to a user's portion of the collateral locked and track the initial leverage set for their position to determine PnL values. No need to worry about theirs and others' position sizes changing over time. With funding payments, however, the situation becomes more complex because collateral *and* open interest act like pooled quantities. Aggregate open interest on a side, and thus a user's share of that open interest, changes over time.
 
 ### Share of Open Interest
@@ -91,7 +99,7 @@ with open interest evening out between the long and short sides given enough tim
 
 \\[ \mathrm{OI} = \mathrm{OI}\_{l} + \mathrm{OI}\_{s} = \mathrm{const} \\]
 
-Funding becomes simple to implement. Assume we pay funding in discrete intervals (e.g. every [``periodSize``](note-2) blocks at the oracle fetch). A call to distribute funding payments at time \\( t+m \\), \\( m \\) funding intervals after the last update, should adjust a market's aggregate open interest according to
+Funding becomes simple to implement. We pay funding in discrete intervals every [``periodSize``](note-2) blocks at the oracle fetch. A call to distribute funding payments at time \\( t+m \\), \\( m \\) funding intervals after the last update, should adjust a market's aggregate open interest according to
 
 \\[ \mathrm{OI}\_{l} (t+m) = \frac{1}{2} \bigg[ \mathrm{OI}\_{l} (t) + \mathrm{OI}\_{s} (t) + (\mathrm{OI}\_{l} (t) - \mathrm{OI}\_{s} (t)) \cdot ( 1 - 2k )^{m} \bigg] \\]
 
@@ -139,9 +147,9 @@ Thus, to assess the value of a position at any time \\( t \\), we only need to s
 
 - \\( P(0) \\) -- \\( j \\)'s entry price from the market's oracle feed
 
-Dynamic pooled quantities are limited to the aggregate open interest on each side \\( \mathrm{OI}\_{aj}(t) \\).
+Dynamic pooled quantities are limited to the aggregate open interest on each side \\( \mathrm{OI}\_{a}(t) \\).
 
-Attributing entry price \\( P(0) \\) as a static quantity to position \\( j \\) assumes users can *not* add additional collateral after build time \\( 0 \\). This requirement allows for a semi-fungible implementation: shares in a position are fungible (i.e. many users can own a portion of a position), but positions themselves are non-fungible with respect to each other. We recommend this approach, particularly with the ERC-1155 standard, because tokenization of each position offers composability with other DeFi protocols.
+Attributing entry price \\( P(0) \\) as a static quantity to position \\( j \\) assumes users can *not* add additional collateral after build time \\( 0 \\). This requirement allows for a semi-fungible implementation: shares in a position are fungible (i.e. many users can own a portion of a position), but positions themselves are non-fungible with respect to each other. We recommend this approach, particularly with the ERC-1155 standard, because tokenization of each position offers composability with other DeFi protocols and the ability to e.g., buy or sell Overlay positions on secondary markets.
 
 
 ### Returns on Unwind
@@ -158,7 +166,7 @@ Fully realizing the position size at build, however, requires we also burn the e
 
 \\[\mathrm{PnL}\_{aj}(t) = V_{aj}(t) - C_{aj} = \mathrm{OI}\_{aj} (t) \cdot \bigg[ 1 \; (\pm)\_a \; \bigg( \frac{P(t)}{P(0)} - 1 \bigg) \bigg] - \mathrm{OI}_{aj}(0)\\]
 
-At unwind time \\( t \\), the market contract returns \\( V_{aj}(t) \\) in OVL to the user unwinding all of position \\( j \\) (assuming only one user owns shares in the position). If the profit for position \\( j \\) *exceeds the position's outstanding debt*, the system mints to the market contract the difference \\( \mathrm{PnL}\_{aj}(t) - D_{aj} \\) and returns the value of the position to the user. If the profit/loss is less than the debt, the system burns the difference \\( D_{aj} - \mathrm{PnL}\_{aj}(t) \\) and returns the remaining value of the position to the user.
+At unwind time \\( t \\), the market contract returns \\( V_{aj}(t) \\) in OVL to the user unwinding all of position \\( j \\) (assuming only one user owns shares in the position). If the profit for position \\( j \\) exceeds the position's outstanding debt, the system mints to the market contract the difference \\( \mathrm{PnL}\_{aj}(t) - D_{aj} \\) and returns the value of the position to the user. If the profit/loss is less than the debt, the system burns the difference \\( D_{aj} - \mathrm{PnL}\_{aj}(t) \\) and returns the remaining value of the position to the user.
 
 Factoring in multiple users owning shares of position \\( j \\) is trivial, with any profit/loss, value, cost and debt split pro-rata amongst each user \\( i \\). For example, the value returned to user \\( i \\) unwinding \\( \mathrm{S}_{aij} \\) shares in position \\( j \\) at time \\( t \\) is
 
