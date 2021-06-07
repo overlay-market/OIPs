@@ -3,7 +3,7 @@ note: 1
 oip-num: 1
 title: Funding Payments
 status: WIP
-author: Michael Feldman (@mikeyrf), Adam Kay (@mcillkay)
+author: Michael Feldman (@mikeyrf), Adam Kay (@mcillkay), James Foley (@realisation)
 discussions-to: oip-1
 created: 2021-02-25
 updated: N/A
@@ -158,9 +158,17 @@ which is simply getting paid funding on top of our initial OVL balance of to go 
 
 which is still sensitive to changes in the ETH-OVL feed, but remains profitable as long as price deviations are less than 100% to the ETH bull side.
 
-## Public Strategies
+## Magic ERC-20s
 
-What's even more interesting is these are simple trades that anyone should be able to participate in. We can code and propose strategies for [yearn vaults](https://github.com/iearn-finance/yearn-vaults) that accomplish this: one to earn yield on OVL and the other to earn yield on ETH. This ultimately stabilizes our system even more, although gas costs could likely be difficult to manage. The alternative would be to open source Python bots that anyone can run on their own servers, like [Hummingbot](https://hummingbot.io/) strategies.
+What's even more interesting is these are simple trades that anyone should be able to participate in. Since portfolio A mimics holding spot ETH tokens and portfolio B mimics holding spot OVL, each with additional yield from funding payments, we can represent these portfolios as high-yield synthetic fungible tokens. What we're calling Magic ETH (portfolio A) and Magic OVL (portfolio B).
+
+Users would deposit ETH to the Magic ETH contract and OVL to the Magic OVL contract. Each magic contract would then perform the appropriate swaps and building of Overlay market positions necessary to replicate the portfolios above and issue [ERC-20](https://eips.ethereum.org/EIPS/eip-20) tokens as corresponding credits. These are effectively tokenized basis trades that users can easily swap into or out of on spot AMMs as funding rates go against their respective side or provide liquidity for on spot exchanges specializing in like-asset pairs (e.g. Magic ETH & ETH pool).
+
+Each Overlay market we offer that includes OVL as one of the currencies will have a similar dynamic. Another way to generate Magic OVL (portfolio B), and a new Magic X high-yield synthetic for the X-OVL market (portfolio A). Likely, our first markets would be ETH-OVL and DAI-OVL for Magic ETH, DAI, and OVL at launch. The additional liquidity generated from providing easy-to-access exposure to funding on Overlay markets could ultimately stabilize our system even more through larger amounts of capital interested in playing the basis trade.
+
+### Strategies
+
+We can code and propose strategies for [yearn vaults](https://github.com/iearn-finance/yearn-vaults) that swap in and out of each magic token to avoid losing principal: one to earn yield on OVL and the other to earn yield on ETH, although gas costs could likely be difficult to manage. The alternative would be to open source Python bots that anyone can run on their own servers, like [Hummingbot](https://hummingbot.io/) strategies.
 
 # Considerations
 
