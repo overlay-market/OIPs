@@ -55,6 +55,14 @@ When approaching a peer-to-pool model with leverage and funding, we must conside
 
 where \\( L_{aj} \\) is the initial leverage and \\( N_{aj}(0) \\) is the OVL collateral locked when \\( j \\) is first built.
 
+Expanding on our previous example, if we're super bullish and want to build a position with 3x leverage
+
+At time 0,
+
+- We lock 10 OVL in a long position on the \\( X \\) feed with 3x leverage for a market entry price of \\( x = 100 \\)
+
+- The market contract marks our position as having an open interest (OI) of 30 OVL. It is backed by 10 OVL of collateral and has a debt of 20 OVL
+
 Without funding payments, a peer-to-pool model would be relatively simple to implement. The market contract would issue separate tokens linked to a user's portion of the collateral locked and track the initial leverage set for their position to determine PnL values. No need to worry about theirs and others' position sizes changing over time. With funding payments, however, the situation becomes more complex because collateral *and* open interest act like pooled quantities. Aggregate open interest on a side, and thus a user's share of that open interest, changes over time.
 
 ### Share of Open Interest

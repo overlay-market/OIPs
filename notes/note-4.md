@@ -191,11 +191,37 @@ to inform our governance-determined value for \\( k \\).
 
 ## Considerations
 
-The analysis above only examines value at risk to the system on an individual market-by-market basis. While useful, it is not entirely accurate at the macro level. We should really examine the "portfolio" of markets we're offering and the total value at risk to the system caused by the *sum of imbalances* on each individual market
+The analysis above is overly simplistic since:
+
+1. It assumes all traders enter and exit positions at the same time
+
+2. It only examines value at risk to the system on an individual market-by-market basis
+
+3. It assumes GBM for the underlying feeds.
+
+While useful, it is not entirely accurate. Further risk work should address each of these concerns:
+
+1: We should think about how differing position entry prices might skew our risk estimates, and whether having funding payments incentivize *only* open interest imbalance is the optimal approach. Remember, we assumed each trader builds their position at the same time \\( 0 \\), which is unrealistic to say the least. This lead to an imbalance PnL dependent on only one entry price \\( P(0) \\) versus some form of an average. Would incorporating a more realistic model of trader behavior change things significantly given our goal is to provide suggestions for \\( k \\)?
+
+2: We should really examine the "portfolio" of markets we're offering and the total value at risk to the system caused by the *sum of imbalances* on each individual market
 
 \\[ 1 - \alpha = \mathbb{P}\bigg[ \sum_{i=1}^{N} {\mathrm{OI}\_{imb}}\_{i} (0) \cdot d^{-m}\_{i} \cdot \bigg( e^{\mu_i m T + \sigma_i \cdot W\_{m T}}  - 1 \bigg) \leq \mathrm{VaR}_{\alpha} (m) \bigg] \\]
 
 where \\( (\mu_i, \sigma_i, d_i) \\) are the relevant parameters for market \\( i \\) assuming \\( N \\) total markets offered by the protocol.
+
+3: Geometric Brownian motion, while easier to handle from a theoretical perspective, is [notoriously terrible](http://static.stevereads.com/papers_to_read/errors_robustness_and_the_fourth_quadrant.pdf) in practice for quant finance. Most price time series exhibit fat tailed behavior, particularly within crypto. Assuming prices follow a [log-stable process](https://cpb-us-w2.wpmucdn.com/sites.coecis.cornell.edu/dist/9/287/files/2019/08/Nolan-9-Nolan_Financial-Modeling-w-heavy-tailed-stable-2.pdf) might be a more flexible approach to generalize the analysis above while accommodating for fat tails.
+
+For example, we could assume \\( P \\) is driven by a stochastic process \\( L_t \\)
+
+\\[ P(t) = P(0) e^{\mu t + \sigma L_t} \\]
+
+having [Levy stable](https://en.wikipedia.org/wiki/Stable_distribution) increments, \\( L_{t+T} - L_{t} \sim S(a, b, 0, (\frac{T}{a})^{\frac{1}{a}}) \\), where \\( a \\) is the stability parameter, \\( b \\) is the skewness parameter, and \\( c = (\frac{T}{a})^{\frac{1}{a}} \\) is the scale parameter. This reduces to GBM when \\( a = 2 \\) and \\( b = 0 \\).
+
+The Levy stable CDF is not necessarily expressible analytically and estimation of parameters \\( (a, b, \mu, \sigma) \\) no longer reduces to sample mean and variance, as with GBM. However, there are easy to use [packages in SciPy](https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.levy_stable.html) to help numerically. Particularly important,
+
+\\[ \mathrm{VaR}\_{\alpha} (m) = \mathrm{OI}\_{imb}(0) \cdot d^{-m} \cdot \bigg[ e^{\mu m T + \sigma (\frac{m T}{a})^{\frac{1}{a}} \cdot {F}^{-1}(1-\alpha)} - 1 \bigg] \\]
+
+where \\( F^{-1} \\) is the inverse CDF for the standard Levy stable \\( S(a, b, 0, 1) \\). SciPy's `levy_stable.ppf` would be helpful here as well.
 
 
 ## Acknowledgments
