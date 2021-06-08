@@ -11,9 +11,9 @@ updated: N/A
 
 Two issues to address in this note:
 
-- How much can the value of a Uniswap/SushiSwap **sliding window** TWAP oracle be manipulated within the oracle's update interval (which is much smaller than the time averaged over)?
+- How much can the value of a Uniswap/SushiSwap sliding window TWAP oracle be manipulated within the oracle's update interval?
 
-- How much capital is needed to **profitably attack** an Overlay market by manipulating the underlying price feed?
+- How much capital is needed to profitably attack an Overlay market by manipulating the underlying price feed?
 
 
 ## Sliding Window Oracles
@@ -26,45 +26,42 @@ For context, if we fix the price on Overlay to each fetch from the oracle, we en
 
 The alternative would be to use a sliding window TWAP oracle for each of our price feeds. Summary of how it works: every \\( \gamma \\) blocks (`periodSize`), we fetch and store a new [cumulative price value](https://uniswap.org/docs/v2/core-concepts/oracles/) from the Uni/SushiSwap feed. Assume we average our TWAP over \\( \Delta \\) blocks (`windowSize`) and \\( \gamma \ll \Delta \\) (e.g. \\( \gamma = 10 \mathrm{m}, \Delta = 1 \mathrm{h} \\) in block time).
 
-The oracle keeps track of the trailing index of the observation (at the beginning of the window) relative to the current time index. To calculate the TWAP value for our Overlay market prices during the current update interval \\( t_i < t < t_i + \gamma \\), we simply take the difference in the cumulative price value of the last observation stored with that of the trailing index value and divide by the difference in timestamps of the last and trailing.
+The oracle keeps track of the trailing index of the observation at the beginning of the window relative to the current time index. To calculate the TWAP value for our Overlay market prices during the current update interval \\( t_i < t < t_i + \gamma \\), we simply take the difference in the cumulative price value of the last observation stored with that of the trailing index value and divide by the difference in timestamps of the last and trailing.
 
 Explicitly, for a `windowSize` of \\( \Delta \\) blocks that we average our prices over, the TWAP at block \\( i \\) for our market feed is
 
-\\[ \mathrm{TWAP}\_i(\Delta) = \mathrm{TWAP}\_i = \frac{CP_i - CP_{i-\Delta}}{\Delta} \\]
+\\[ \mathrm{TWAP}\_{\Delta}(i) = \frac{CP(i) - CP(i-\Delta)}{\Delta} \\]
 
-where \\( CP_i \\) is the Uni/SushiSwap price accumulator
+where \\( CP(i) \\) is the Uni/SushiSwap price accumulator
 
-\\[ CP_i = \sum_{k=0}^{i} t_k \cdot P_k \\]
+\\[ CP(i) = \sum_{k=0}^{i} t(k) \cdot P(k) \\]
 
-\\( t_k \\) is the time elapsed between the end of block \\( k \\) and beginning of block \\( k+1 \\). \\( P_k \\) is the price on Uni/SushiSwap at the end of block \\( k \\) and beginning of block \\( k+1 \\).
+\\( t(k) \\) is the time elapsed between the end of block \\( k \\) and beginning of block \\( k+1 \\). \\( P(k) \\) is the price on Uni/SushiSwap at the end of block \\( k \\) and beginning of block \\( k+1 \\).
+
+The sliding window TWAP queries the current TWAP value every \\( \gamma \\) blocks
+
+\\[ \mathrm{TWAP}\_{\gamma, \Delta}(i) = \mathrm{TWAP}\_{\Delta}(i - \mathrm{mod}(i, \gamma)) \\]
 
 ### TWAP Manipulation
 
-For a `periodSize` of \\( \gamma \\), we want an explicit expression for how much the TWAP can change due to an attacker consistently manipulating the spot from blocks \\( i \\) to \\( i + \gamma \\) within the update interval. See the [Considerations](#Considerations) section below for ways we need to further expand.
+We want an explicit expression for how much the TWAP can change due to an attacker consistently manipulating the spot for \\( \alpha \\) blocks within the averaging window \\( \alpha \leq \Delta \\).
 
-We want to look at \\( \mathrm{TWAP}\_{i+\gamma} / \mathrm{TWAP}\_i - 1 \\), where \\( \mathrm{TWAP}\_{i+\gamma} = (CP_{i+\gamma} - CP_{i+\gamma - \Delta}) / \Delta \\). The value of the price accumulator at block \\( i + \gamma \\) is
+Further, for simplicity's sake, take the price at each block recorded by the accumulator to be the same prior to the attack, and the attack to happen in the last \\( \alpha \\) blocks of the averaging window:
 
-\\[ CP_{i+\gamma} = CP_i + \sum_{k=i+1}^{i+\gamma} t_k \cdot P_k \\]
+\\[ P(i - \Delta) = P(i - \Delta - 1) = ... = P(i - \alpha) = P_0 \\]
+\\[ P(i - \alpha + 1) = P(i - \alpha + 2) = ... = P(i) = P_0 (1 + \epsilon) \\]
 
-For simplicity's sake, assume the attacker manipulates the spot price a percent difference \\(\epsilon_{\gamma} \\) for each block in the update window (i.e. for \\( \gamma \\) blocks) such that
+where the attacker manipulates the spot a percent difference \\( \epsilon \\) each block for the last \\( \alpha \\) blocks.
 
-\\[ P_{i+1} = P_{i+2} = ... = P_{i+\gamma} = (1 + \epsilon_{\gamma}) \cdot P_i \\]
+Without loss of generality, we can examine the value of the sliding window TWAP at the beginning of the update interval, which reduces \\( \mathrm{TWAP}\_{\gamma, \Delta}(i) = \mathrm{TWAP}\_{\Delta}(i) \\). The value given by the sliding window TWAP will be
 
-The value of the price accumulator at block \\( i + \gamma \\) will simplify to
+\\[ \mathrm{TWAP}\_{\gamma, \Delta}(i) = P_0 \bigg[ 1 + \frac{\alpha}{\Delta} \cdot \epsilon \bigg] \\]
 
-\\[ CP_{i+\gamma} = CP_i + \gamma \cdot (1 + \epsilon_{\gamma}) \cdot P_i \\]
+and the percent change in the TWAP \\( \epsilon_{\mathrm{TWAP}} \\) will be
 
-and \\( \mathrm{TWAP}\_{i+\gamma} \\) reduces to
+\\[ \epsilon_{\mathrm{TWAP}} = \frac{\alpha}{\Delta} \cdot \epsilon \\]
 
-\\[\mathrm{TWAP}\_{i+\gamma} = \frac{\gamma}{\Delta} \cdot (1 + \epsilon_{\gamma}) \cdot P_i + \frac{CP_i - CP_{i+\gamma-\Delta}}{\Delta} \\]
-
-Simplify further (we can always generalize) by assuming prior to the update interval
-
-\\[ P_{i-\Delta} = P_{i-\Delta+1} = ... = P_{i} \\]
-
-such that \\(\mathrm{TWAP}\_{i} = P_i \\). We have \\( (CP_i - CP_{i+\gamma-\Delta}) / \Delta = P_i \cdot (\Delta - \gamma) / \Delta \\) and the TWAP at the end of the update interval is \\(\mathrm{TWAP}\_{i+\gamma} = P_i \cdot [ 1 + (\gamma/\Delta) \cdot \epsilon_{\gamma} ] \\). Then the change in the TWAP during the update interval \\( \epsilon^{\mathrm{TWAP}}\_{\gamma} \\) given a consistent spot change \\( \epsilon_{\gamma} \\) over the update interval's \\( \gamma \\) blocks will be
-
-\\[ \epsilon^{\mathrm{TWAP}}\_{\gamma} = \frac{\mathrm{TWAP}\_{i+\gamma} - \mathrm{TWAP}\_{i}}{\mathrm{TWAP}\_{i}} = \frac{\gamma}{\Delta} \cdot \epsilon_{\gamma} \\]
+given a consistent spot change \\( \epsilon \\) for \\( \alpha \\) blocks.
 
 
 ## Profitably Attacking Overlay
