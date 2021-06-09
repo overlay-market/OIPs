@@ -192,7 +192,9 @@ Take \\( \gamma = 40 \\) for an approximately 10 minute update interval. The ext
 
 which is still substantial. Plotting \\( C\|\_{\mathrm{breakeven}} (\epsilon\_{\gamma}) \\) with \\( \gamma = 10 \mathrm{m}, \Delta = 1 \mathrm{h}, R = $10 \mathrm{M}, l\_{\mathrm{max}} = 5 \\)
 
-![Image of Cost Plot](../assets/oip-1/cost_plot_wolfram.gif)
+![Image of Breakeven Cost Plot](../assets/oip-1/cost_breakeven.svg)
+
+![Image of Breakeven Collateral Plot](../assets/oip-1/cost_collateral.svg)
 
 with y-axis in millions of dollars.
 
