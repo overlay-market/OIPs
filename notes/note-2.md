@@ -11,7 +11,7 @@ updated: N/A
 
 Two issues to address in this note:
 
-- How much can the value of a Uniswap/SushiSwap sliding window TWAP oracle be manipulated within the oracle's update interval?
+- How much can the value of a Uniswap V2 sliding window TWAP oracle be manipulated within the oracle's update interval?
 
 - How much capital is needed to profitably attack an Overlay market by manipulating the underlying price feed?
 
@@ -42,26 +42,28 @@ The sliding window TWAP queries the current TWAP value every \\( \gamma \\) bloc
 
 \\[ \mathrm{TWAP}\_{\gamma, \Delta}(i) = \mathrm{TWAP}\_{\Delta}(i - \mathrm{mod}(i, \gamma)) \\]
 
+such that our markets would only have the latest value of the TWAP every \\( \gamma \\) blocks.
+
 ### TWAP Manipulation
 
-We want an explicit expression for how much the TWAP can change due to an attacker consistently manipulating the spot for \\( \alpha \\) blocks within the averaging window \\( \alpha \leq \Delta \\).
+We want an explicit expression for how much the TWAP can change due to an attacker consistently manipulating the spot for \\( \nu \\) blocks within the averaging window \\( \nu \leq \Delta \\).
 
-Further, for simplicity's sake, take the price at each block recorded by the accumulator to be the same prior to the attack, and the attack to happen in the last \\( \alpha \\) blocks of the averaging window:
+For simplicity's sake, take the price at each block recorded by the accumulator to be the same prior to the attack, and the attack to happen in the last \\( \nu \\) blocks of the averaging window:
 
-\\[ P(i - \Delta) = P(i - \Delta - 1) = ... = P(i - \alpha) = P_0 \\]
-\\[ P(i - \alpha + 1) = P(i - \alpha + 2) = ... = P(i) = P_0 (1 + \epsilon) \\]
+\\[ P(i - \Delta) = P(i - \Delta - 1) = ... = P(i - \nu) = P_0 \\]
+\\[ P(i - \nu + 1) = P(i - \nu + 2) = ... = P(i) = P_0 \cdot (1 + \epsilon) \\]
 
-where the attacker manipulates the spot a percent difference \\( \epsilon \\) each block for the last \\( \alpha \\) blocks.
+where the attacker manipulates the spot a percent difference \\( \epsilon \\) each block for the last \\( \nu \\) blocks.
 
 Without loss of generality, we can examine the value of the sliding window TWAP at the beginning of the update interval, which reduces \\( \mathrm{TWAP}\_{\gamma, \Delta}(i) = \mathrm{TWAP}\_{\Delta}(i) \\). The value given by the sliding window TWAP will be
 
-\\[ \mathrm{TWAP}\_{\gamma, \Delta}(i) = P_0 \bigg[ 1 + \frac{\alpha}{\Delta} \cdot \epsilon \bigg] \\]
+\\[ \mathrm{TWAP}\_{\gamma, \Delta}(i) = P_0 \bigg[ 1 + \frac{\nu}{\Delta} \cdot \epsilon \bigg] \\]
 
 and the percent change in the TWAP \\( \epsilon_{\mathrm{TWAP}} \\) will be
 
-\\[ \epsilon_{\mathrm{TWAP}} = \frac{\alpha}{\Delta} \cdot \epsilon \\]
+\\[ \epsilon_{\mathrm{TWAP}} = \frac{\nu}{\Delta} \cdot \epsilon \\]
 
-given a consistent spot change \\( \epsilon \\) for \\( \alpha \\) blocks.
+given a consistent spot change \\( \epsilon \\) for \\( \nu \\) blocks.
 
 
 ## Profitably Attacking Overlay
@@ -72,53 +74,102 @@ Using a 10 minute update interval for a 1 hour sliding window TWAP on an underly
 
 ### Constructing the Trade
 
-Using the above as an attacker, I should be able to take a position on Overlay with max leverage, manipulate the spot price to my advantage within the update interval, and cash out the Overlay position for a profit. Understanding the break-even cost of such an attack will guide us in what TWAP feeds are suitable for the system as well as what constraints we must place on our max leverage values in order to make the cost of such an attack unreasonable.
+The value reported by the sliding window TWAP oracle is what traders will trade on this specific type of Overlay market. Using the above as an attacker, we should be able to take a position on Overlay with max leverage, manipulate the spot price to our advantage, and cash out the Overlay position for a profit. Understanding the break-even cost of such an attack will guide us in what TWAP feeds are suitable for the system as well as what constraints we must place on our max leverage values in order to make the cost of such an attack unreasonable.
 
-Take the relevant price on a constant product (\\( R \cdot R' = k \\)) market maker at block \\( i \\): \\( P_i = k / R^2 \\), where \\( R \\) is reserve 0 and \\( R' \\) reserve 1 at block \\( i \\). The change in price for \\( x_{\gamma} \\) number of tokens swapped will be
+Before the attack, take the price on the spot constant product \\( x \cdot y = k \\) market maker to be
 
-\\[ \epsilon_{\gamma} = \frac{P_{i+\gamma} - P_i}{P_i} = \frac{1}{(1-x_{\gamma}/R)^2} - 1 \\]
+\\[ P_0 = \frac{x^2}{k} = \frac{k}{y^2} \\]
 
-which implies the capital to move the spot an amount \\( \epsilon_{\gamma} \\) is
+where \\( x \\) is the number of tokens in reserve 0 and \\( y \\) the number of tokens in reserve 1 at block \\( i - \nu \\). The attacker has two options
 
-\\[ x_{\gamma} = R \cdot \bigg[ 1 - \frac{1}{\sqrt{1+\epsilon_{\gamma}}} \bigg] \\]
+1. Add \\( \delta x \\) tokens to the pool each block to increase the price
+2. Add \\( \delta y \\) tokens to the pool each block to decrease the price
 
-Assuming arbitrageurs revert the price back to \\( P_i \\) after each block, the total amount of capital required on the spot side of the attack for \\( \gamma \\) blocks is
+In the former case, we take out a max leverage long on the corresponding Overlay market. In the latter case, we take out a max short. To change the spot price for \\( \nu \\) blocks, the total number of tokens needed will be \\( \nu \cdot \delta x \\) for the former and \\( \nu \cdot \delta y \\) for the latter, assuming arbitrageurs move the price back to \\( P_0 \\) within each block after cumulative price values are recorded.
 
-\\[ x = \sum_{k=i+1}^{i+\gamma} x_{\gamma} = R \cdot \gamma \cdot \bigg[ 1 - \frac{1}{\sqrt{1+\epsilon_{\gamma}}} \bigg] \\]
+#### Option 1: \\( 0 < \epsilon < \infty \\)
 
-The attacker stakes \\( n_{\gamma} \\) OVL in a long position with leverage \\( l_{\gamma} \\) at block \\( i \\), then starts to manipulate the spot price from \\( i+1 \\) to \\( i+\gamma \\), when the next sliding window observation occurs. The payoff in OVL terms of the long position on the Overlay TWAP will be
+In the former case, the trader attacks the Overlay market by increasing the TWAP value. After sending \\( \delta x \\) tokens to the spot pool, reserve 0 changes \\( x \to x + \delta x \\). The recorded price after the change will be
 
-\\[ \mathrm{PO}(t_{i+\gamma}) = n_{\gamma} \cdot ( 1 + l_{\gamma} \cdot \epsilon^{\mathrm{TWAP}}\_{\gamma} ) \\]
+\\[ P_0 \cdot (1 + \epsilon) = \frac{(x + \delta x)^2}{k} \\]
 
-ignoring payoff contributions from [funding payments](note-1) since the attacker would likely cause significant imbalance with a large long position and total profit would suffer (below is conservative).
+Thus, the capital \\( \delta x \\) required to move the spot price up \\( \epsilon \\) is
 
-Assume they obtain \\( x \\) number of \\( R \\) tokens at block \\( i \\) to prepare for the attack. The total cost for the attack in OVL terms will be
+\\[ \delta x = x \bigg[ \sqrt{1 + \epsilon} - 1 \bigg] \\]
 
-\\[ C = n_{\gamma} + p^{OVL}_R (t_i) \cdot x \\]
+Say we take out a long position on the corresponding Overlay TWAP market using OVL collateral \\( N \\) with leverage \\( L \\), prior to manipulating the spot. The value of our long position in OVL after manipulating the spot will be
 
-where \\( p^{OVL}_R(t_i) \\) is the spot swap price at block \\( i \\) for the \\( R \\) token in terms of OVL. And total profit \\( \mathrm{PnL}(t\_{i+\gamma}) = \mathrm{PO}(t\_{i+\gamma}) - C \\) in OVL terms
+\\[ V_l (i) = N + N \cdot L \cdot \epsilon\_{\mathrm{TWAP}} = N + N \cdot L \cdot \frac{\nu}{\Delta} \cdot \epsilon \\]
 
-\\[ \mathrm{PnL}(t_{i+\gamma}) = \frac{\gamma \cdot \epsilon_{\gamma}}{\Delta} \cdot \bigg[ n_{\gamma} \cdot l_{\gamma} - p^{OVL}_R(t_i) \cdot \frac{R \cdot \Delta}{\epsilon\_{\gamma}} \cdot \bigg( 1 - \frac{1}{\sqrt{1+\epsilon\_{\gamma}}} \bigg) \bigg] \\]
+with the total cost to attack the system given by the sum of the collateral locked in the long \\( N \\) and the total tokens needed to manipulate the spot \\( \nu \cdot \delta x \\).
 
-The attacker's trade is therefore only profitable when
+At what point is the attack profitable for the trader? When the value of the max long position exceeds the total cost to attack the system. Or the PnL for the attack
 
-\\[ n_{\gamma} > p^{OVL}_R(t_i) \cdot \frac{R \cdot \Delta}{l\_{\gamma}} \cdot \frac{1}{\epsilon\_{\gamma}} \cdot \bigg[ 1 - \frac{1}{\sqrt{1+\epsilon\_{\gamma}}} \bigg] \\]
+\\[ \mathrm{PnL}_{l} (i) = \nu \bigg[ \frac{N\_x \cdot L}{\Delta} \cdot \epsilon - x \cdot \bigg( \sqrt{1 + \epsilon} - 1 \bigg) \bigg] \\]
 
-Taylor expanding the root term, we have an inequality for the break-even amount of \\( n_{\gamma} \\) required to execute the long side of the trade
+is greater than zero. \\( N_x \\) here is the initial collateral locked in the long expressed in \\( x \\) token terms. This translates to a break-even amount of collateral the attacker needs to lock in the long position for the attack to be worthwhile (\\( \mathrm{PnL}_l = 0 \\)):
 
-\\[ n_{\gamma} > p^{OVL}_R(t_i) \cdot \frac{R \cdot \Delta}{l\_{\gamma}} \cdot \bigg[ \frac{1}{2} - \frac{3}{8} \epsilon\_{\gamma} + \frac{5}{16} \epsilon^2\_{\gamma} - ... \bigg] \\]
+\\[ N_x\|\_{B} = x \cdot \frac{\Delta}{L \cdot \epsilon} \cdot \bigg[ \sqrt{1 + \epsilon} - 1 \bigg] \\]
 
-which is independent of the `periodSize` \\( \gamma \\) to first order.
+The total upfront cost to break-even with this attack is then
 
-The break-even (\\( \mathrm{PnL} = 0 \\)) amount of OVL required to attack the system on the Overlay side of the trade is then
+\\[ \mathrm{TC}\|_{B} = N_x\|\_{B} + \nu \cdot \delta x = x \cdot \bigg( \frac{\Delta}{L \cdot \epsilon} + \nu \bigg) \bigg[ \sqrt{1 + \epsilon} - 1 \bigg] \\]
 
-\\[ n_{\gamma}\|_{\mathrm{breakeven}} = p^{OVL}_R(t_i) \cdot \frac{R \cdot \Delta}{l\_{\gamma}} \cdot \frac{1}{\epsilon\_{\gamma}} \cdot \bigg[ 1 - \frac{1}{\sqrt{1+\epsilon\_{\gamma}}} \bigg] \\]
+for a spot price manipulation per block of \\( 0 < \epsilon < \infty \\).
 
-and the break-even total cost in dollar terms is
 
-\\[ C\|_{\mathrm{breakeven}} = p^{$}_R(t_i) \cdot R \cdot \bigg(\frac{\Delta}{l\_{\gamma}} + \gamma \cdot \epsilon\_{\gamma} \bigg) \cdot \frac{1}{\epsilon\_{\gamma}} \cdot \bigg[ 1 - \frac{1}{\sqrt{1+\epsilon\_{\gamma}}} \bigg] \\]
+#### Option 2: \\( -1 < \epsilon < 0 \\)
 
-where \\( p^{$}_R(t_i) \\) is the price of the \\( R \\) token in dollar terms at block \\( i \\).
+In the latter case, the trader attacks the Overlay market by decreasing the TWAP value. After sending \\( \delta y \\) tokens to the spot pool, reserve 1 changes \\( y \to y + \delta y \\). The recorded price after the change will be
+
+\\[ P_0 \cdot (1 + \epsilon) = \frac{k}{(y + \delta y)^2} \\]
+
+Thus, the capital \\( \delta y \\) required to move the spot price down \\( \epsilon \\) is
+
+\\[ \delta y = y \bigg[ \frac{1}{\sqrt{1 + \epsilon}} - 1 \bigg] \\]
+
+We take out a short position on the Overlay TWAP market using OVL collateral \\( N \\) with leverage \\( L \\), prior to manipulating the spot. The value of our short position in OVL after manipulating spot will be
+
+\\[ V_s (i) = N - N \cdot L \cdot \epsilon\_{\mathrm{TWAP}} = N - N \cdot L \cdot \frac{\nu}{\Delta} \cdot \epsilon \\]
+
+with the total cost to attack the system given by the sum of the collateral locked in the short \\( N \\) and the total tokens needed to manipulate the spot \\( \nu \cdot \delta y \\).
+
+The PnL for the attack in this latter scenario is
+
+\\[ \mathrm{PnL}\_{s}(i) = \nu \bigg[ \frac{N_y \cdot L}{\Delta} \cdot \| \epsilon \| - y \bigg( \frac{1}{\sqrt{1 - \|\epsilon\|}} - 1 \bigg) \bigg] \\]
+
+where \\( N_y \\) is the initial collateral locked in the short expressed in \\( y \\) terms. This translates to a break-even amount of collateral
+
+\\[ N_y \|_{B} = y \cdot \frac{\Delta}{L \cdot \| \epsilon \|} \cdot \bigg[ \frac{1}{\sqrt{1 - \| \epsilon \|}} - 1 \bigg] \\]
+
+to make the attack worthwhile (\\( \mathrm{PnL}\_{s} = 0 \\)).
+
+The total upfront cost to break-even with this attack is then
+
+\\[ \mathrm{TC}\|_{B} = N_y\|\_{B} + \nu \cdot \delta y = y \cdot \bigg( \frac{\Delta}{L \cdot \| \epsilon \|} + \nu \bigg) \bigg[ \frac{1}{\sqrt{1 - \| \epsilon \|}} - 1 \bigg] \\]
+
+for a spot manipulation per block of \\( -1 < \epsilon < 0 \\).
+
+
+### Minimum Break-Even Cost
+
+We can combine these two scenarios into a break-even cost function for the full range of spot price changes:
+
+$$
+\begin{eqnarray}
+\mathrm{TC}|_{B} (\epsilon) =
+\begin{cases}
+y \cdot \bigg( \frac{\Delta}{L \cdot | \epsilon |} + \nu \bigg) \bigg[ \frac{1}{\sqrt{1 - | \epsilon |}} - 1 \bigg] & -1 < \epsilon < 0 \\
+x \cdot \bigg( \frac{\Delta}{L \cdot \epsilon} + \nu \bigg) \bigg[ \sqrt{1 + \epsilon} - 1 \bigg] & 0 < \epsilon < \infty
+\end{cases}
+\end{eqnarray}
+$$
+
+which is dominated by
+
+\\[ \lim_{\epsilon \to 0} \mathrm{TC}\|_{B} (\epsilon) = \frac{x}{2} \cdot \frac{\Delta}{L} = \frac{y}{2} \cdot \frac{\Delta}{L} \\]
+
+for small changes in price per block. This relation constrains the maximum leverage we can offer for a TWAP market given the underlying liquidity in the pool and the time averaged over to calculate the TWAP.
 
 
 ### Concrete Numbers
