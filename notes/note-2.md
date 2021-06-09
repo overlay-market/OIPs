@@ -169,7 +169,7 @@ which is dominated by
 
 \\[ \lim_{\epsilon \to 0} \mathrm{TC}\|_{B} (\epsilon) = \frac{x}{2} \cdot \frac{\Delta}{L} = \frac{y}{2} \cdot \frac{\Delta}{L} \\]
 
-for small changes in price per block. This relation constrains the maximum leverage we can offer for a TWAP market given the underlying liquidity in the pool and the time averaged over to calculate the TWAP.
+for small changes in price per block. This relation gives rough constraints on the maximum leverage we can offer for a TWAP market given the underlying liquidity in the pool and the time averaged over to calculate the TWAP.
 
 
 ### Concrete Numbers

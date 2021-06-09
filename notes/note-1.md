@@ -26,7 +26,7 @@ For each feed, there should be at least two sets of traders with different prefe
 
 Floating the price has been ok, but introduced a large amount of additional complexity. Below, we want to explore whether we can offer opportunities for traders to construct "portfolios" that offer consistent yield while using a **fixed price** fetched directly from the oracle i.e., lock price of a new position built at a time \\( t \\) would be the price at the next oracle fetch \\( t^\* \\), where \\( t^\*\_0 < t \leq t^\* \\). Here the star denotes an oracle fetch.
 
-We'll go into the mechanisms for accomplishing filling at price \\( P(t^\*) = P^\* \\) even though \\( P(t_0) = P_0 \\) is all of the information we have at time \\( t \\) in a separate note. The strategy in short would be: if the oracle is fetched at \\(t = t^\*\\), then the first trader in `n+1`th update interval of the feed settles all of the trades for the prior `n`th update interval (i.e. sets the price \\(P^\*\\) ), so all trades from \\( t^\*\_0 < t \leq t^\* \\) settle at the same price).
+We'll go into the mechanisms for accomplishing filling at price \\( P(t^\*) = P^\* \\) even though \\( P(t_0) = P(0) \\) is all of the information we have at time \\( t \\) in a separate note. The strategy in short would be: if the oracle is fetched at \\(t = t^\*\\), then the first trader in `n+1`th update interval of the feed settles all of the trades for the prior `n`th update interval (i.e. sets the price \\(P^\*\\) ), so all trades from \\( t^\*\_0 < t \leq t^\* \\) settle at the same price).
 
 There's a good argument to be made for the benefits of fixing the price to the oracle fetch. It reduces the number of problems we have to solve from two to one. With a price fixed directly to each oracle fetch, we only have to worry about the stability of the currency supply, since arbitrage opportunities from price tracking the reference feed may not actually solve our stability problems, while also introducing other problems such as e.g., what should the price impact per OVL be.
 
@@ -43,11 +43,11 @@ Furthermore, we will think in terms of "internal time" to keep things simple. Th
 
 Let the open interest contributed by any one position to the long (short) side be the number \\(N \\) of OVL locked to that side, times the leverage \\(L\\) associated with those \\(N\\)  OVL. Thus, for trader \\( j \\) going long (thus the subscript \\(l\\)) we have
 
-\\[ \mathrm{OI}\_{jl} = L_{jl} \cdot N_{jl}\\]
+\\[ \mathrm{OI}\_{lj} = L_{lj} \cdot N_{lj}\\]
 
 If that trader has multiple long positions we sum over the OI of each one:
 
-\\[\mathrm{OI}\_{jl} = \sum_i L_{jli} N_{jli}\\]
+\\[\mathrm{OI}\_{lj} = \sum_i L_{lji} N_{lji}\\]
 
 We define the open interest on an entire market as above, summing over first \\(i\\) then \\(j\\). The imbalance on open interest is the long side OI minus the short side:
 \\[\mathrm{OI}\_{imb} = \mathrm{OI}\_l - \mathrm{OI}\_s  \\]
@@ -97,11 +97,11 @@ We buy OVL with our ETH on the spot market. Take out a 1x long position on the O
 
 For argument's sake we ignore fees for now. Because we prefer ETH, we care about our cost, value, and PnL in ETH terms. The cost in ETH terms to enter the 1x long ETH-OVL trade on Overlay is simply the cost to buy \\( n \\) OVL on the spot market, at time \\(t_0\\).
 
-\\[ C = V_0 = \frac{n}{P_0} \\]
+\\[ C = V(0) = \frac{n}{P(0)} \\]
 
-where \\( P_0 \\) is the price of ETH in OVL terms (units of OVL/ETH) when we enter the position. At time \\( t \\), the current value in ETH terms of our 1x long Overlay contract is
+where \\( P(0) \\) is the price of ETH in OVL terms (units of OVL/ETH) when we enter the position. At time \\( t \\), the current value in ETH terms of our 1x long Overlay contract is
 
-\\[ V(t) = \frac{N(t)}{P(t)} \cdot \bigg[ 1 + \frac{P(t) - P_0}{P_0} \bigg] = \frac{N(t)}{P_0} \\]
+\\[ V(t) = \frac{N(t)}{P(t)} \cdot \bigg[ 1 + \frac{P(t) - P(0)}{P(0)} \bigg] = \frac{N(t)}{P(0)} \\]
 
 where \\( N(t) \\) is the size of our position. Note that the ETH value is locked in, and so is independent of \\(P(t)\\). Any changes in value must come from changing \\(N(t)\\).
 
@@ -109,11 +109,11 @@ The funding payment will probably be computed each oracle fetch rather than each
 
 \\[ N(t) = n \cdot \bigg( 1 + \frac{\mathrm{FP}(0)}{\mathrm{OI}\_l(0)} \bigg) \cdots \bigg( 1 + \frac{\mathrm{FP}(m-1)}{\mathrm{OI}\_l(m-1)} \bigg) = n \cdot \prod_{i=1}^m \bigg[ 1 + f_l(i) \bigg] \\]
 
-Thus, the profit/loss **in ETH terms** at time \\(t \\) will be given by \\(\mathrm{PnL} = V(t) - C\\), yielding a PnL that changes only upon funding payments. After the $$m$$th payment, it is:
+Thus, the profit/loss **in ETH terms** at time \\(t \\) will be given by \\(\mathrm{PnL} (t) = V(t) - C\\), yielding a PnL that changes only upon funding payments. After the $$m$$th payment, it is:
 
-\\[ \mathrm{PnL}(m) = \frac{n}{P_0} \cdot \bigg[ \prod_{i=1}^m \bigg( 1 + f_l(i) \bigg) - 1  \bigg].\\]
+\\[ \mathrm{PnL}(m) = \frac{n}{P(0)} \cdot \bigg[ \prod_{i=1}^m \bigg( 1 + f_l(i) \bigg) - 1  \bigg].\\]
 
-This is simply getting paid funding on top of our initial ETH balance of \\( n/P_0 \\) to go long the ETH-OVL feed (bearish OVL, bullish ETH). This is always profitable for the trader that prefers ETH, when imbalance is toward the OVL bull side: shorts outweigh longs on ETH-OVL. Rate of return \\( r_{l} \\) for this strategy on the initial ETH capital \\( V_0 \\) is
+This is simply getting paid funding on top of our initial ETH balance of \\( n / P(0) \\) to go long the ETH-OVL feed (bearish OVL, bullish ETH). This is always profitable for the trader that prefers ETH, when imbalance is toward the OVL bull side: shorts outweigh longs on ETH-OVL. Rate of return \\( r_{l} \\) for this strategy on the initial ETH capital \\( V(0) \\) is
 
 \\[ r_l (m) = \prod_{i=1}^m \bigg( 1 + f_l(i) \bigg) - 1. \\]
 
@@ -134,25 +134,25 @@ Again we make a relatively simple trade to lock in funding. If we have \\( n \\)
 
 Cost to enter the trade **in OVL terms** is just the number of OVL:
 
-\\[ C = V_0 = n \\]
+\\[ C = V(0) = n \\]
 
 Payoff for the 1x short is
 
-\\[ \mathrm{PO}(t) = \frac{N(t)}{2} \cdot \bigg[ 1 - \frac{P(t) - P_0}{P_0} \bigg] \\]
+\\[ \mathrm{PO}(t) = \frac{N(t)}{2} \cdot \bigg[ 1 - \frac{P(t) - P(0)}{P(0)} \bigg] \\]
 
-and value of the spot ETH in OVL terms at time \\( t\\) is \\( (n / 2) \cdot (P(t) / P_0) \\). Value of the portfolio at \\( t \\) is then
+and value of the spot ETH in OVL terms at time \\( t\\) is \\( (n / 2) \cdot (P(t) / P(0)) \\). Value of the portfolio at \\( t \\) is then
 
-\\[ V(t) = \frac{n}{2} \cdot \frac{P(t)}{P_0} + \frac{N(t)}{2} \cdot \bigg[1 - \bigg( \frac{P(t)}{P_0} - 1 \bigg) \bigg] \\]
+\\[ V(t) = \frac{n}{2} \cdot \frac{P(t)}{P(0)} + \frac{N(t)}{2} \cdot \bigg[1 - \bigg( \frac{P(t)}{P(0)} - 1 \bigg) \bigg] \\]
 
 Similar to the prior case, assume for this note that funding only affects the user's collateral (disregard leverage considerations), such that
 
 \\[ N(t) = n \cdot \prod_{i=1}^m \bigg( 1 + f_s (i) \bigg) \\]
 
-Going through the same exercise as in the previous case with \\( P(t) = P_0 \cdot (1 + \epsilon) \\) gives a PnL of
+Going through the same exercise as in the previous case with \\( P(t) = P(0) \cdot (1 + \epsilon) \\) gives a PnL of
 
 \\[ \mathrm{PnL}(t) = \frac{n}{2} \cdot (1 - \epsilon) \cdot \bigg[ \prod_{i=1}^m \bigg( 1 + f_s (i) \bigg) - 1 \bigg] \\]
 
-which is simply getting paid funding on top of our initial OVL balance of to go short the ETH-OVL feed (bullish OVL, bearish ETH). This is profitable for the trader that prefers OVL, when \\( \epsilon < 1 \\) and imbalance is toward the OVL bear side: longs outweigh shorts on ETH-OVL. Rate of return \\( r_{s} \\) for this strategy on the initial OVL capital \\( V_0 \\) is
+which is simply getting paid funding on top of our initial OVL balance of to go short the ETH-OVL feed (bullish OVL, bearish ETH). This is profitable for the trader that prefers OVL, when \\( \epsilon < 1 \\) and imbalance is toward the OVL bear side: longs outweigh shorts on ETH-OVL. Rate of return \\( r_{s} \\) for this strategy on the initial OVL capital \\( V(0) \\) is
 
 \\[ r_s (t) = \frac{1 - \epsilon}{2} \cdot \prod_{i=1}^m \bigg[ \bigg( 1 + f_s(i) \bigg) - 1 \bigg] \\]
 
@@ -197,4 +197,4 @@ then we can explictly solve for \\(k \\) as a function of \\( \ell, m\\). Below,
 
 ## Remaining Risk
 
-The risk of a OVL price death spiral still exists when incorporating funding payments, even with a profitable portfolio for case 2. If there is complete loss of faith in OVL and the price collapses while longs heavily outweigh shorts on the ETH-OVL feed, there may be few traders willing to earn yield in OVL and thus take the short side of the trade, even though funding payments would be extremely profitable in OVL terms. Longs on ETH-OVL could ultimately still win in the short term, mint more OVL, then cash out that OVL, suppressing the value of OVL relative to ETH more and having even more longs on ETH-OVL win. It is a positive feedback loop that is difficult to mitigate without enforcing strict values for \\( k \\) and imposing caps. Even then, this scenario is still very much a risk for the Overlay system.
+The risk of a OVL price death spiral still exists when incorporating funding payments, even with a profitable portfolio for case 2. If there is complete loss of faith in OVL and the price collapses while longs heavily outweigh shorts on the ETH-OVL feed, there may be few traders willing to earn yield in OVL and thus take the short side of the trade, even though funding payments would be extremely profitable in OVL terms. Longs on the inverse ETH-OVL market could ultimately still win in the short term, mint more OVL, then cash out that OVL, suppressing the value of OVL relative to ETH more and having even more longs on ETH-OVL win. It is a positive feedback loop that is difficult to mitigate without enforcing strict values for \\( k \\) and imposing caps. Even then, this scenario is still very much a risk for the Overlay system.
