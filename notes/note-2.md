@@ -174,31 +174,29 @@ for small changes in price per block. This relation gives rough constraints on t
 
 ### Concrete Numbers
 
-We can use the above expression for the break-even cost as guidance for which TWAP feeds are suitable to offer as Overlay markets in addition to what the maximum leverage \\( l_{\gamma} = l_{\mathrm{max}} \\) allowed on a TWAP feed should be.
+We can use the above expression for the break-even cost as guidance for which TWAP feeds are suitable to offer as Overlay markets in addition to what the maximum leverage allowed on a TWAP feed should be.
 
-For a small change \\( \epsilon_{\gamma} \approx 0 \\) to the spot price for \\( \gamma \\) blocks, the dominant term in the break-even cost becomes the TWAP window size expression and to first order reduces to
+Assume the following reasonable numbers for parameters:
 
-\\[ C\|_{\mathrm{breakeven}} \approx p^{$}_R(t_i) \cdot \frac{R \cdot \Delta}{2l\_{\mathrm{max}}} \\]
+- \\( \Delta = 240 \\): for an approximately 1 hour TWAP
+- \\( x = y = $10 \mathrm{M} \\): for a spot pool with liquidity of $20M
+- \\( L = 5 \\): for maximum leverage of 5x
 
-Take \\( \Delta = 240 \\) for an approximately 1 hour TWAP. For a spot pool with liquidity of $20M, \\( p^{$}_R \cdot R = $10 \mathrm{M} \\). If we limit the max leverage allowed on this market to \\( l\_{\mathrm{max}} = 5 \\), break-even cost to attack the market would be
+For the worst case scenario, we look at the case where the attacker only manipulates the spot price for one block, \\( \nu = 1 \\), which ultimately requires less upfront capital given our expression for \\( \mathrm{TC}\|_{B} \\) above.
 
-\\[ C\|_{\mathrm{breakeven}} (\Delta = 1 \mathrm{h}, R = $10 \mathrm{M}, l\_{\mathrm{max}} = 5, \epsilon\_{\gamma} \approx 0) \approx $240 \mathrm{M} \\]
-
-which is substantial. If, however, the attacker is able to move the spot price within the update interval a large amount such that \\( \epsilon\_{\gamma} \gg 0 \\), the break-even cost increases.
-
-Take \\( \gamma = 40 \\) for an approximately 10 minute update interval. The extreme case of \\( \epsilon\_{\gamma} \to \infty \\) gives the break-even cost to attack the system through drastically manipulating the spot in the update interval
-
-\\[ C\|_{\mathrm{breakeven}} (\gamma = 10 \mathrm{m}, \Delta = 1 \mathrm{h}, R = $10 \mathrm{M}, l\_{\mathrm{max}} = 5, \epsilon\_{\gamma} \to \infty) \approx $400 \mathrm{M} \\]
-
-which is still substantial. Plotting \\( C\|\_{\mathrm{breakeven}} (\epsilon\_{\gamma}) \\) with \\( \gamma = 10 \mathrm{m}, \Delta = 1 \mathrm{h}, R = $10 \mathrm{M}, l\_{\mathrm{max}} = 5 \\)
+Below are plots for the total upfront cost of a break-even attack vs spot price change per block required \\( \mathrm{TC}\|_{B} \\) vs \\( \epsilon \\)
 
 ![Image of Breakeven Cost Plot](../assets/oip-1/cost_breakeven.svg)
+
+and the total amount of OVL collateral (in dollar terms) needed to enter the position on the Overlay market for such an attack \\( N\|_{B} \\) vs \\( \epsilon \\)
 
 ![Image of Breakeven Collateral Plot](../assets/oip-1/cost_collateral.svg)
 
 with y-axis in millions of dollars.
 
-Using this setup of a 1 hour TWAP with 10 min update interval and max leverage of 5x results in a minimum cost of attack on a $20M spot liquidity pool of approximately $240M, which is likely robust.
+Using this setup of a 1 hour TWAP with max leverage of 5x results in a minimum cost of attack on a $20M spot liquidity pool of approximately $118.56M (\\( \epsilon\_{\mathrm{min}} = 34.1436 \\)). The corresponding OVL collateral required to execute such an attack would be about $69.282M. These amounts scale linearly with liquidity in the spot pool.
+
+This further emphasizes the need for caps on open interest on an Overlay TWAP market having a relatively illiquid spot pool (i.e. \\( < $100\mathrm{M} \\)). Governance can set the caps such that it is not even possible to enter a trade with \\( N\|_{B} \\) amount of OVL.
 
 
 ## Nuances with Oracles
