@@ -20,7 +20,7 @@ Issue to address with this note:
 [A previous note](note-1) explored the ability of a funding payment mechanism to incentivize yield hunters to balance the Overlay system directional risk. These actors seek yield on either OVL, ETH, DAI (or some other cryptoasset), without taking directional risk. In this note they will be called *investors*. In practice there are some difficulties with the approach:
 
 
-1. To remain profitable, investors must remain nimble, reacting quickly to changes in the imbalance. Failure to do so will reduce yield or even incur loss. Thus investors must be fairly high frequency.
+1. To remain profitable, investors must remain nimble, reacting quickly to changes in the imbalance. Failure to do so will reduce yield or even incur loss. Thus investors must be fairly high frequency. But this in itself reduces yield and can incur loss, as fees accumulate. 
 
 2. As the system scales, investors who wish to gain yield must keep track of an increasing number of markets.
 
@@ -43,7 +43,7 @@ Issue to address with this note:
 <!-- pThese are effectively tokenized basis trades that users can easily swap into or out of on spot AMMs as funding rates go against their respective side or provide liquidity for on spot exchanges specializing in like-asset pairs (e.g. Magic ETH & ETH pool). -->
 
 
-These issues collectively assure that 1) the balancing mechanism will be a specialized activity, requiring ongoing maintenance and incurring technical debt, 2) the magic contracts as currently imagined do not escape issues 1-6 above, and because of issue 7 actually increase the risk to the system. 
+These issues collectively assure that 1) the balancing mechanism will be a specialized activity, requiring ongoing maintenance and incurring technical debt, and yields will not be as good as they might be, thus limiting the appeal, and  2) the magic contracts as currently imagined do not escape issues 1-6 above, and because of issue 7 actually increase the risk to the system. 
 
 Because the effectiveness of the funding mechanism is be a bottleneck for the system itself, unless these issues can be solved the system cannot scale. 
 
@@ -101,29 +101,46 @@ For simplicity, assume the scenario above with $$L_0 = 0 = S_0$$, and let $$L_1 
 
 The above example can be generalized to any case where $$L_1 > S_1$$. If $$S_1 > L_1$$, then it is ✨OVL that plays the balancing role.  
 
-Now let us imagine a scenario where $$\beta \neq 1$$. 
+Now let us imagine a scenario where $$\beta \neq 1$$, and $$S_1 \neq 0$$, but we still have $$I_1 > 0$$. In this case funding is still paid to ✨DAI, but some of it goes to the traders on the short side as well. It seems reasonable to pay funding to everyone on a pro-rata basis as originally designed. In this case $$\beta$$ would change each oracle fetch, and for the $$m^\mathrm{th}$$ funding payment, can be computed as 
 
+\\[\beta(m) = \pm\frac{I(m)}{G(m)}\\]
 
-One interesting feature of this idea is that, because OVL is the settlement currency, ✨OVL is special in several ways. We list them here:
+where $$G=L$$ if $$L>S$$ and otherwise $$G=S$$, and the sign changes to negative if $$G = S$$. 
 
-1. A *massive* amount of short pressure be exerted on it via hedging, thus creating juicy yields for ✨OVL holders.
+Thinking about $$\beta$$ is helpful to determine how we wish to distribute funding payments, and to what degree we want traders to benefit from funding payments as well as paying them. It seems desireable that traders should receive funding, since it makes them more likely to also pay it. 
+
+### Conclusions
+One interesting feature of this idea is that, because OVL is the settlement currency, ✨OVL is special in several ways:
+
+1. A *massive* amount of short pressure will be exerted on ETH-OVL and especially DAI-OVL via hedging, thus creating juicy yields for ✨OVL holders.
 
 2. Any new X market that we list is an X-OVL market, which means that the ✨OVL pool automatically can get yield from traders going short there. Thus, the more markets we list, the greater the yield for ✨OVL, driving capital into ✨OVL, allowing us to list more markets.  
 
 3. The capacity of the protocol as a whole is limited by the depth of ✨OVL, so we may use this depth as a parameter to optimize when thinking about  scaling.
 
 
+Finally, we will briefly explain how this idea addresses all of the problems above: 
+
+1. ✅ Investors are now passive rather than high frequency, and incur zero fees.
+2. 1/2✅ Investors in ✨OVL are automatically exposed to all markets as the system scales (although, those wishing to get yield on the other side still need to keep track of a multitude of magic pools).  
+3. 1/2✅ Small imbalances on multiple markets on the short side are automatically balanced by ✨OVL, and are balanced on the long side if there are magic pools for those markets.
+4. ✅ There is no overshoot. 
+5. ✅ Funding is improved from a mere damping mechanism, and investors are no longer incentivized to balance with the smallest possible amount. 
+6. ✅ The inflation risk to Overlay is completely mitigated on markets that have magic pools. 
+7. ✅ As magic tokens do not increase OI, there can be pools of arbitrary depth. Rather than *increasing* the risk to Overlay, these now decrease it, as desired. 
 
 
-(we may be able to not do this last one if the depth of the ✨DAI pool can be computed dynamically at each oracle fetch).  
+A few final thoughts: 
 
-this is important to do rather when deposits/withdrawals happen in the ✨DAI contract, so the size of ✨DAI is known at the time of trading.)
+Using this balancing mechanism, the caps on the DAI-OVL market are actually equivalent to the depth of the ✨DAI pool, which could conceivably be extremely deep, many billions worth of USD. If there is little volume on DAI-OVL, the yield will be low and ✨DAI will be shallow, but that is fine because there is litle volume, so not much risk to balance. If there is a lot of volume, ✨DAI will have high yield and attract deeper capital. It is exactly the kind of positive feedback loop we want. 
 
-Specifically, ✨DAI is shrunk or grown to reflect price movements since the last fetch, and then $$.1kL_1$$ OVL is deposited from the trader's position into ✨DAI. 
+Most importantly, this mechanism *completely eliminates* all inflation risk for the DAI-OVL market (assuming that we also have a deep ✨OVL pool).  With this mechanism in place, OVL will never inflate through DAI-OVL risk. It will only deflate, and likely a lot, as people lose, get liquidated, and pay fees. Because OVL becomes deflationary on the DAI-OVL market, more OVL can be given to LPs, increasing utility and thus volume, and thus yield in ✨DAI pools. This also completely eliminates the death spiral (on this market). Thus, there is no reason not to hold ✨OVL, thus we can concieve of a very very deep ✨OVL, thus the system can scale. 
 
-The ✨DAI pool is a passive pool that does not make calls to the standard market contract. Nobody pays gas to enter positions. It never overshoots because it always balances the correct amount to eighteen decimal places. Using this balancing mechanism, the caps on the X market are actually equivalent to the depth of the ✨DAI pool, which could conceivably be extremely deep, many billions worth of USD. If there is little volume on X, the yield will be low and X will be shallow, but that is fine because there is litle volume, so not much risk to balance. If there is a lot of volume, ✨DAI will have high yield and attract deeper capital. It is exactly the kind of postiive feedback loop we want. Most importantly, this mechanism *completely eliminates* all inflation risk for the X market. With this mechanism in place, OVL will never inflate through X risk. It will only deflate (and likely a lot) as people lose, get liquidated, and pay fees. Because OVL becomes deflationary on the X market, more OVL can be given to LPs, increasing utility and thus volume, and thus yield in ✨DAI pools.   
 
-This works! This is the coolest possible solution to the inflation problem.
+Finally, this points the way to a very attractive future, a decentralized protocol that acts as a decentralized exchange, where fees and funding payments, instead of going to a centralized exchange, go to the LPs, magic token holders, and OVL holders. A system with significant volume like this enters a virtuous feedback loop which can scale and generate enormous revenues. 
+
+
+## This works! This is the coolest possible solution to the inflation problem.
 
 <!-- to ever hit Overlay! And it's a combination of three brilliant ideas! --> 
 <!-- FP(m) = k(m)I(m) -->
