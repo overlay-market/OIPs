@@ -70,7 +70,10 @@ given a consistent spot change \\( \epsilon \\) for \\( \nu \\) blocks.
 
 ### Summary
 
-Using a 10 minute update interval for a 1 hour sliding window TWAP on an underlying spot pool having liquidity of $20M+ and setting leverage max to 5x will likely be robust. Cost of attack should be approximately $240M+.
+Using a 1 hour sliding window TWAP on an underlying spot pool having liquidity of $20M+ and setting leverage max to 5x will have a minimum cost of attack of approximately $118M+. This amount scales linearly with liquidity in the spot pool.
+
+Governance can and should set caps on the open interest such that it is not even possible to enter a trade on the Overlay market with the necessary OVL collateral to execute such an attack.
+
 
 ### Constructing the Trade
 
@@ -194,7 +197,7 @@ and the total amount of OVL collateral (in dollar terms) needed to enter the pos
 
 with y-axis in millions of dollars.
 
-Using this setup of a 1 hour TWAP with max leverage of 5x results in a minimum cost of attack on a $20M spot liquidity pool of approximately $118.56M (\\( \epsilon\_{\mathrm{min}} = 34.1436 \\)). The corresponding OVL collateral required to execute such an attack would be about $69.282M. These amounts scale linearly with liquidity in the spot pool.
+Using this setup of a 1 hour TWAP with max leverage of 5x results in a minimum cost of attack on a $20M spot liquidity pool of approximately $118.56M at \\( \epsilon\_{\mathrm{min}} = 34.1436 \\). The corresponding OVL collateral required to execute such an attack would be about $69.282M. These amounts scale linearly with liquidity in the spot pool.
 
 This further emphasizes the need for caps on open interest on an Overlay TWAP market having a relatively illiquid spot pool (i.e. \\( < $100\mathrm{M} \\)). Governance can set the caps such that it is not even possible to enter a trade with \\( N\|_{B} \\) amount of OVL.
 
