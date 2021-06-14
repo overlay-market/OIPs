@@ -215,7 +215,7 @@ For example, we could assume \\( P \\) is driven by a stochastic process \\( L_t
 
 \\[ P(t) = P(0) e^{\mu t + \sigma L_t} \\]
 
-having [Levy stable](https://en.wikipedia.org/wiki/Stable_distribution) increments, \\( L_{t+T} - L_{t} \sim S(a, b, 0, (\frac{T}{a})^{\frac{1}{a}}) \\), where \\( a \\) is the stability parameter, \\( b \\) is the skewness parameter, and \\( c = (\frac{T}{a})^{\frac{1}{a}} \\) is the scale parameter. This reduces to GBM when \\( a = 2 \\) and \\( b = 0 \\).
+having [Levy stable](https://en.wikipedia.org/wiki/Stable_distribution) increments, \\( L_{t+T} - L_{t} \sim S(a, b, 0, (\frac{T}{a})^{\frac{1}{a}}) \\), where \\( a \\) here is the stability parameter, \\( b \\) is the skewness parameter, and \\( c = (\frac{T}{a})^{\frac{1}{a}} \\) is the scale parameter. This reduces to GBM when \\( a = 2 \\) and \\( b = 0 \\).
 
 The Levy stable CDF is not necessarily expressible analytically and estimation of parameters \\( (a, b, \mu, \sigma) \\) no longer reduces to sample mean and variance, as with GBM. However, there are easy to use [packages in SciPy](https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.levy_stable.html) to help numerically. Particularly important,
 
