@@ -22,20 +22,20 @@ Issue to address with this note:
 
 Need to include:
 
-- Payoff caps -- limits max percent change in price
+- Payoff caps -- limits max percent change in price for payoff
 
 - Dynamic OI caps -- limits *new* position builds when market has printed an excessive amount of OVL over a prior period of time (cooldown on trading)
 
 Looking at prior \\( n \\) update periods to see how much market has printed over a rolling window. Compare with max worst case local inflation rate willing to tolerate (market param).
 
-If larger than max inflation rate, market dynamically lowers OI cap to zero to prevent new positions from being built until long enough time has passed for prior rolling window to have calculated inflation rate below max. Then, we are setting a worst case inflation rate per market in stone instead of being solely probabilistic.
+If larger than max inflation rate, market dynamically lowers OI cap to zero to prevent new positions from being built until long enough time has passed for window to see rolling inflation rate below max. Then, we are setting a worst case inflation rate per market in stone instead of being solely probabilistic.
 
 In practice, what does this look like in readjusting the inflation cap upward after cooldown period? Additionally, how should we gradually ease cap down if rate seems to be increasing over time (acceleration), so dynamic cap is somewhat smooth in readjustments?
 
-Mitigates death spiral by:
+Mitigates death spiral through two layers:
 
-1. Cap on contract payoff limits infinite printing from one existing set of short positions on inverse market. We know what is the worst case amount we can print on one cycle of OI builds.
+1. Cap on contract payoff limits infinite printing from one existing set of short positions on inverse market. We know what is the worst case amount we can print on one "cycle" of OI builds.
 
-2. Dynamic OI cap prevents recycling of profits from capped short payout immediately into a set of *new* short positions on the inverse market to ride the price down further -- a circuit breaker. Enforces a cooldown period to prevent building more positions that would profit (and print) further from drop. Effectively can ensure worst case inflation rate by limiting max aggregate OI willing to take on for prolonged period of time.
+2. Dynamic OI cap prevents recycling of collateral from capped short payout immediately into a set of *new* short positions on the inverse market, slowing traders ability to ride price down further after dumping prior profits -- a circuit breaker. Effectively can ensure worst case inflation rate by dynamically limiting max aggregate OI market is willing to take on for prolonged period of time.
 
 Do we have problems if keep bumping up against max inflation rate cap and lowering caps or short circuiting trading constantly? Is this a reason for having smooth increases/decreases in dynamic cap by market contract?
