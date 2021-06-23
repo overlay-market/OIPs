@@ -31,7 +31,7 @@ The protocol remains liable for any PnL associated with an imbalance in open int
 
 \\[ \mathrm{PnL}(m) = \mathrm{OI}\_{imb}(0) \cdot (1 - 2k)^{m} \cdot \bigg[ \frac{P(m)}{P(0)} - 1 \bigg] \\]
 
-where we make the simplifying assumption here that all existing positions were built at the same time \\( 0 \\). An appropriate \\( k \in [0, \frac{1}{2}] \\) for each market can be determined through statistical methods, modeling \\( P(m) \\) as a stochastic process. Governance can then adjust \\( k \\) on-chain based on value at risk metrics all token holders are comfortable with.
+where we make the simplifying assumption here that all existing positions were built at the same time \\( 0 \\). An appropriate funding constant \\( k \in [0, \frac{1}{2}] \\) for each market can be determined through statistical methods, modeling price \\( P(m) \\) as a stochastic process. Governance can then adjust \\( k \\) on-chain based on value at risk metrics all token holders are comfortable with.
 
 However, what if imbalance risk isn't drawn down quick enough through funding? How do we definitively cap dilution risk over a set amount of time?
 
@@ -52,13 +52,27 @@ To mitigate the death spiral, we can include:
 
 - Dynamic OI caps -- limits *new* position builds when market has printed an excessive amount of OVL over a prior period of time (cooldown on trading)
 
+Constant payoff and OI caps make it possible to enforce a worst case amount printed *per trade*. Dynamic OI caps take this a step further and make it possible to enforce the worst case amount printed *over a period of time*, by limiting trading if excessive printing has happened in the recent past. Thus, the combination of payoff caps and dynamic OI caps can enforce a worst case inflation rate.
+
+The maximum amount the system is allowed to print over a given period of time will then degenerate to
+
+\\[ \mathrm{PnL} \|\_{max} = C_{\mathrm{OI}} \cdot C_{P} \\]
+
+irrespective of future price.
+
+- \\( C_{P} \\) is the payoff cap putting a maximum on \\( [\frac{P(m)}{P(0)} - 1] \\) offered to traders. This can be set
+
+- \\( C_{\mathrm{OI}} \\) is the dynamic OI cap putting a maximum on \\( \mathrm{OI}\_{imb} \\) taken on by the market contract. This can be set and lowers/raises dependent on the amount of printing that has occurred in the prior \\( \omega \\) blocks.
+
 ### Payoff Caps
 
-Payoff caps [limit the downside exposure](http://static.stevereads.com/papers_to_read/errors_robustness_and_the_fourth_quadrant.pdf) the protocol has to tail events in the price of the underlying feed. Consider a more empirically accurate model (than log-normal) for the price of the TWAP market:
+Payoff caps [limit the downside exposure](http://static.stevereads.com/papers_to_read/errors_robustness_and_the_fourth_quadrant.pdf) the protocol has to tail events in the price of the underlying feed, enforcing a predictable (non-random) worst case scenario *per trade*. Consider a more empirically accurate model than log-normal for the price of the TWAP market:
 
 \\[ P(t) = P(0) e^{\mu t + \sigma L_t} \\]
 
 where \\( L_{t} \\) is a Levy stable stochastic process with increments that follow a [stable distribution](https://en.wikipedia.org/wiki/Stable_distribution) \\( L_{t+u} - L_{t} \sim S(a, b, 0, (\frac{u}{a})^{\frac{1}{a}}) \\). \\( a \\) is the stable distribution stability parameter, \\( b \\) is the skewness parameter, and \\( c = (\frac{u}{a})^{\frac{1}{a}} \\) is the scale parameter, for time increments of length \\( u \\). For \\( a = 2 \\) and \\( b = 0 \\), this reduces to Geometric Brownian motion.
+
+![Image of Capped Inverse Market Payoff Plot](../assets/oip-1/inverse_payoff_capped.svg)
 
 
 ### Dynamic OI Caps
