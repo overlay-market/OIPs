@@ -19,7 +19,7 @@ Issue to address with this note:
 <blockquote class="twitter-tweet"><p lang="tl" dir="ltr">Talib <a href="https://twitter.com/search?q=%24Titan&amp;src=ctag&amp;ref_src=twsrc%5Etfw">$Titan</a> Turkey <a href="https://t.co/6JvUjkYddn">pic.twitter.com/6JvUjkYddn</a></p>&mdash; Flood (@ThinkingUSD) <a href="https://twitter.com/ThinkingUSD/status/1405311057480929282?ref_src=twsrc%5Etfw">June 16, 2021</a></blockquote> <script async src="https://platform.twitter.com/widgets.js" charset="utf-8"></script>
 
 
-For us, a death spiral can occur with Overlay's OVL-X inverse markets, where X is ETH, DAI, etc., when all open interest on these markets is bearish OVL and a significant price drop of OVL relative to X occurs.
+With Overlay, a death spiral can occur through the protocol's OVL-X inverse markets, where X is ETH, DAI, etc., when all open interest on these markets is bearish OVL and a significant price drop of OVL relative to X occurs.
 
 The payout of bearish OVL trades trends toward infinity as the price of OVL relative to X goes to zero, given the nature of the inverse market. Infinite printing by the market contract from this payout would lead to a collapse of the system.
 
@@ -31,9 +31,9 @@ The protocol remains liable for any PnL associated with an imbalance in open int
 
 \\[ \mathrm{PnL}(m) = \mathrm{OI}\_{imb}(0) \cdot (1 - 2k)^{m} \cdot \bigg[ \frac{P(m)}{P(0)} - 1 \bigg] \\]
 
-where we make the simplifying assumption here that all existing positions were built at the same time \\( 0 \\). An appropriate funding constant \\( k \in [0, \frac{1}{2}] \\) for each market can be determined through statistical methods, modeling price \\( P(m) \\) as a stochastic process. Governance can then adjust \\( k \\) on-chain based on value at risk metrics all token holders are comfortable with.
+where we make the simplifying assumption here that all existing positions were built at the same time \\( 0 \\). An appropriate funding constant \\( k \in [0, \frac{1}{2}] \\) for each market can be determined through statistical methods, modeling price \\( P(m) \\) at time \\( m \\) as a stochastic process. Governance can then adjust \\( k \\) on-chain based on value at risk metrics all token holders are comfortable with.
 
-However, what if imbalance risk isn't drawn down quick enough through funding? How do we definitively cap dilution risk over a set amount of time?
+However, what if imbalance risk isn't drawn down quick enough through funding or if our models are incorrect? How do we definitively cap dilution risk over a set amount of time?
 
 This is particularly worrisome for the OVL-X inverse markets, as PnL to be printed for a bearish OVL imbalance looks like
 
@@ -44,15 +44,15 @@ where we've normalized with respect to initial imbalance and initial price. As t
 
 ## Stopping the Death Spiral
 
-Building on prior caps work in [WPv1](https://firebasestorage.googleapis.com/v0/b/overlay-landing.appspot.com/o/OverlayWPv3.pdf?alt=media).
+With this note, we build on prior caps work from [WPv1](https://firebasestorage.googleapis.com/v0/b/overlay-landing.appspot.com/o/OverlayWPv3.pdf?alt=media).
 
 To mitigate the death spiral, we can include:
 
-- Payoff caps -- limits max percent change in price for position payoff offered to traders
+- Payoff caps -- limits the maximum percent change in price offered to traders in a position's payoff function
 
-- Dynamic OI caps -- limits *new* position builds when market has printed an excessive amount of OVL over a prior period of time (cooldown on trading)
+- Dynamic OI caps -- limits *new* position builds when the market has printed an excessive amount of OVL over a prior period of time (cooldown on trading)
 
-Constant payoff and OI caps make it possible to enforce a worst case amount printed *per trade*. Dynamic OI caps take this a step further and make it possible to enforce the worst case amount printed *over a period of time*, by limiting trading if excessive printing has happened in the recent past. Thus, the combination of payoff caps with dynamic OI caps offers us an avenue to enforcing a worst case inflation rate.
+Constant payoff and OI caps make it possible to enforce a worst case amount printed *per trade*. Dynamic OI caps take this a step further and make it possible to enforce the worst case amount printed *over a period of time*, by limiting trading if excessive printing has happened in the recent past. Thus, the combination of payoff caps with dynamic OI caps offers us an avenue to enforce a worst case inflation rate.
 
 The maximum amount the system is allowed to print over a given period of time will then degenerate to
 
@@ -66,11 +66,25 @@ irrespective of future price.
 
 ### Payoff Caps
 
-Payoff caps [limit the downside exposure](http://static.stevereads.com/papers_to_read/errors_robustness_and_the_fourth_quadrant.pdf) the protocol has to tail events in the price of the underlying feed, enforcing a predictable (non-random) worst case scenario *per trade*. Consider a more empirically accurate model than log-normal for the price of the TWAP market:
+Payoff caps [limit downside exposure](http://static.stevereads.com/papers_to_read/errors_robustness_and_the_fourth_quadrant.pdf) the protocol has to tail events in the price of the underlying feed, enforcing a predictable (non-random) worst case scenario per trade. Consider a more empirically accurate model than log-normal for the price of the TWAP market:
 
 \\[ P(t) = P(0) e^{\mu t + \sigma L_t} \\]
 
-where \\( L_{t} \\) is a Levy stable stochastic process with increments that follow a [stable distribution](https://en.wikipedia.org/wiki/Stable_distribution) \\( L_{t+u} - L_{t} \sim S(a, b, 0, (\frac{u}{a})^{\frac{1}{a}}) \\). \\( a \\) is the stable distribution stability parameter, \\( b \\) is the skewness parameter, and \\( c = (\frac{u}{a})^{\frac{1}{a}} \\) is the scale parameter, for time increments of length \\( u \\). For \\( a = 2 \\) and \\( b = 0 \\), this reduces to Geometric Brownian motion.
+where \\( L_{t} \\) is a Levy stable stochastic process with increments that follow a [stable distribution](https://en.wikipedia.org/wiki/Stable_distribution) \\( L_{t+u} - L_{t} \sim S(a, b, 0, (\frac{u}{a})^{\frac{1}{a}}) \\). \\( a \\) is the stable distribution stability parameter, \\( b \\) is the skewness parameter, and \\( c = (\frac{u}{a})^{\frac{1}{a}} \\) is the scale parameter, for time increments of length \\( u \\). \\( \mu \\) is a drift parameter and \\( \sigma \\) is a volatility parameter.
+
+While this reduces to [Geometric Brownian motion](https://en.wikipedia.org/wiki/Geometric_Brownian_motion) for \\( a = 2 \\) and \\( b = 0 \\) (no tails), most price feeds exhibit fat tails, delivering a model parameter value of \\( a < 2 \\). [PDF](https://en.wikipedia.org/wiki/Probability_density_function) plots of the stable distribution give a sense for the effect tails can have. Comparing \\( a = 1 \\) (Cauchy distribution: blue line), \\( a = 1.5 \\) (orange line), and \\( a = 2 \\) (Normal distribution: green line) with zero skewness and standard \\( c = 1 \\) scale:
+
+![Image of Stable Distribution Plot](../assets/oip-1/stable_pdf.svg)
+
+As we increase the fatness of the tails of the stable distribution (as \\( a \\) moves from \\( 2 \to 1 \\) in the plot), more weight is assigned to values near the peak of the distribution *and* to values near the extreme ends of the distribution, with a greater chance of either occurring.
+
+Value at risk ([VaR](https://en.wikipedia.org/wiki/Value_at_risk)) metrics like what we used in [our prior risk note](note-4) can be misleading. While we might be confident we won't lose more than the VaR amount with a probability of \\( 1-\alpha \\), any losses that do occur in the accepted level \\( \alpha \\) of uncertainty can be catastrophic. In the language of the inverse market payoff, while we might expect that 99.9% of the time OVL price won't decrease more than 85% relative to X, VaR won't tell us how much of a loss to expect the 0.1% of the time it actually does decrease more.
+
+Worse, improper modeling of tail behavior makes it such that the 99.9% confidence level we thought we had, actually turned out to be closer to 90%. It's easy to see these issues when examining the upper range of the [CDF](https://en.wikipedia.org/wiki/Cumulative_distribution_function) of the stable distribution for the same values of \\( a \in [1, 1.5, 2] \\):
+
+![Image of Stable Distribution Plot](../assets/oip-1/stable_cdf.svg)
+
+where the horizontal red dashed line represents a CDF value of 0.99. An anticipated upper bound of 3.3x on the percentage change in log price when modeling with the Normal distribution (green) with a confidence level of 99%, can turn out to be an actual upper bound of 32x when modeling with the Cauchy distribution (blue) using the same degree of confidence. This is an order of magnitude difference that can result simply from model or calibration error.
 
 ![Image of Capped Inverse Market Payoff Plot](../assets/oip-1/inverse_payoff_capped.svg)
 
