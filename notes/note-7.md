@@ -72,27 +72,29 @@ Payoff caps [limit downside exposure](http://static.stevereads.com/papers_to_rea
 
 where \\( L_{t} \\) is a Levy stable stochastic process with increments that follow a [stable distribution](https://en.wikipedia.org/wiki/Stable_distribution) \\( L_{t+u} - L_{t} \sim S(a, b, 0, (\frac{u}{a})^{\frac{1}{a}}) \\). \\( a \\) is the stable distribution stability parameter, \\( b \\) is the skewness parameter, and \\( c = (\frac{u}{a})^{\frac{1}{a}} \\) is the scale parameter, for time increments of length \\( u \\). \\( \mu \\) is a drift parameter and \\( \sigma \\) is a volatility parameter.
 
-While this reduces to [Geometric Brownian motion](https://en.wikipedia.org/wiki/Geometric_Brownian_motion) for \\( a = 2 \\) and \\( b = 0 \\) (no tails), most price feeds exhibit fat tails, delivering a model parameter value of \\( a < 2 \\). [PDF](https://en.wikipedia.org/wiki/Probability_density_function) plots of the stable distribution give a sense for the effect tails can have. Comparing \\( a = 1 \\) (Cauchy distribution: blue line), \\( a = 1.5 \\) (orange line), and \\( a = 2 \\) (Normal distribution: green line) with zero skewness and standard \\( c = 1 \\) scale:
+While this reduces to [Geometric Brownian motion](https://en.wikipedia.org/wiki/Geometric_Brownian_motion) for \\( a = 2 \\) and \\( b = 0 \\), most price feeds exhibit fat tails, delivering a model parameter value of \\( a < 2 \\). [PDF](https://en.wikipedia.org/wiki/Probability_density_function) plots of the stable distribution give a sense for the effect fatter tails can have. Comparing \\( a = 1 \\) (Cauchy distribution: blue line), \\( a = 1.5 \\) (orange line), and \\( a = 2 \\) (Normal distribution: green line) with zero skewness and standard \\( c = 1 \\) scale:
 
 ![Image of Stable Distribution Plot](../assets/oip-1/stable_pdf.svg)
 
 As we increase the fatness of the tails of the stable distribution (as \\( a \\) moves from \\( 2 \to 1 \\) in the plot), more weight is assigned to values near the peak of the distribution *and* to values near the extreme ends of the distribution, with a greater chance of either occurring.
 
-Value at risk ([VaR](https://en.wikipedia.org/wiki/Value_at_risk)) metrics like what we used in [our prior risk note](note-4) can be misleading. While we might be confident we won't lose more than the VaR amount with a probability of \\( 1-\alpha \\), any losses that do occur in the accepted level \\( \alpha \\) of uncertainty can be catastrophic. In the language of the inverse market payoff, while we might expect that 99.9% of the time OVL price won't decrease more than 85% relative to X, VaR won't tell us how much of a loss to expect the 0.1% of the time it actually does decrease more.
+Value at risk ([VaR](https://en.wikipedia.org/wiki/Value_at_risk)) metrics like what we used in [our prior risk note](note-4) can be misleading. While we might be confident we won't lose more than the VaR amount with a probability of \\( 1-\alpha \\), any losses that do occur in the accepted level \\( \alpha \\) of uncertainty can be catastrophic. In the language of the inverse market payoff, while we might expect that 99% of the time OVL price won't decrease more than 85% relative to X, VaR won't tell us how much of a loss to expect the 1% of the time it actually does decrease more.
 
-Worse, improper modeling of tail behavior makes it such that the 99.9% confidence level we thought we had, actually turned out to be closer to 90%. It's easy to see these issues when examining the upper range of the [CDF](https://en.wikipedia.org/wiki/Cumulative_distribution_function) of the stable distribution for the same values of \\( a \in [1, 1.5, 2] \\):
+Worse, improper modeling of tail behavior makes it such that the 99% confidence level we thought we had, actually turned out to be closer to 90%. It's easy to see these issues when examining the upper range of the [CDF](https://en.wikipedia.org/wiki/Cumulative_distribution_function) of the stable distribution for the same values of \\( a \in [1, 1.5, 2] \\):
 
 ![Image of Stable Distribution Plot](../assets/oip-1/stable_cdf.svg)
 
 where the horizontal red dashed line represents a CDF value of 0.99. An anticipated upper bound of 3.3x on the percentage change in log price when modeling with the Normal distribution (green) with a confidence level of 99%, can turn out to be an actual upper bound of 32x when modeling with the Cauchy distribution (blue) using the same degree of confidence. This is an order of magnitude difference that can result from model or calibration error.
 
-How do we ensure we are completely resistant to this type of modeling error in the price of the underlying feed? Simply by setting a maximum value in the contract payoff for the price delta each trade can have. For the inverse market, the prior PnL plot would reduce to something like
+How do we ensure the protocol is robust with respect to tail events in the price of the underlying feed? Guided by Taleb's work, we cut off the damage associated with the tails: simply by setting a maximum value in the contract payoff for the price delta each trade can have. For the inverse market, the prior PnL plot would reduce to something like
 
 ![Image of Capped Inverse Market Payoff Plot](../assets/oip-1/inverse_payoff_capped.svg)
 
-where any feed price changes that occur in the tails (orange shaded area) lead to the same finite PnL paid out by the system (top border of orange shaded area).
+where any price changes that occur in the tails (orange shaded area) lead to the same finite PnL paid out by the system (top border of orange shaded area). This definitively eliminates the possibility of a single trade payout printing an infinite amount of OVL.
 
 The price delta at which to place this cap can be linked to our prior VaR work.
+
+<!-- TODO: Link it! -->
 
 
 ### Dynamic OI Caps
