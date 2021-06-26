@@ -86,15 +86,15 @@ Worse, improper modeling of tail behavior makes it such that the 99% confidence 
 
 where the horizontal red dashed line represents a CDF value of 0.99. An anticipated upper bound of 3.3x on the percentage change in log price when modeling with the Normal distribution (green) with a confidence level of 99%, can turn out to be an actual upper bound of 32x when modeling with the Cauchy distribution (blue) using the same degree of confidence. This is an order of magnitude difference that can result from model or calibration error.
 
-How do we ensure the protocol is robust with respect to tail events in the price of the underlying feed? Guided by Taleb's work, we cut off the damage associated with the tails: simply by setting a maximum value in the contract payoff for the price delta each trade can have. For the inverse market, the prior PnL plot would reduce to something like
+How do we then ensure the protocol is robust with respect to tail events in the price of the underlying feed? Guided by Taleb's work, we cut off the damage associated with the tails: simply by setting a maximum value in the contract payoff for the price delta each trade can have. For the inverse market, the prior PnL plot would reduce to something like
 
 ![Image of Capped Inverse Market Payoff Plot](../assets/oip-1/inverse_payoff_capped.svg)
 
-where any price changes that occur in the tails (orange shaded area) lead to the same finite PnL paid out by the system (top border of orange shaded area). This definitively eliminates the possibility of a single trade payout printing an infinite amount of OVL.
+where any price changes that occur in the tails (orange shaded area) lead to the same finite PnL paid out by the system (top border of orange shaded area). This definitively eliminates the possibility of a single trade printing an infinite amount of OVL.
 
 The price delta at which to place this cap can be linked to our prior VaR work.
 
-<!-- TODO: Link it! -->
+<!-- TODO: Link it! Expected losses in the alpha uncertainty range are now certain: simply PnL cap happening alpha percent of the time -->
 
 
 ### Dynamic OI Caps
