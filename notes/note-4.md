@@ -209,7 +209,7 @@ While useful, it is not entirely accurate. Further risk work should address each
 
 where \\( (\mu_i, \sigma_i, d_i) \\) are the relevant parameters for market \\( i \\) assuming \\( N \\) total markets offered by the protocol.
 
-3: Geometric Brownian motion, while easier to handle from a theoretical perspective, is [notoriously terrible](http://static.stevereads.com/papers_to_read/errors_robustness_and_the_fourth_quadrant.pdf) in practice for quant finance. Most price time series exhibit fat tailed behavior, particularly within crypto. Assuming prices follow a [log-stable process](https://cpb-us-w2.wpmucdn.com/sites.coecis.cornell.edu/dist/9/287/files/2019/08/Nolan-9-Nolan_Financial-Modeling-w-heavy-tailed-stable-2.pdf) might be a more flexible approach to generalize the analysis above while accommodating for fat tails.
+3: Geometric Brownian motion, while easier to handle from a theoretical perspective, is [notoriously terrible](https://www.sciencedirect.com/science/article/abs/pii/S016920700900096X) in practice for quant finance. Most price time series exhibit fat tailed behavior, particularly within crypto. Assuming prices follow a [log-stable process](https://cpb-us-w2.wpmucdn.com/sites.coecis.cornell.edu/dist/9/287/files/2019/08/Nolan-9-Nolan_Financial-Modeling-w-heavy-tailed-stable-2.pdf) might be a more flexible approach to generalize the analysis above while accommodating for fat tails.
 
 For example, we could assume \\( P \\) is driven by a stochastic process \\( L_t \\)
 

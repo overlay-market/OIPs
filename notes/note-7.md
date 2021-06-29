@@ -66,7 +66,7 @@ irrespective of future price.
 
 ### Payoff Caps
 
-Payoff caps [limit downside exposure](http://static.stevereads.com/papers_to_read/errors_robustness_and_the_fourth_quadrant.pdf) the protocol has to tail events in the price of the underlying feed, enforcing a predictable (non-random) worst case scenario per trade. Consider a more empirically accurate model than log-normal for the price of the TWAP market:
+Payoff caps [limit downside exposure](https://www.sciencedirect.com/science/article/abs/pii/S016920700900096X) the protocol has to tail events in the price of the underlying feed, enforcing a predictable (non-random) worst case scenario per trade. Consider a more empirically accurate model than log-normal for the price of the TWAP market:
 
 \\[ P(t) = P(0) e^{\mu t + \sigma L_t} \\]
 
