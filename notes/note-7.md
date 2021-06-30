@@ -76,7 +76,7 @@ While this reduces to [Geometric Brownian motion](https://en.wikipedia.org/wiki/
 
 ![Image of Stable Distribution Plot](../assets/oip-1/stable_pdf.svg)
 
-As we increase the fatness of the tails of the stable distribution (as \\( a \\) moves from \\( 2 \to 1 \\) in the plot), more weight is assigned to values near the peak of the distribution *and* to values near the extreme ends of the distribution, with a greater chance of either occurring.
+As we increase the fatness of the tails of the stable distribution (as \\( a \\) moves from \\( 2 \to 1 \\) in the plot), more weight is assigned to values near the peak of the distribution but with less of a drop off as we approach the extreme ends of the distribution.
 
 Value at risk ([VaR](https://en.wikipedia.org/wiki/Value_at_risk)) metrics like what we used in [our prior risk note](note-4) can be misleading. While we might be confident we won't lose more than the VaR amount with a probability of \\( 1-\alpha \\), any losses that do occur in the accepted level \\( \alpha \\) of uncertainty can be catastrophic. In the language of the inverse market payoff, while we might expect that 99% of the time OVL price won't decrease more than 85% relative to X, VaR won't tell us how much of a loss to expect the 1% of the time it actually does decrease more.
 
