@@ -66,11 +66,11 @@ irrespective of future price.
 
 ### Payoff Caps
 
-Payoff caps [limit downside exposure](https://www.sciencedirect.com/science/article/abs/pii/S016920700900096X) the protocol has to tail events in the price of the underlying feed, enforcing a predictable (non-random) worst case scenario per trade. Consider a more empirically accurate model than log-normal for the price of the TWAP market:
+Payoff caps [limit downside exposure](https://www.sciencedirect.com/science/article/abs/pii/S016920700900096X) the protocol has to tail events in the price of the underlying feed, enforcing a predictable (non-random) worst case scenario per trade. Consider a more [empirically accurate model](https://www.jstor.org/stable/2350970) than log-normal for the price of the TWAP market:
 
 \\[ P(t) = P(0) e^{\mu t + \sigma L_t} \\]
 
-where \\( L_{t} \\) is a Levy stable stochastic process with increments that follow a [stable distribution](https://en.wikipedia.org/wiki/Stable_distribution) \\( L_{t+u} - L_{t} \sim S(a, b, 0, (\frac{u}{a})^{\frac{1}{a}}) \\). \\( a \\) is the stable distribution stability parameter, \\( b \\) is the skewness parameter, and \\( c = (\frac{u}{a})^{\frac{1}{a}} \\) is the scale parameter, for time increments of length \\( u \\). \\( \mu \\) is a drift parameter and \\( \sigma \\) is a volatility parameter.
+where \\( L_{t} \\) is a Levy stable stochastic process with increments that follow a [stable distribution](https://en.wikipedia.org/wiki/Stable_distribution) \\( L_{t+\tau} - L_{t} \sim S(a, b, 0, (\frac{\tau}{a})^{\frac{1}{a}}) \\). \\( a \\) is the stable distribution stability parameter, \\( b \\) is the skewness parameter, and \\( c = (\frac{\tau}{a})^{\frac{1}{a}} \\) is the scale parameter, for time increments of length \\( \tau \\). \\( \mu \\) is a drift parameter and \\( \sigma \\) is a volatility parameter.
 
 While this reduces to [Geometric Brownian motion](https://en.wikipedia.org/wiki/Geometric_Brownian_motion) for \\( a = 2 \\), most price feeds exhibit fat tails, delivering a model parameter value of \\( a < 2 \\). [PDF](https://en.wikipedia.org/wiki/Probability_density_function) plots of the stable distribution give a sense for the effect fatter tails can have. Comparing \\( a = 1 \\) (Cauchy distribution: blue line), \\( a = 1.5 \\) (orange line), and \\( a = 2 \\) (Normal distribution: green line) with zero skewness and standard \\( c = 1 \\) scale:
 
