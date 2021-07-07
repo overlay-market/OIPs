@@ -1,4 +1,7 @@
 _site
 .sass-cache
 .jekyll-metadata
-csv/
+*.csv
+
+.DS_Store
+.ipynb_checkpoints
