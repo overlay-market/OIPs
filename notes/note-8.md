@@ -3,7 +3,7 @@ note: 8
 oip-num: 1
 title: Bid-Ask Spread
 status: WIP
-author: Adam Kay (@mcillkay), Michael Feldman (@mikeyrf)
+author: Adam Kay (@mcillkay), Michael Feldman (@mikeyrf), James Foley (@realisation)
 discussions-to: oip-1
 created: 2021-08-03
 updated: N/A
