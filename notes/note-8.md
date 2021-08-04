@@ -16,7 +16,7 @@ Issue to address with this note:
 
 ## Context
 
-Offering Uniswap TWAPs as markets on Overlay comes with a catch. The TWAP averaged over the *previous* \\( \Delta \\) blocks only catches up to changes in the spot price *after the next* \\( \Delta \\) blocks have gone by. This is easily exploitable as a trader, particularly on large jumps in spot.
+Offering Uniswap TWAPs as markets on Overlay comes with a catch. The TWAP averaged over the previous \\( \Delta \\) blocks only catches up to changes in the spot price *after the next* \\( \Delta \\) blocks have gone by. This is easily exploitable as a trader, particularly on large jumps in spot.
 
 A trader could wait for a jump to happen on the spot market, realize the direction the TWAP will be going once it catches up to spot over the next \\( \Delta \\) blocks, and scalp an easily assured profit. We've already seen this on [Kovan](https://kovan.overlay.exchange/) with our old contracts. For example,
 
@@ -28,3 +28,7 @@ To prevent traders from taking advantage of the lag, one solution is to add a "b
 
 
 ## Responsive Spreads
+
+![Image of Twap Lag With Spread Plot](../assets/oip-1/twap_lag_spread.png)
+
+![Image of Twap Lag With Spread And Vol Plot](../assets/oip-1/twap_lag_spread_vol.png)
