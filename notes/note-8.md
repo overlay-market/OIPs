@@ -24,9 +24,9 @@ For example,
 
 ![Image of Twap Lag Plot](../assets/oip-1/twap_lag.png)
 
-using 1.5 hours of simulated data generated from fits to ETH-DAI historical price data. The TWAP is averaged over an hour.
+displaying 1.5 hours of [simulated data](https://github.com/overlay-market/pystable/blob/main/example/montecarlo.py) generated from fits to ETH-DAI historical price data. The TWAP is averaged over an hour.
 
-The 1h TWAP value immediately after the spot jumps from 1983.65 to 1995.48 is still around 1985.86 and the 1h TWAP value an hour after the jump catches up 2002.48. If we offer the long entry and exit prices at the rolling 1h TWAP value, the scalp trade over an hour yields easy money.
+The 1h TWAP value immediately after spot jumps from 1983.65 to 1995.48 is still around 1985.86, and the 1h TWAP value an hour after the jump catches up is 2002.48. If we offer the long entry and exit prices at the rolling 1h TWAP value, the scalp trade over an hour yields easy money.
 
 
 ## Responsive Spreads
@@ -41,9 +41,11 @@ We propose the bid \\( B(t) \\) and ask \\( A(t) \\) prices offered to traders a
 
 Longs receive the ask as their entry price and the bid as their exit price. Shorts receive the bid as their entry price and the ask as their exit price.
 
+Traders unfortunately receive the worst possible price, but it does protect the system both against the predictability of the TWAP lag *and* [spot price manipulation](#spot-manipulation).
+
 \\( \epsilon_s \\) is an additional spread added, regardless of the current spot price, to encourage longer term trading. This helps guard against traders who may have significantly more information than what everyone else has before that information is reflected in the spot price.
 
-Applying this spread with \\( \epsilon_s = 0.00728 \\) to the 1.5 hours of simulated data plotted above
+Applying a spread with \\( \epsilon_s = 0.00728 \\) to the 1.5 hours of simulated data plotted above
 
 ![Image of Twap Lag With Spread Plot](../assets/oip-1/twap_lag_spread.png)
 
@@ -55,8 +57,6 @@ The downside with this approach is we likely reduce the amount of higher frequen
 
 it's clear that shorting the local top here gives an entry price at the bid of 2477.91 and an exit price at the ask of 2461.99, for a profit (without fees) of 0.64%. Spot on the other hand moved 3% over the same period.
 
-The value of \\( \epsilon_s \\) effectively provides an envelope around the bid-ask spread. Tuning this to be better for higher frequency traders (smaller value) needs to be balanced against the risk associated with traders profiting from information not yet known to the entire market.
-
 Over much longer time horizons, traders can still make significant profits. Looking at 3 months of simulated data
 
 ![Image of Twap Lag With Spread Full Plot](../assets/oip-1/twap_lag_spread_all.png)
@@ -64,7 +64,21 @@ Over much longer time horizons, traders can still make significant profits. Look
 shows markets remain tradeable.
 
 
+## Spot Manipulation
+
+Uniswap offers the TWAP as a method for offering a [manipulation-resistant on-chain oracle](https://uniswap.org/whitepaper.pdf). However, we're suggesting using *both* the TWAP and the current spot price to determine what entry and exit prices to give traders. At first glance, [this is rather concerning](https://samczsun.com/taking-undercollateralized-loans-for-fun-and-for-profit/).
+
+Are Overlay markets now susceptible to manipulation of the spot price?
+
+![Image of Twap Attack Plot](../assets/oip-1/twap_attack.png)
+
+**Q: Are we comparing the rate against known good rates as samczsun suggests? Think so. We're taking the TWAP as the known good rate.**
+
+![Image of Twap Attack With Spread Plot](../assets/oip-1/twap_attack_spread.png)
+
+*NOTE: There is a possible attack on others positions: user manipulates the spot price to cause other user's queued OI to settle at a worse price than they would have had otherwise. This grief attack doesn't cause any profit for the user who is causing it however so it's a complete burning of capital. Given liquid spot markets take significant amounts of capital to manipulate, it seems unlikely we should be overly concerned about this griefing attack.*
+
+
 ## Calibrating \\( \epsilon_s \\)
 
-
-## Spot Manipulation
+The value of \\( \epsilon_s \\) effectively provides an envelope around the bid-ask spread. Tuning this to be better for higher frequency traders (smaller value) needs to be balanced against the risk associated with traders profiting from information not yet known to the entire market.
