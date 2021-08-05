@@ -70,9 +70,13 @@ Uniswap offers the TWAP as a method for offering a [manipulation-resistant on-ch
 
 Are Overlay markets now susceptible to manipulation of the spot price?
 
+Take the example of an attacker manipulating the spot price upward. In another round of sims, we add a shock of ~10% over 100 blocks
+
 ![Image of Twap Attack Plot](../assets/oip-1/twap_attack.png)
 
-**Q: Are we comparing the rate against known good rates as samczsun suggests? Think so. We're taking the TWAP as the known good rate.**
+to use as an example.
+
+**Q: Are we comparing the rate against known good rates as samczsun suggests? There's an attack potentially with spot manipulation**
 
 ![Image of Twap Attack With Spread Plot](../assets/oip-1/twap_attack_spread.png)
 
