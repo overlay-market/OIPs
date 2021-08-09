@@ -35,17 +35,17 @@ To prevent traders from taking advantage of the lag, one solution is to add a "b
 
 We propose the bid \\( B(t) \\) and ask \\( A(t) \\) prices offered to traders at time \\( t \\) be
 
-\\[ B(t) = \min \bigg(P(t), \mathrm{TWAP}(t-\Delta, t) \bigg) \cdot e^{-\epsilon_s} \\]
+\\[ B(t) = \min \bigg(P(t), \mathrm{TWAP}(t-\Delta, t) \bigg) \cdot e^{-S} \\]
 
-\\[ A(t) = \max \bigg(P(t), \mathrm{TWAP}(t-\Delta, t) \bigg) \cdot e^{\epsilon_s}  \\]
+\\[ A(t) = \max \bigg(P(t), \mathrm{TWAP}(t-\Delta, t) \bigg) \cdot e^{S}  \\]
 
 Longs receive the ask as their entry price and the bid as their exit price. Shorts receive the bid as their entry price and the ask as their exit price.
 
 Traders unfortunately receive the worst possible price, but it does protect the system both against the predictability of the TWAP lag *and* [spot price manipulation](#spot-manipulation).
 
-\\( \epsilon_s \\) is an additional spread added, regardless of the current spot price, to encourage longer term trading. This helps guard against traders who may have significantly more information than what everyone else has before that information is reflected in the spot price.
+\\( S \\) is an additional spread added, regardless of the current spot price, to encourage longer term trading. This helps guard against traders who may have significantly more information than what everyone else has before that information is reflected in the spot price.
 
-Applying a spread with \\( \epsilon_s = 0.00728 \\) to the 1.5 hours of simulated data plotted above
+Applying a spread with \\( S = 0.00728 \\) to the 1.5 hours of simulated data plotted above
 
 ![Image of Twap Lag With Spread Plot](../assets/oip-1/twap_lag_spread.png)
 
@@ -83,6 +83,6 @@ to use as an example.
 *NOTE: There is a possible attack on others positions: user manipulates the spot price to cause other user's queued OI to settle at a worse price than they would have had otherwise. This grief attack doesn't cause any profit for the user who is causing it however so it's a complete burning of capital. Given liquid spot markets take significant amounts of capital to manipulate, it seems unlikely we should be overly concerned about this griefing attack.*
 
 
-## Calibrating \\( \epsilon_s \\)
+## Calibrating \\( S \\)
 
-The value of \\( \epsilon_s \\) effectively provides an envelope around the bid-ask spread. Tuning this to be better for higher frequency traders (smaller value) needs to be balanced against the risk associated with traders profiting from information not yet known to the entire market.
+The value of \\( S \\) effectively provides an envelope around the bid-ask spread. Tuning this to be better for higher frequency traders (smaller value) needs to be balanced against the risk associated with traders profiting from information not yet known to the entire market.
