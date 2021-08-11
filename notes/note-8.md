@@ -111,11 +111,18 @@ where
 
 \\( F^{-1}_{ab} \\) is the inverse CDF for the standard [Levy stable](https://en.wikipedia.org/wiki/Stable_distribution) \\( S(a, b, 0, 1) \\).
 
-\\( \mu \\), \\( \sigma \\), \\( a \\) and \\( b \\) are fit using historical data assuming log-stable increments for the underlying spot price
+\\( 1-\alpha \\) is the probability that our offered ask (bid) price is worse for the trader than the future spot price, given a move up (down).
+
+\\( \mu \\), \\( \sigma \\), \\( a \\) and \\( b \\) are parameters expressed per-block above, fit using historical data assuming log-stable increments for the underlying spot price
 
 \\[ P(t+\tau) = P(t) e^{\mu \tau + \sigma L\_{\tau}} \\]
 
 where \\( L\_{\tau} \sim S(a, b, 0, (\frac{\tau}{a})^{1/a}) \\).
+
+
+### Concrete Numbers
+
+We use [`pystable`](https://github.com/overlay-market/pystable) to fit the last 120 days of 10 minute data from the [USDC-WETH SushiSwap pool](https://analytics.sushi.com/pairs/0x397ff1542f962076d0bfe58ea045ffa2d347aca0).
 
 
 ### Derivation
@@ -135,4 +142,13 @@ Take spot to be driven by a [Levy process](https://en.wikipedia.org/wiki/L%C3%A9
 
 with log-stable increments. The future value of the geometric TWAP averaged over \\( \nu \\) blocks will be
 
-\\[ \mathrm{TWAP}(t, t+\nu) =  \\]
+$$\begin{eqnarray}
+\mathrm{TWAP}(t, t+\nu) &=& \bigg( \prod_{t' = t}^{t+\nu} P(t') \bigg)^{\frac{1}{\nu}} \\
+&=& P(t) e^{\frac{1}{\nu} \sum_{t''=0}^{\nu} \mu t'' + \sigma L_{t''}} \\
+&=& P(t) e^{\frac{\mu (\nu + 1)}{2} + \frac{\sigma}{\nu} L_{\frac{\nu (\nu + 1)}{2}}}
+\end{eqnarray}$$
+
+using some arithmetic series math and [properties of sums of stable random variables](https://en.wikipedia.org/wiki/Stable_distribution#Properties).
+
+
+## Market Impact
