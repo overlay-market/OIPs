@@ -35,50 +35,104 @@ To prevent traders from taking advantage of the lag, one solution is to add a "b
 
 We propose the bid \\( B(t) \\) and ask \\( A(t) \\) prices offered to traders at time \\( t \\) be
 
-\\[ B(t) = \min \bigg(P(t), \mathrm{TWAP}(t-\Delta, t) \bigg) \cdot e^{-\epsilon_s} \\]
+\\[ B(t) = \min \bigg[\mathrm{TWAP}(t-\nu, t), \mathrm{TWAP}(t-\Delta, t) \bigg] \cdot e^{-S} \\]
 
-\\[ A(t) = \max \bigg(P(t), \mathrm{TWAP}(t-\Delta, t) \bigg) \cdot e^{\epsilon_s}  \\]
+\\[ A(t) = \max \bigg[\mathrm{TWAP}(t-\nu, t), \mathrm{TWAP}(t-\Delta, t) \bigg] \cdot e^{S}  \\]
+
+where \\( \nu \ll \Delta \\).
 
 Longs receive the ask as their entry price and the bid as their exit price. Shorts receive the bid as their entry price and the ask as their exit price.
 
-Traders unfortunately receive the worst possible price, but it does protect the system both against the predictability of the TWAP lag *and* [spot price manipulation](#spot-manipulation).
+\\( \mathrm{TWAP}(t-\nu, t) \\) is a shorter TWAP used as a proxy for the most recent spot price. Traders unfortunately receive the worst possible price, but it does protect the system both against the predictability of the lag in the longer TWAP *and* [spot price manipulation](#spot-manipulation). Good starting values to average over would be \\( \nu = 40 \\) for a 10m shorter TWAP and \\( \Delta = 240 \\) for a 1h longer TWAP.
 
-\\( \epsilon_s \\) is an additional spread added, regardless of the current spot price, to encourage longer term trading. This helps guard against traders who may have significantly more information than what everyone else has before that information is reflected in the spot price.
+\\( S \\) is an additional static spread, on top of the bid-ask TWAP values, used to discourage front-running of the shorter TWAP, which acts as a proxy for spot. Spot values from Uniswap pools shouldn't be used, as they [are vulnerable to manipulation](https://samczsun.com/taking-undercollateralized-loans-for-fun-and-for-profit/).
 
-Applying a spread with \\( \epsilon_s = 0.00728 \\) to the 1.5 hours of simulated data plotted above
+Applying a spread with \\( S = 0.00624957 \\) to the 1.5 hours of simulated data plotted above
 
-![Image of Twap Lag With Spread Plot](../assets/oip-1/twap_lag_spread.png)
+![Image of Twap Lag With Spread Plot](../assets/oip-1/twap_lag_double_spread.png)
 
-shows the scalp is no longer profitable over the hour following the jump, as the same long trade now has an entry price at the ask of 2010.07, immediately after the jump, and an exit price at the bid of 1987.95, 1 hour after the jump.
+shows the scalp is no longer profitable over the hour following the jump, as the same long trade now has an entry price at the ask of 1998.31, immediately after the jump, and an exit price at the bid of 1990.01, 1 hour after the jump.
 
 The downside with this approach is we likely reduce the amount of higher frequency trading that occurs on the platform. Over shorter time horizons, it becomes more difficult to exit with a profit, as one has to overcome the spread. For example, examining 6 hours of simulated data
 
-![Image of Twap Lag With Spread And Vol Plot](../assets/oip-1/twap_lag_spread_vol.png)
+![Image of Twap Lag With Spread And Vol Plot](../assets/oip-1/twap_lag_double_spread_vol.png)
 
-it's clear that shorting the local top here gives an entry price at the bid of 2477.91 and an exit price at the ask of 2461.99, for a profit (without fees) of 0.64%. Spot on the other hand moved 3% over the same period.
+shorting the local top here gives an entry price at the bid of 2489.67 and an exit price at the ask of 2459.50, for a profit (without fees) of 1.21%. Spot on the other hand moved 3% over the same period.
 
-Over much longer time horizons, traders can still make significant profits. Looking at 3 months of simulated data
+Over longer time horizons, traders can still make significant profits. Looking at 2 days
 
-![Image of Twap Lag With Spread Full Plot](../assets/oip-1/twap_lag_spread_all.png)
+![Image of Twap Lag With Spread And Vol Zoom Out Plot](../assets/oip-1/twap_lag_double_spread_vol_zoom_1x.png)
+
+and 3 months of simulated data
+
+![Image of Twap Lag With Spread Full Plot](../assets/oip-1/twap_lag_double_spread_all.png)
 
 shows markets remain tradeable.
 
 
 ## Spot Manipulation
 
-Uniswap offers the TWAP as a method for offering a [manipulation-resistant on-chain oracle](https://uniswap.org/whitepaper.pdf). However, we're suggesting using *both* the TWAP and the current spot price to determine what entry and exit prices to give traders. At first glance, [this is rather concerning](https://samczsun.com/taking-undercollateralized-loans-for-fun-and-for-profit/).
+Uniswap offers the TWAP as a method for offering a [manipulation-resistant on-chain oracle](https://uniswap.org/whitepaper.pdf).
+
+<!--
+
+However, we're suggesting using *both* the TWAP and the current spot price to determine what entry and exit prices to give traders. At first glance, [this is rather concerning](https://samczsun.com/taking-undercollateralized-loans-for-fun-and-for-profit/).
 
 Are Overlay markets now susceptible to manipulation of the spot price?
 
+Take the example of an attacker manipulating the spot price upward. In another round of sims, we add a shock of ~10% over 100 blocks
+
 ![Image of Twap Attack Plot](../assets/oip-1/twap_attack.png)
 
-**Q: Are we comparing the rate against known good rates as samczsun suggests? Think so. We're taking the TWAP as the known good rate.**
+to use as an example.
+
+**Q: Are we comparing the rate against known good rates as samczsun suggests? There's an attack potentially with spot manipulation**
 
 ![Image of Twap Attack With Spread Plot](../assets/oip-1/twap_attack_spread.png)
 
 *NOTE: There is a possible attack on others positions: user manipulates the spot price to cause other user's queued OI to settle at a worse price than they would have had otherwise. This grief attack doesn't cause any profit for the user who is causing it however so it's a complete burning of capital. Given liquid spot markets take significant amounts of capital to manipulate, it seems unlikely we should be overly concerned about this griefing attack.*
+*
+* -->
 
 
-## Calibrating \\( \epsilon_s \\)
+## Calibrating \\( S \\)
 
-The value of \\( \epsilon_s \\) effectively provides an envelope around the bid-ask spread. Tuning this to be better for higher frequency traders (smaller value) needs to be balanced against the risk associated with traders profiting from information not yet known to the entire market.
+\\( S \\), as an additional static spread, offers protection against large jumps in spot that happen over shorter timeframes than \\( \nu \\). To calibrate, we can use the statistical properties of the underlying feed.
+
+Our goal is to have the static spread \\( e^{\pm S} \\) produce bid and ask values that e.x. 97% of the time will be worse than any jumps that are likely to occur in the spot price over a 10 minute interval. This guards against the timelag associated with the shorter 10 minute TWAP versus the actual spot price.
+
+To accomplish this, we suggest setting the spread to
+
+\\[ S = \frac{\mu \cdot (\nu - 1)}{2} + C(a, \nu) \cdot \sigma F^{-1}_{ab}(1-\alpha) \\]
+
+where
+
+\\[ C(a, \nu) \equiv \bigg[ \frac{\nu}{a} \bigg(1 - \bigg(\frac{1}{\nu}\bigg)^{a} \cdot \frac{\nu+1}{2} \bigg) \bigg]^{\frac{1}{a}} \\]
+
+\\( F^{-1}_{ab} \\) is the inverse CDF for the standard [Levy stable](https://en.wikipedia.org/wiki/Stable_distribution) \\( S(a, b, 0, 1) \\).
+
+\\( \mu \\), \\( \sigma \\), \\( a \\) and \\( b \\) are fit using historical data assuming log-stable increments for the underlying spot price
+
+\\[ P(t+\tau) = P(t) e^{\mu \tau + \sigma L\_{\tau}} \\]
+
+where \\( L\_{\tau} \sim S(a, b, 0, (\frac{\tau}{a})^{1/a}) \\).
+
+
+### Derivation
+
+Formally, we want the probability that the spot price \\( P \\) is greater than the ask price, \\( \nu \\) blocks into the future, to be equal to a small number \\( \alpha \\):
+
+$$\begin{eqnarray}
+\alpha &=& \mathbb{P}[ P(t+\nu) > A(t+\nu) | P(t+\nu) > P(t) ] \\
+&=& \mathbb{P}[ P(t+\nu) > \mathrm{TWAP}(t, t+\nu) \cdot e^{S} ]
+\end{eqnarray}$$
+
+In the case of a spot jump up, we look at spot prices greater than the ask. For a spot jump down, we would look at spot prices less than the bid. Assume the current time is \\( t \\).
+
+Take spot to be driven by a [Levy process](https://en.wikipedia.org/wiki/L%C3%A9vy_process)
+
+\\[ P(t+\tau) = P(t) e^{\mu \tau + \sigma L_{\tau}} \\]
+
+with log-stable increments. The future value of the geometric TWAP averaged over \\( \nu \\) blocks will be
+
+\\[ \mathrm{TWAP}(t, t+\nu) =  \\]

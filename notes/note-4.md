@@ -217,9 +217,9 @@ having [Levy stable](https://en.wikipedia.org/wiki/Stable_distribution) incremen
 
 The Levy stable CDF is not necessarily expressible analytically and estimation of parameters \\( (a, b, \mu, \sigma) \\) no longer reduces to sample mean and variance, as with GBM. However, there are easy to use [packages](https://cpb-us-w2.wpmucdn.com/sites.coecis.cornell.edu/dist/9/287/files/2019/08/Nolan-9-Nolan_Financial-Modeling-w-heavy-tailed-stable-2.pdf) to help numerically. Particularly important,
 
-\\[ \mathrm{VaR}\_{\alpha} (m) = \mathrm{OI}\_{imb}(0) \cdot d^{-m} \cdot \bigg[ e^{\mu m T + \sigma (\frac{m T}{a})^{\frac{1}{a}} \cdot {F}^{-1}(1-\alpha)} - 1 \bigg] \\]
+\\[ \mathrm{VaR}\_{\alpha} (m) = \mathrm{OI}\_{imb}(0) \cdot d^{-m} \cdot \bigg[ e^{\mu m T + \sigma (\frac{m T}{a})^{\frac{1}{a}} \cdot {F}^{-1}_{ab}(1-\alpha)} - 1 \bigg] \\]
 
-where \\( F^{-1} \\) is the inverse CDF for the standard Levy stable \\( S(a, b, 0, 1) \\).
+where \\( F^{-1}_{ab} \\) is the inverse CDF for the standard Levy stable \\( S(a, b, 0, 1) \\).
 
 
 ## Acknowledgments
