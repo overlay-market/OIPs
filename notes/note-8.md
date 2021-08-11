@@ -97,4 +97,42 @@ to use as an example.
 
 ## Calibrating \\( S \\)
 
-The value of \\( S \\) effectively provides an envelope around the bid-ask spread. Tuning this to be better for higher frequency traders (smaller value) needs to be balanced against the risk associated with traders profiting from information not yet known to the market contract.
+\\( S \\), as an additional static spread, offers protection against large jumps in spot that happen over shorter timeframes than \\( \nu \\). To calibrate, we can use the statistical properties of the underlying feed.
+
+Our goal is to have the static spread \\( e^{\pm S} \\) produce bid and ask values that e.x. 97% of the time will be worse than any jumps that are likely to occur in the spot price over a 10 minute interval. This guards against the timelag associated with the shorter 10 minute TWAP versus the actual spot price.
+
+To accomplish this, we suggest setting the spread to
+
+\\[ S = \frac{\mu \cdot (\nu - 1)}{2} + C(a, \nu) \cdot \sigma F^{-1}_{ab}(1-\alpha) \\]
+
+where
+
+\\[ C(a, \nu) \equiv \bigg[ \frac{\nu}{a} \bigg(1 - \bigg(\frac{1}{\nu}\bigg)^{a} \cdot \frac{\nu+1}{2} \bigg) \bigg]^{\frac{1}{a}} \\]
+
+\\( F^{-1}_{ab} \\) is the inverse CDF for the standard [Levy stable](https://en.wikipedia.org/wiki/Stable_distribution) \\( S(a, b, 0, 1) \\).
+
+\\( \mu \\), \\( \sigma \\), \\( a \\) and \\( b \\) are fit using historical data assuming log-stable increments for the underlying spot price
+
+\\[ P(t+\tau) = P(t) e^{\mu \tau + \sigma L\_{\tau}} \\]
+
+where \\( L\_{\tau} \sim S(a, b, 0, (\frac{\tau}{a})^{1/a}) \\).
+
+
+### Derivation
+
+Formally, we want the probability that the spot price \\( P \\) is greater than the ask price, \\( \nu \\) blocks into the future, to be equal to a small number \\( \alpha \\):
+
+$$\begin{eqnarray}
+\alpha &=& \mathbb{P}[ P(t+\nu) > A(t+\nu) | P(t+\nu) > P(t) ] \\
+&=& \mathbb{P}[ P(t+\nu) > \mathrm{TWAP}(t, t+\nu) \cdot e^{S} ]
+\end{eqnarray}$$
+
+In the case of a spot jump up, we look at spot prices greater than the ask. For a spot jump down, we would look at spot prices less than the bid. Assume the current time is \\( t \\).
+
+Take spot to be driven by a [Levy process](https://en.wikipedia.org/wiki/L%C3%A9vy_process)
+
+\\[ P(t+\tau) = P(t) e^{\mu \tau + \sigma L_{\tau}} \\]
+
+with log-stable increments. The future value of the geometric TWAP averaged over \\( \nu \\) blocks will be
+
+\\[ \mathrm{TWAP}(t, t+\nu) =  \\]
