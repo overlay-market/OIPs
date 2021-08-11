@@ -35,38 +35,48 @@ To prevent traders from taking advantage of the lag, one solution is to add a "b
 
 We propose the bid \\( B(t) \\) and ask \\( A(t) \\) prices offered to traders at time \\( t \\) be
 
-\\[ B(t) = \min \bigg(P(t), \mathrm{TWAP}(t-\Delta, t) \bigg) \cdot e^{-S} \\]
+\\[ B(t) = \min \bigg[\mathrm{TWAP}(t-\nu, t), \mathrm{TWAP}(t-\Delta, t) \bigg] \cdot e^{-S} \\]
 
-\\[ A(t) = \max \bigg(P(t), \mathrm{TWAP}(t-\Delta, t) \bigg) \cdot e^{S}  \\]
+\\[ A(t) = \max \bigg[\mathrm{TWAP}(t-\nu, t), \mathrm{TWAP}(t-\Delta, t) \bigg] \cdot e^{S}  \\]
+
+where \\( \nu \ll \Delta \\).
 
 Longs receive the ask as their entry price and the bid as their exit price. Shorts receive the bid as their entry price and the ask as their exit price.
 
-Traders unfortunately receive the worst possible price, but it does protect the system both against the predictability of the TWAP lag *and* [spot price manipulation](#spot-manipulation).
+\\( \mathrm{TWAP}(t-\nu, t) \\) is a shorter TWAP used as a proxy for the most recent spot price. Traders unfortunately receive the worst possible price, but it does protect the system both against the predictability of the lag in the longer TWAP *and* [spot price manipulation](#spot-manipulation). Good starting values to average over would be \\( \nu = 40 \\) for a 10m shorter TWAP and \\( \Delta = 240 \\) for a 1h longer TWAP.
 
-\\( S \\) is an additional spread added, regardless of the current spot price, to encourage longer term trading. This helps guard against traders who may have significantly more information than what everyone else has before that information is reflected in the spot price.
+\\( S \\) is an additional static spread, on top of the bid-ask TWAP values, used to discourage front-running of the shorter TWAP, which acts as a proxy for spot. Spot values from Uniswap pools shouldn't be used, as they [are vulnerable to manipulation](https://samczsun.com/taking-undercollateralized-loans-for-fun-and-for-profit/).
 
-Applying a spread with \\( S = 0.00728 \\) to the 1.5 hours of simulated data plotted above
+Applying a spread with \\( S = 0.00624957 \\) to the 1.5 hours of simulated data plotted above
 
-![Image of Twap Lag With Spread Plot](../assets/oip-1/twap_lag_spread.png)
+![Image of Twap Lag With Spread Plot](../assets/oip-1/twap_lag_double_spread.png)
 
-shows the scalp is no longer profitable over the hour following the jump, as the same long trade now has an entry price at the ask of 2010.07, immediately after the jump, and an exit price at the bid of 1987.95, 1 hour after the jump.
+shows the scalp is no longer profitable over the hour following the jump, as the same long trade now has an entry price at the ask of 1998.31, immediately after the jump, and an exit price at the bid of 1990.01, 1 hour after the jump.
 
 The downside with this approach is we likely reduce the amount of higher frequency trading that occurs on the platform. Over shorter time horizons, it becomes more difficult to exit with a profit, as one has to overcome the spread. For example, examining 6 hours of simulated data
 
-![Image of Twap Lag With Spread And Vol Plot](../assets/oip-1/twap_lag_spread_vol.png)
+![Image of Twap Lag With Spread And Vol Plot](../assets/oip-1/twap_lag_double_spread_vol.png)
 
-it's clear that shorting the local top here gives an entry price at the bid of 2477.91 and an exit price at the ask of 2461.99, for a profit (without fees) of 0.64%. Spot on the other hand moved 3% over the same period.
+shorting the local top here gives an entry price at the bid of 2489.67 and an exit price at the ask of 2459.50, for a profit (without fees) of 1.21%. Spot on the other hand moved 3% over the same period.
 
-Over much longer time horizons, traders can still make significant profits. Looking at 3 months of simulated data
+Over longer time horizons, traders can still make significant profits. Looking at 2 days
 
-![Image of Twap Lag With Spread Full Plot](../assets/oip-1/twap_lag_spread_all.png)
+![Image of Twap Lag With Spread And Vol Zoom Out Plot](../assets/oip-1/twap_lag_double_spread_vol_zoom_1x.png)
+
+and 3 months of simulated data
+
+![Image of Twap Lag With Spread Full Plot](../assets/oip-1/twap_lag_double_spread_all.png)
 
 shows markets remain tradeable.
 
 
 ## Spot Manipulation
 
-Uniswap offers the TWAP as a method for offering a [manipulation-resistant on-chain oracle](https://uniswap.org/whitepaper.pdf). However, we're suggesting using *both* the TWAP and the current spot price to determine what entry and exit prices to give traders. At first glance, [this is rather concerning](https://samczsun.com/taking-undercollateralized-loans-for-fun-and-for-profit/).
+Uniswap offers the TWAP as a method for offering a [manipulation-resistant on-chain oracle](https://uniswap.org/whitepaper.pdf).
+
+<!--
+
+However, we're suggesting using *both* the TWAP and the current spot price to determine what entry and exit prices to give traders. At first glance, [this is rather concerning](https://samczsun.com/taking-undercollateralized-loans-for-fun-and-for-profit/).
 
 Are Overlay markets now susceptible to manipulation of the spot price?
 
@@ -81,8 +91,10 @@ to use as an example.
 ![Image of Twap Attack With Spread Plot](../assets/oip-1/twap_attack_spread.png)
 
 *NOTE: There is a possible attack on others positions: user manipulates the spot price to cause other user's queued OI to settle at a worse price than they would have had otherwise. This grief attack doesn't cause any profit for the user who is causing it however so it's a complete burning of capital. Given liquid spot markets take significant amounts of capital to manipulate, it seems unlikely we should be overly concerned about this griefing attack.*
+*
+* -->
 
 
 ## Calibrating \\( S \\)
 
-The value of \\( S \\) effectively provides an envelope around the bid-ask spread. Tuning this to be better for higher frequency traders (smaller value) needs to be balanced against the risk associated with traders profiting from information not yet known to the entire market.
+The value of \\( S \\) effectively provides an envelope around the bid-ask spread. Tuning this to be better for higher frequency traders (smaller value) needs to be balanced against the risk associated with traders profiting from information not yet known to the market contract.
