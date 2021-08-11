@@ -122,7 +122,13 @@ where \\( L\_{\tau} \sim S(a, b, 0, (\frac{\tau}{a})^{1/a}) \\).
 
 ### Concrete Numbers
 
-We use [`pystable`](https://github.com/overlay-market/pystable) to fit the last 120 days of 10 minute data from the [USDC-WETH SushiSwap pool](https://analytics.sushi.com/pairs/0x397ff1542f962076d0bfe58ea045ffa2d347aca0).
+We use [`pystable`](https://github.com/overlay-market/pystable) to fit 120 days of 10 minute data on the [USDC-WETH SushiSwap pool](https://analytics.sushi.com/pairs/0x397ff1542f962076d0bfe58ea045ffa2d347aca0), from timestamp `1618868463` (April 19, 2021) to `1626472862` (July 16, 2021).
+
+Per-block parameter values obtained are `a = 1.4029884974837792`, `b = -0.008110504596997956`, `mu = -1.4909873693826263e-07`, `sig = 0.00012610528857189945`. With `c(a, 40) = 9.975722461478524`.
+
+For 97.5% confidence (`alpha = 0.025`), we have `s = 0.006529828886969226`.
+
+Console logs to replicate above are in [this gist](https://gist.github.com/mikeyrf/b8202b738b2f594f87e81cdc3bd5a41c#file-spread-calc-md).
 
 
 ### Derivation
@@ -140,7 +146,7 @@ Take spot to be driven by a [Levy process](https://en.wikipedia.org/wiki/L%C3%A9
 
 \\[ P(t+\tau) = P(t) e^{\mu \tau + \sigma L_{\tau}} \\]
 
-with log-stable increments. The future value of the geometric TWAP averaged over \\( \nu \\) blocks will be
+with log-stable increments. The future value of the [geometric TWAP](https://uniswap.org/whitepaper-v3.pdf) averaged over \\( \nu \\) blocks will be
 
 $$\begin{eqnarray}
 \mathrm{TWAP}(t, t+\nu) &=& \bigg( \prod_{t' = t}^{t+\nu} P(t') \bigg)^{\frac{1}{\nu}} \\
