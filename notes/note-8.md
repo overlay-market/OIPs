@@ -156,5 +156,24 @@ $$\begin{eqnarray}
 
 using some arithmetic series math and [properties of sums of stable random variables](https://en.wikipedia.org/wiki/Stable_distribution#Properties).
 
+Our probability expression with the spot and the geometric TWAP reduces to
+
+$$\begin{eqnarray}
+\alpha &=& \mathbb{P} \bigg[ e^{\mu \cdot (\nu - \frac{\nu + 1}{2}) + \sigma \cdot ( L_{\nu} - \frac{1}{\nu} L_{\frac{\nu (\nu + 1)}{2}})} > e^{S} \bigg] \\
+&=& \mathbb{P} \bigg[ e^{\mu \cdot \frac{\nu - 1}{2} + \sigma \cdot C(a, \nu) \cdot Z_{ab}} > e^S \bigg] \\
+&=& 1 - F_{ab}\bigg( \frac{S - \frac{\mu \cdot (\nu-1)}{2}}{\sigma \cdot C(a, \nu)} \bigg)
+\end{eqnarray}$$
+
+after some manipulation. \\( Z_{ab} \sim S(a, b, 0, 1) \\) is a standard stable random variable, \\( F_{ab} \\) is the CDF of the standard stable with params \\( a, b \\) and we let
+
+\\[ C(a, \nu) \equiv \bigg[ \frac{\nu}{a} \bigg(1 - \bigg(\frac{1}{\nu}\bigg)^{a} \cdot \frac{\nu+1}{2} \bigg) \bigg]^{\frac{1}{a}} \\]
+
+Then, the \\( S \\) value that gives a probability of \\( \alpha \\) of offering a worse ask price to the long scalp trader than spot is
+
+\\[ S = \frac{\mu \cdot (\nu - 1)}{2} + C(a, \nu) \cdot \sigma F^{-1}_{ab}(1-\alpha) \\]
+
+This prevents front-running of the shorter TWAP from being profitable with \\( 1-\alpha \\) confidence.
+
+Similar arguments can be used for the bid (short scalper), but if \\( b \approx 0 \\) for the underlying fit, suggested \\( S \\) will be the same by symmetry of the associated stable random variable.
 
 ## Market Impact
