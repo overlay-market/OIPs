@@ -33,11 +33,11 @@ The 1h TWAP value immediately after spot jumps from 1983.65 to 1995.48 is still 
 
 To prevent traders from taking advantage of the lag, one solution is to add a "bid-ask spread" to the entry and exit values Overlay markets offer to traders. Such a spread should be responsive to large jumps in the most recent spot price while also inheriting the security properties of the TWAP when traders wish to ultimately take profits.
 
-We propose the bid \\( B(t) \\) and ask \\( A(t) \\) prices offered to traders at time \\( t \\) be
+We propose the bid \\( B \\) and ask \\( A \\) prices offered to traders at time \\( t \\) be
 
-\\[ B(t) = \min \bigg[\mathrm{TWAP}(t-\nu, t), \mathrm{TWAP}(t-\Delta, t) \bigg] \cdot e^{-S} \\]
+\\[ B(t, Q_s) = \min \bigg[\mathrm{TWAP}(t-\nu, t), \mathrm{TWAP}(t-\Delta, t) \bigg] \cdot e^{-\delta - \lambda Q_s} \\]
 
-\\[ A(t) = \max \bigg[\mathrm{TWAP}(t-\nu, t), \mathrm{TWAP}(t-\Delta, t) \bigg] \cdot e^{S}  \\]
+\\[ A(t, Q_l) = \max \bigg[\mathrm{TWAP}(t-\nu, t), \mathrm{TWAP}(t-\Delta, t) \bigg] \cdot e^{\delta + \lambda Q_l}  \\]
 
 where \\( \nu \ll \Delta \\).
 
@@ -45,9 +45,11 @@ Longs receive the ask as their entry price and the bid as their exit price. Shor
 
 \\( \mathrm{TWAP}(t-\nu, t) \\) is a shorter TWAP used as a proxy for the most recent spot price. Traders unfortunately receive the worst possible price, but it does protect the system both against the predictability of the lag in the longer TWAP *and* [spot price manipulation](#spot-manipulation). Good starting values to average over would be \\( \nu = 40 \\) for a 10m shorter TWAP and \\( \Delta = 240 \\) for a 1h longer TWAP.
 
-\\( S \\) is an additional static spread, on top of the bid-ask TWAP values, used to discourage front-running of the shorter TWAP, which acts as a proxy for spot. Spot values from Uniswap pools shouldn't be used, as they [are vulnerable to manipulation](https://samczsun.com/taking-undercollateralized-loans-for-fun-and-for-profit/).
+\\( \delta \\) is a static spread, on top of the bid-ask TWAP values, used to discourage front-running of the shorter TWAP, which acts as a proxy for spot. Spot values from Uniswap pools shouldn't be used, as they [are vulnerable to manipulation](https://samczsun.com/taking-undercollateralized-loans-for-fun-and-for-profit/).
 
-Applying a spread with \\( S = 0.00624957 \\) to the 1.5 hours of simulated data plotted above
+\\( \lambda Q_a \\) is a market impact term to minimize the damage associated with front-running the TWAP in the event the spot price spikes above the static spread. \\( Q_a \\) is the queued open interest on side \\( a \in \\{ l, s \\} \\), imposed when new positions are built.
+
+Applying a static spread with \\( \delta = 0.00624957 \\) to the 1.5 hours of simulated data plotted above
 
 ![Image of Twap Lag With Spread Plot](../assets/oip-1/twap_lag_double_spread.png)
 
@@ -95,23 +97,19 @@ to use as an example.
 * -->
 
 
-## Calibrating \\( S \\)
+## Calibrating \\( \delta \\)
 
-\\( S \\), as an additional static spread, offers protection against large jumps in spot that happen over shorter timeframes than \\( \nu \\). To calibrate, we can use the statistical properties of the underlying feed.
+\\( \delta \\), as an additional static spread, offers protection against large jumps in spot that happen over shorter timeframes than \\( \nu \\). To calibrate, we can use the statistical properties of the underlying feed.
 
-Our goal is to have the static spread \\( e^{\pm S} \\) produce bid and ask values that e.x. 97% of the time will be worse than any jumps that are likely to occur in the spot price over a 10 minute interval. This guards against the timelag associated with the shorter 10 minute TWAP versus the actual spot price.
+Our goal is to have the static spread \\( e^{\pm \delta} \\) produce bid and ask values that e.x. 99% of the time will be worse than any jumps that are likely to occur in the spot price over a 10 minute interval. This guards against the timelag associated with the shorter 10 minute TWAP versus the actual spot price.
 
 To accomplish this, we suggest setting the spread to
 
-\\[ S = \frac{\mu \cdot (\nu - 1)}{2} + C(a, \nu) \cdot \sigma F^{-1}_{ab}(1-\alpha) \\]
+\\[ \delta = \frac{1}{2} \bigg[ \mu \nu + \sigma \cdot \bigg(\frac{\nu}{a}\bigg)^{1/a} F^{-1}_{ab}(1-\alpha) \bigg] \\]
 
-where
-
-\\[ C(a, \nu) \equiv \bigg[ \frac{\nu}{a} \bigg(1 - \bigg(\frac{1}{\nu}\bigg)^{a} \cdot \frac{\nu+1}{2} \bigg) \bigg]^{\frac{1}{a}} \\]
+such that the value at risk to the system from a trader entering into the TWAP scalp over the next \\( \nu \\) blocks is equal to zero with confidence \\( 1-\alpha \\).
 
 \\( F^{-1}_{ab} \\) is the inverse CDF for the standard [Levy stable](https://en.wikipedia.org/wiki/Stable_distribution) \\( S(a, b, 0, 1) \\).
-
-\\( 1-\alpha \\) is the probability that our offered ask (bid) price is worse for the trader than the future spot price, given a move up (down).
 
 \\( \mu \\), \\( \sigma \\), \\( a \\) and \\( b \\) are parameters expressed per-block above, fit using historical data assuming log-stable increments for the underlying spot price
 
@@ -124,56 +122,50 @@ where \\( L\_{\tau} \sim S(a, b, 0, (\frac{\tau}{a})^{1/a}) \\).
 
 We use [`pystable`](https://github.com/overlay-market/pystable) to fit 120 days of 10 minute data on the [USDC-WETH SushiSwap pool](https://analytics.sushi.com/pairs/0x397ff1542f962076d0bfe58ea045ffa2d347aca0), from timestamp `1618868463` (April 19, 2021) to `1626472862` (July 16, 2021).
 
-Per-block parameter values obtained are `a = 1.4029884974837792`, `b = -0.008110504596997956`, `mu = -1.4909873693826263e-07`, `sig = 0.00012610528857189945`. With `c(a, 40) = 9.975722461478524`.
+Per-block parameter values obtained are `a = 1.4029884974837792`, `b = -0.008110504596997956`, `mu = -5.963949477530506e-06`, `sig = 0.0013734391723921105`.
 
-For 97.5% confidence (`alpha = 0.025`), we have `s = 0.006529828886969226`.
+For 99% confidence (`alpha = 0.01`), we have `delta = 0.006551445624571194`.
 
 Console logs to replicate above are in [this gist](https://gist.github.com/mikeyrf/b8202b738b2f594f87e81cdc3bd5a41c#file-spread-calc-md).
 
 
 ### Derivation
 
-Formally, we want the probability that the spot price \\( P \\) is greater than the ask price, \\( \nu \\) blocks into the future, to be equal to a small number \\( \alpha \\):
+Formally, the maximum attainable profit \\( \mathrm{VaR} \\) from the long scalp trade after \\( \nu \\) blocks with confidence \\( 1-\alpha \\) is
 
 $$\begin{eqnarray}
-\alpha &=& \mathbb{P}[ P(t+\nu) > A(t+\nu) | P(t+\nu) > P(t) ] \\
-&=& \mathbb{P}[ P(t+\nu) > \mathrm{TWAP}(t, t+\nu) \cdot e^{S} ]
+1-\alpha &=& \mathbb{P}[ \mathrm{PnL}(Q, t+\nu) \leq \mathrm{VaR}(\alpha, \nu) | \mathcal{F}_{t-\nu} ] \\
+&\approx& \mathbb{P}\bigg[ Q \cdot \bigg( \frac{P(t)}{P(t-\nu)} e^{-2\delta - \lambda Q} - 1 \bigg) \leq \mathrm{VaR}(\alpha, \nu) | \mathcal{F}_{t-\nu} \bigg] \\
+&=& \mathbb{P}\bigg[ Q \cdot \bigg( e^{\mu \nu + \sigma L_{\nu} -2\delta - \lambda Q} - 1 \bigg) \leq \mathrm{VaR}(\alpha, \nu) \bigg]
 \end{eqnarray}$$
 
-In the case of a spot jump up, we look at spot prices greater than the ask. For a spot jump down, we would look at spot prices less than the bid. Assume the current time is \\( t \\).
+where \\( Q \\) is the long open interest taken out by the trader.
 
-Take spot to be driven by a [Levy process](https://en.wikipedia.org/wiki/L%C3%A9vy_process)
+Our market contracts can only rely on stale information from the oracle feed before the current time \\( t \\): \\( \mathcal{F}_{t-\nu} \\). We've made simplifying assumptions to reflect this by having our entry and exit TWAP values
 
-\\[ P(t+\tau) = P(t) e^{\mu \tau + \sigma L_{\tau}} \\]
+- \\( \mathrm{TWAP}(t, t+\nu) \sim P(t) \\)
+- \\( \mathrm{TWAP}(t-\nu, t) \sim P(t-\nu) \\)
 
-with log-stable increments. The future value of the [geometric TWAP](https://uniswap.org/whitepaper-v3.pdf) averaged over \\( \nu \\) blocks will be
+take similar values to the spot price \\( \nu \\) blocks in the past. To understand why, reference our first plot in [responsive spreads](#responsive-spreads):
 
-$$\begin{eqnarray}
-\mathrm{TWAP}(t, t+\nu) &=& \bigg( \prod_{t' = t}^{t+\nu} P(t') \bigg)^{\frac{1}{\nu}} \\
-&=& P(t) e^{\frac{1}{\nu} \sum_{t''=0}^{\nu} \mu t'' + \sigma L_{t''}} \\
-&=& P(t) e^{\frac{\mu (\nu + 1)}{2} + \frac{\sigma}{\nu} L_{\frac{\nu (\nu + 1)}{2}}}
-\end{eqnarray}$$
+- Jump occurs at t=195250
+- Spot at t=195250 jumps from 1985 to ~2000
+- 10m TWAP at t=195250 remains in line with spot 10m prior (before jump)
+- 10m TWAP at t=195290 (40 blocks or 10m after jump) finally catches up with the spot value at t=195250
 
-using some arithmetic series math and [properties of sums of stable random variables](https://en.wikipedia.org/wiki/Stable_distribution#Properties).
+Our suggested value for \\( \delta \\) will be on the more conservative given these assumptions, as the exit price used in practice will be worse for the scalp trader with the longer TWAP.
 
-Our probability expression with the spot and the geometric TWAP reduces to
+The value at risk due to this long scalp is then
 
-$$\begin{eqnarray}
-\alpha &=& \mathbb{P} \bigg[ e^{\mu \cdot (\nu - \frac{\nu + 1}{2}) + \sigma \cdot ( L_{\nu} - \frac{1}{\nu} L_{\frac{\nu (\nu + 1)}{2}})} > e^{S} \bigg] \\
-&=& \mathbb{P} \bigg[ e^{\mu \cdot \frac{\nu - 1}{2} + \sigma \cdot C(a, \nu) \cdot Z_{ab}} > e^S \bigg] \\
-&=& 1 - F_{ab}\bigg( \frac{S - \frac{\mu \cdot (\nu-1)}{2}}{\sigma \cdot C(a, \nu)} \bigg)
-\end{eqnarray}$$
+\\[ \mathrm{VaR}(\alpha, \nu) = Q \cdot \bigg[ e^{\mu \nu + \sigma \cdot (\frac{\nu}{a})^{1/a} F^{-1}_{ab}(1-\alpha) - 2\delta - \lambda Q } - 1 \bigg] \\]
 
-after some manipulation. \\( Z_{ab} \sim S(a, b, 0, 1) \\) is a standard stable random variable, \\( F_{ab} \\) is the CDF of the standard stable with params \\( a, b \\) and we let
+which is less than or equal to zero when
 
-\\[ C(a, \nu) \equiv \bigg[ \frac{\nu}{a} \bigg(1 - \bigg(\frac{1}{\nu}\bigg)^{a} \cdot \frac{\nu+1}{2} \bigg) \bigg]^{\frac{1}{a}} \\]
+\\[ \delta = \frac{1}{2} \bigg[ \mu \nu + \sigma \cdot \bigg( \frac{\nu}{a} \bigg)^{1/a} F^{-1}_{ab}(1-\alpha) \bigg] \\]
 
-Then, the \\( S \\) value that gives a probability of \\( \alpha \\) of offering a worse ask price to the long scalp trader than spot is
+regardless of market impact on entry, \\( \lambda Q \\).
 
-\\[ S = \frac{\mu \cdot (\nu - 1)}{2} + C(a, \nu) \cdot \sigma F^{-1}_{ab}(1-\alpha) \\]
+Setting our static spread \\( \delta \\) to this expression implies that, with confidence \\( 1-\alpha \\), the value at risk to the system after the next \\( \nu \\) blocks from front-running the shorter TWAP will be at most zero, once the shorter TWAP catches up to spot.
 
-This prevents front-running of the shorter TWAP from being profitable with \\( 1-\alpha \\) confidence.
 
-Similar arguments can be used for the bid (short scalper), but if \\( b \approx 0 \\) for the underlying fit, suggested \\( S \\) will be the same by symmetry of the associated stable random variable.
-
-## Market Impact
+## Calibrating \\( \lambda \\)
