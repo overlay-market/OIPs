@@ -124,14 +124,14 @@ We use [`pystable`](https://github.com/overlay-market/pystable) to fit 120 days 
 
 Per-block parameter values obtained are `a = 1.4029884974837792`, `b = -0.008110504596997956`, `mu = -1.4909873693826263e-07`, `sig = 0.00012610528857189945`.
 
-For 99% confidence (`alpha = 0.01`), we have `delta = 0.006551445624571194`.
+For 99% confidence (`alpha = 0.01`), we have `delta = 0.006551445624571194`. This is a spread of about 65 bps on either side of the TWAP (1.3% total).
 
 Console logs to replicate above are in [this gist](https://gist.github.com/mikeyrf/b8202b738b2f594f87e81cdc3bd5a41c#file-spread-calc-md).
 
 
 ### Derivation
 
-Formally, the maximum attainable profit \\( \mathrm{VaR} \\) from the long scalp trade after \\( \nu \\) blocks with confidence \\( 1-\alpha \\) is
+Formally, the maximum attainable profit after \\( \nu \\) blocks, \\( \mathrm{VaR}(\alpha, \nu) \\), from the long scalp trade is given by
 
 $$\begin{eqnarray}
 1-\alpha &=& \mathbb{P}[ \mathrm{PnL}(Q, t+\nu) \leq \mathrm{VaR}(\alpha, \nu) | \mathcal{F}_{t-\nu} ] \\
@@ -139,11 +139,11 @@ $$\begin{eqnarray}
 &=& \mathbb{P}\bigg[ Q \cdot \bigg( e^{\mu \nu + \sigma L_{\nu} -2\delta - \lambda Q} - 1 \bigg) \leq \mathrm{VaR}(\alpha, \nu) \bigg]
 \end{eqnarray}$$
 
-where \\( Q \\) is the long open interest taken out by the trader.
+assuming confidence \\( 1-\alpha \\), where \\( Q \\) is the long open interest taken out by the trader.
 
 Our market contracts can only rely on stale information from the oracle feed before the current time \\( t \\): \\( \mathcal{F}_{t-\nu} \\). We've made simplifying assumptions to reflect this by having our entry and exit TWAP values
 
-- \\( \mathrm{TWAP}(t, t+\nu) \sim P(t) \\)
+- \\( \mathrm{TWAP}(t, t+\nu) \sim \mathrm{TWAP}(t, t+\Delta) \sim P(t) \\)
 - \\( \mathrm{TWAP}(t-\nu, t) \sim P(t-\nu) \\)
 
 take similar values to the spot price \\( \nu \\) blocks in the past. To understand why, reference our first plot in [responsive spreads](#responsive-spreads):
@@ -152,8 +152,6 @@ take similar values to the spot price \\( \nu \\) blocks in the past. To underst
 - Spot at t=195250 jumps from 1985 to ~2000
 - 10m TWAP at t=195250 remains in line with spot 10m prior (before jump)
 - 10m TWAP at t=195290 (40 blocks or 10m after jump) finally catches up with the spot value at t=195250
-
-Our suggested value for \\( \delta \\) will be on the more conservative given these assumptions, as the exit price used in practice will be worse for the scalp trader with the longer TWAP.
 
 The value at risk due to this long scalp is then
 
@@ -165,7 +163,26 @@ which is less than or equal to zero when
 
 regardless of market impact on entry, \\( \lambda Q \\).
 
-Setting our static spread \\( \delta \\) to this expression implies that, with confidence \\( 1-\alpha \\), the value at risk to the system after the next \\( \nu \\) blocks from front-running the shorter TWAP will be at most zero, once the shorter TWAP catches up to spot.
+Setting our static spread \\( \delta \\) to this expression implies that, with confidence \\( 1-\alpha \\), the value at risk to the system after the next \\( \nu \\) blocks from front-running the shorter TWAP will be at most zero, once the TWAP catches up to spot.
 
 
 ## Calibrating \\( \lambda \\)
+
+\\( \lambda Q \\), as an additional market impact term, offers protection against large jumps in spot that *exceed* our expectations used in calibrating \\( \delta \\). Furthermore, imposing significant market impact (i.e. slippage) on large trades guards the system against traders who have more information than what is currently reflected in the market's current spot price.
+
+Our goal is to have the market impact term \\( e^{\lambda Q} \\) produce bid and ask values that will minimize the expected profits from the scalp in the e.x. 1% of the time *when* spot jumps more than the static spread over a 10 minute interval.
+
+To accomplish this, we suggest setting the market impact constant to
+
+\\[ \lambda = \frac{1}{Q_0} \cdot \bigg[ \mu \nu - 2s + \frac{\sigma^2 \nu}{2} + \ln \rho \bigg] \\]
+
+such that the expected value (EV) of the PnL for the scalp trade in the case when spot exceeds the spread over the next \\( \nu \\) blocks is less than or equal to zero for \\( Q \geq Q_0 \\).
+
+\\[ \rho \equiv \frac{1 - \Phi(-\frac{\mu\nu-2s}{\sigma \sqrt{\nu}}-\sigma \sqrt{\nu})}{1 - \Phi(-\frac{\mu\nu-2s}{\sigma \sqrt{\nu}})} \\]
+
+
+
+
+## Considerations
+
+Given we calibrate \\( \delta \\) and \\( \lambda \\) based off of the statistical properties of the underlying feed, these results should generalize beyond TWAPs to any oracle feed that experiences some form of time delay, \\( \nu \\), with respect to the oracle's "actual" most recent value.
