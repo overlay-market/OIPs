@@ -122,16 +122,16 @@ where \\( L\_{\tau} \sim S(a, b, 0, (\frac{\tau}{a})^{1/a}) \\).
 
 We use [`pystable`](https://github.com/overlay-market/pystable) to fit 120 days of 10 minute data on the [USDC-WETH SushiSwap pool](https://analytics.sushi.com/pairs/0x397ff1542f962076d0bfe58ea045ffa2d347aca0), from timestamp `1618868463` (April 19, 2021) to `1626472862` (July 16, 2021).
 
-Per-block parameter values obtained are `a = 1.4029884974837792`, `b = -0.008110504596997956`, `mu = -5.963949477530506e-06`, `sig = 0.0013734391723921105`.
+Per-block parameter values obtained are `a = 1.4029884974837792`, `b = -0.008110504596997956`, `mu = -1.4909873693826263e-07`, `sig = 0.00012610528857189945`.
 
-For 99% confidence (`alpha = 0.01`), we have `delta = 0.006551445624571194`.
+For 99% confidence (`alpha = 0.01`), we have `delta = 0.006551445624571194`. This is a spread of about 65 bps on either side of the TWAP (1.3% total).
 
 Console logs to replicate above are in [this gist](https://gist.github.com/mikeyrf/b8202b738b2f594f87e81cdc3bd5a41c#file-spread-calc-md).
 
 
 ### Derivation
 
-Formally, the maximum attainable profit \\( \mathrm{VaR} \\) from the long scalp trade after \\( \nu \\) blocks with confidence \\( 1-\alpha \\) is
+Formally, the maximum attainable profit after \\( \nu \\) blocks, \\( \mathrm{VaR}(\alpha, \nu) \\), from the long scalp trade is given by
 
 $$\begin{eqnarray}
 1-\alpha &=& \mathbb{P}[ \mathrm{PnL}(Q, t+\nu) \leq \mathrm{VaR}(\alpha, \nu) | \mathcal{F}_{t-\nu} ] \\
@@ -139,11 +139,11 @@ $$\begin{eqnarray}
 &=& \mathbb{P}\bigg[ Q \cdot \bigg( e^{\mu \nu + \sigma L_{\nu} -2\delta - \lambda Q} - 1 \bigg) \leq \mathrm{VaR}(\alpha, \nu) \bigg]
 \end{eqnarray}$$
 
-where \\( Q \\) is the long open interest taken out by the trader.
+assuming confidence \\( 1-\alpha \\), where \\( Q \\) is the long open interest taken out by the trader.
 
 Our market contracts can only rely on stale information from the oracle feed before the current time \\( t \\): \\( \mathcal{F}_{t-\nu} \\). We've made simplifying assumptions to reflect this by having our entry and exit TWAP values
 
-- \\( \mathrm{TWAP}(t, t+\nu) \sim P(t) \\)
+- \\( \mathrm{TWAP}(t, t+\nu) \sim \mathrm{TWAP}(t, t+\Delta) \sim P(t) \\)
 - \\( \mathrm{TWAP}(t-\nu, t) \sim P(t-\nu) \\)
 
 take similar values to the spot price \\( \nu \\) blocks in the past. To understand why, reference our first plot in [responsive spreads](#responsive-spreads):
@@ -152,8 +152,6 @@ take similar values to the spot price \\( \nu \\) blocks in the past. To underst
 - Spot at t=195250 jumps from 1985 to ~2000
 - 10m TWAP at t=195250 remains in line with spot 10m prior (before jump)
 - 10m TWAP at t=195290 (40 blocks or 10m after jump) finally catches up with the spot value at t=195250
-
-Our suggested value for \\( \delta \\) will be on the more conservative given these assumptions, as the exit price used in practice will be worse for the scalp trader with the longer TWAP.
 
 The value at risk due to this long scalp is then
 
@@ -165,7 +163,125 @@ which is less than or equal to zero when
 
 regardless of market impact on entry, \\( \lambda Q \\).
 
-Setting our static spread \\( \delta \\) to this expression implies that, with confidence \\( 1-\alpha \\), the value at risk to the system after the next \\( \nu \\) blocks from front-running the shorter TWAP will be at most zero, once the shorter TWAP catches up to spot.
+Setting our static spread \\( \delta \\) to this expression implies that, with confidence \\( 1-\alpha \\), the value at risk to the system after the next \\( \nu \\) blocks from front-running the shorter TWAP will be at most zero, once the TWAP catches up to spot.
 
 
 ## Calibrating \\( \lambda \\)
+
+\\( \lambda Q \\), as an additional market impact term, offers protection against large jumps in spot that *exceed* our expectations used in calibrating \\( \delta \\). Furthermore, imposing significant market impact (i.e. slippage) on large trades guards the system against traders who have more information than what is currently reflected in the market's current spot price.
+
+Our goal is to have the market impact term \\( e^{\lambda Q} \\) produce bid and ask values that will minimize the expected profits from the scalp in the e.x. 1% of the time *when* spot jumps more than the static spread over a 10 minute interval.
+
+To accomplish this, we suggest setting the market impact parameter to
+
+\\[ \lambda = \frac{1}{Q_0} \cdot \ln \bigg[\frac{\int_0^{g^{-1}(C_p)} dy \; e^{y} f_{Y_{\nu}} (y)}{ [1-F_{Y_{\nu}}(0)] - (1+C_p) \cdot [1-F_{Y_{\nu}} (g^{-1}(C_p))] }\bigg] \\]
+
+such that the expected value (EV) of the PnL for the scalp trade in the case when spot exceeds the spread over the next \\( \nu \\) blocks is less than or equal to zero for \\( Q \geq Q_0 \\).
+
+\\( f_{Y_{\nu}} \\) and \\( F_{Y_{\nu}} \\) are, respectively, the PDF and CDF of \\( Y_{\nu} \sim S(a, b, \mu \nu - 2\delta, \sigma \cdot (\frac{\nu}{a})^{1/a}) \\).
+
+\\( C_p \\) is the payoff cap imposed on the position to [limit the damage](note-7) associated with the tails.
+
+Choices for \\( Q_0 \\) can be framed with respect to a percentage of our market's open interest cap, \\( Q_{max} \\). Governance must choose a value for \\( Q_0 \\) that balances EV risks from the scalp trade vs platform usability risks due to severe slippage. We give suggested values with concrete numbers below.
+
+
+### Concrete Numbers
+
+
+### Derivation
+
+We want to minimize the expected value of the trader's PnL from the scalp, assuming the PnL would be > 0 without imposing market impact on the trade (i.e. spot has spiked beyond the static spread). Formally, the expected value conditioned on the scalp trade being profitable without market impact is given by
+
+$$\begin{eqnarray}
+\mathbb{E} \bigg[ \mathrm{PnL} (Q, t+\nu) | \mathrm{PnL}_{\lambda = 0} > 0 \bigg] &\approx& \mathbb{E} \bigg[ Q \cdot \bigg( e^{Y_{\nu} - \lambda Q} - 1 \bigg) | Y_{\nu} > 0 \bigg] \\
+&=& \frac{Q \int_0^{\infty} dy \; f_{Y_{\nu}} (y) \cdot [e^{y - \lambda Q} - 1]}{\int_0^{\infty} dy \; f_{Y_{\nu}} (y)} \\
+&=& Q \cdot \bigg[\frac{e^{- \lambda Q} \int_0^{\infty} dy \; e^{y} f_{Y_{\nu}} (y)}{\int_0^{\infty} dy \; f_{Y_{\nu}} (y)} - 1\bigg] \\
+&=& Q \cdot \bigg[e^{h - \lambda Q} - 1\bigg]
+\end{eqnarray}$$
+
+where
+
+\\[ h = \ln \bigg[\frac{\int_0^{\infty} dy \; e^{y} f_{Y_{\nu}} (y)}{\int_0^{\infty} dy \; f_{Y_{\nu}} (y)}\bigg] \\]
+
+\\[ Y_{\nu} \equiv \mu \nu - 2\delta + \sigma L_{\nu} \\]
+
+and \\( f_{Y_{\nu}} \\) is the PDF of \\( Y_{\nu} \sim S(a, b, \mu \nu - 2\delta, \sigma \cdot (\frac{\nu}{a})^{1/a}) \\).
+
+The conditional expected value is then less than or equal to zero when
+
+\\[ \lambda Q \geq h \\]
+
+If we target a particular \\( Q_0 \\) beyond which the trade is negative EV, our market impact parameter will be
+
+\\[ \lambda = \frac{1}{Q_0} \cdot \ln \bigg[\frac{\int_0^{\infty} dy \; e^{y} f_{Y_{\nu}} (y)}{\int_0^{\infty} dy \; f_{Y_{\nu}} (y)}\bigg] \\]
+
+where \\( Q \geq Q_0 \\) has an unprofitable expected value even when spot spikes beyond the static spread.
+
+For anything other than \\( a = 2 \\) (Gaussian), the top integral will be undefined since the \\( p \\) moment of a stable distribution [is infinite](https://cpb-us-w2.wpmucdn.com/sites.coecis.cornell.edu/dist/9/287/files/2019/08/Nolan-9-Nolan_Financial-Modeling-w-heavy-tailed-stable-2.pdf) when \\( p \geq a \\). This can be resolved with caps on the payoff function, which [cuts off the impact](#note-7) from the power law tails of the distribution. We'll rely on an imposed payoff cap to extend to the non-normal case.
+
+Let
+
+\\[ g(Q, y) \equiv e^{y - \lambda Q} - 1 \\]
+
+with capped payoff function for the position given by
+
+\\[ \mathrm{PnL}(Q, t+\nu) = Q \cdot \min \bigg( g(Q, Y_{\nu}), C_p \bigg) \\]
+
+assuming \\( C_p \gg 2 \delta \\). Returning to the conditional expected value and proceeding through the same exercise changes our expression to
+
+$$\begin{eqnarray}
+\mathbb{E} \bigg[ \mathrm{PnL} (Q, t+\nu) | \mathrm{PnL}_{\lambda = 0} > 0 \bigg] \\
+\approx \mathbb{E} \bigg[ Q \cdot \min \bigg( g(Q, Y_{\nu}), C_p \bigg) | Y_{\nu} > 0 \bigg] \\
+= \frac{Q \cdot [\int_0^{g^{-1}(C_p)} dy \; f_{Y_{\nu}} (y) \cdot g(Q, y) + C_p \int_{g^{-1}(C_p)}^{\infty} dy \; f_{Y_{\nu}} (y) ] }{\int_0^{\infty} dy \; f_{Y_{\nu}} (y)} \\
+= \frac{Q}{1-F_{Y_{\nu}} (0)} \cdot \bigg[ \int_0^{g^{-1}(C_p)} dy \; f_{Y_{\nu}} (y) \cdot (e^{y - \lambda Q} - 1) + C_p \cdot [1 - F_{Y_{\nu}} (g^{-1}(C_p))] \bigg] \\
+= Q \cdot \bigg[ e^{h - \lambda Q} - 1 + (1+C_p) \cdot \frac{1 - F_{Y_{\nu}} (g^{-1}(C_p))}{1-F_{Y_{\nu}} (0)} \bigg]
+\end{eqnarray}$$
+
+\\( h \\) gets capped
+
+\\[ h = \ln \bigg[\frac{\int_0^{g^{-1}(C_p)} dy \; e^{y} f_{Y_{\nu}} (y)}{\int_0^{\infty} dy \; f_{Y_{\nu}} (y)}\bigg] \\]
+
+and the integral in the numerator becomes finite. The market impact parameter that produces negative EV for the scalp when \\( Q > Q_0 \\) is now
+
+\\[ \lambda = \frac{1}{Q_0} \cdot \ln \bigg[\frac{\int_0^{g^{-1}(C_p)} dy \; e^{y} f_{Y_{\nu}} (y)}{ [1-F_{Y_{\nu}}(0)] - (1+C_p) \cdot [1-F_{Y_{\nu}} (g^{-1}(C_p))] }\bigg] \\]
+
+which reduces to our original expression when \\( C_p \to \infty \\). We can use numerical integration for the numerator to obtain our parameter value.
+
+
+### Implementation
+
+It is likely easier to target a percentage of our open interest caps vs a nominal open interest amount. Normalize with respect to our open interest cap, \\( Q_{max} \\), such that
+
+\\[ \tilde{\lambda} \equiv \lambda \cdot Q_{max} \\]
+
+\\[ q \equiv \frac{Q}{Q_{max}} \\]
+
+Market impact can then be calculated based off of how much of the allowed open interest the queued open interest will ultimately occupy upon settlement:
+
+\\[ e^{\tilde{\lambda} \cdot q} \\]
+
+with slippage curves we can compare to other AMMs over the open interest range we support, \\( q \in [0, 1] \\).
+
+
+### Gaussian Case
+
+It is still instructive however to examine the Gaussian case (\\( a=2 \\)), which gives a simple closed form solution. Assume \\( C_p \to \infty \\), so no caps.
+
+Integrals simplify to
+
+\\[ \int_0^{\infty} dy \; f_{Y_{\nu}}(y) = 1 - \Phi \bigg(\frac{2\delta-\mu}{\sigma \sqrt{\nu}} \bigg) \\]
+
+\\[ \int_0^{\infty} dy \; e^{y} f_{Y_{\nu}}(y) = e^{\mu - 2\delta + \frac{\sigma^2 \nu}{2}} \cdot \bigg[ 1 - \Phi \bigg( \frac{2\delta - \mu}{\sigma \sqrt{\nu}} - \sigma \sqrt{\nu} \bigg) \bigg] \\]
+
+where \\( \Phi \\) is the CDF of the standard normal \\( \mathcal{N}(0, 1) \\). Market impact parameter will simplify to
+
+\\[ \lambda = \frac{1}{Q_0} \cdot \bigg[ \mu - 2\delta + \frac{\sigma^2 \nu}{2} + \ln \rho \bigg] \\]
+
+where
+
+\\[ \rho \equiv \frac{1 - \Phi \bigg( \frac{2\delta - \mu}{\sigma \sqrt{\nu}} - \sigma \sqrt{\nu} \bigg)}{1 - \Phi \bigg(\frac{2\delta-\mu}{\sigma \sqrt{\nu}} \bigg)} \\]
+
+
+## Considerations
+
+Given we calibrate \\( \delta \\) and \\( \lambda \\) based off of the statistical properties of the underlying feed, these results should generalize beyond TWAPs to any oracle feed that experiences some form of time delay, \\( \nu \\), with respect to the oracle's "actual" most recent value.
