@@ -172,15 +172,98 @@ Setting our static spread \\( \delta \\) to this expression implies that, with c
 
 Our goal is to have the market impact term \\( e^{\lambda Q} \\) produce bid and ask values that will minimize the expected profits from the scalp in the e.x. 1% of the time *when* spot jumps more than the static spread over a 10 minute interval.
 
-To accomplish this, we suggest setting the market impact constant to
+To accomplish this, we suggest setting the market impact parameter to
 
-\\[ \lambda = \frac{1}{Q_0} \cdot \bigg[ \mu \nu - 2s + \frac{\sigma^2 \nu}{2} + \ln \rho \bigg] \\]
+\\[ \lambda = \frac{1}{Q_0} \cdot \bigg[ \mu \nu - 2\delta + \frac{\sigma^2 \nu}{2} + \ln \rho \bigg] \\]
 
 such that the expected value (EV) of the PnL for the scalp trade in the case when spot exceeds the spread over the next \\( \nu \\) blocks is less than or equal to zero for \\( Q \geq Q_0 \\).
 
-\\[ \rho \equiv \frac{1 - \Phi(-\frac{\mu\nu-2s}{\sigma \sqrt{\nu}}-\sigma \sqrt{\nu})}{1 - \Phi(-\frac{\mu\nu-2s}{\sigma \sqrt{\nu}})} \\]
+\\[ \rho \equiv \frac{1 - \Phi(-\frac{\mu\nu-2\delta}{\sigma \sqrt{\nu}}-\sigma \sqrt{\nu})}{1 - \Phi(-\frac{\mu\nu-2\delta}{\sigma \sqrt{\nu}})} \\]
+
+The price process is assumed to follow a log-normal distribution. *TODO: Fix for log-stable.*
 
 
+### Concrete Numbers
+
+
+### Derivation
+
+We want to minimize the expected value of the trader's PnL from the scalp, assuming the PnL would be > 0 without imposing market impact on the trade (i.e. spot has spiked beyond the static spread). Formally, the expected value conditioned on the scalp trade being profitable without market impact is given by
+
+$$\begin{eqnarray}
+\mathbb{E} \bigg[ \mathrm{PnL} (Q, t+\nu) | \mathrm{PnL}_{\lambda = 0} > 0 \bigg] &\approx& \mathbb{E} \bigg[ Q \cdot \bigg( e^{Y_{\nu} - \lambda Q} - 1 \bigg) | Y_{\nu} > 0 \bigg] \\
+&=& \frac{Q \int_0^{\infty} dy \; f_{Y_{\nu}} (y) \cdot [e^{y - \lambda Q} - 1]}{\int_0^{\infty} dy \; f_{Y_{\nu}} (y)} \\
+&=& Q \cdot \bigg[\frac{e^{- \lambda Q} \int_0^{\infty} dy \; e^{y} f_{Y_{\nu}} (y)}{\int_0^{\infty} dy \; f_{Y_{\nu}} (y)} - 1\bigg] \\
+&=& Q \cdot \bigg[e^{h - \lambda Q} - 1\bigg]
+\end{eqnarray}$$
+
+where
+
+\\[ h = \ln \bigg[\frac{\int_0^{\infty} dy \; e^{y} f_{Y_{\nu}} (y)}{\int_0^{\infty} dy \; f_{Y_{\nu}} (y)}\bigg] \\]
+
+\\[ Y_{\nu} \equiv \mu \nu - 2\delta + \sigma L_{\nu} \\]
+
+and \\( f_{Y_{\nu}} \\) is the PDF of \\( Y_{\nu} \sim S(a, b, \mu \nu - 2\delta, \sigma \cdot (\frac{\nu}{a})^{1/a}) \\).
+
+The conditional expected value is then less than or equal to zero when
+
+\\[ \lambda Q \geq h \\]
+
+If we target a particular \\( Q_0 \\) beyond which the trade is negative EV, our market impact parameter will be
+
+\\[ \lambda = \frac{1}{Q_0} \cdot \ln \bigg[\frac{\int_0^{\infty} dy \; e^{y} f_{Y_{\nu}} (y)}{\int_0^{\infty} dy \; f_{Y_{\nu}} (y)}\bigg] \\]
+
+where \\( Q \geq Q_0 \\) has an unprofitable expected value even when spot spikes beyond the static spread.
+
+For anything other than \\( a = 2 \\) (Gaussian), the top integral will be undefined since the \\( p \\) moment of a stable distribution [is infinite](https://cpb-us-w2.wpmucdn.com/sites.coecis.cornell.edu/dist/9/287/files/2019/08/Nolan-9-Nolan_Financial-Modeling-w-heavy-tailed-stable-2.pdf) when \\( p \geq a \\). This can be resolved with caps on the payoff function, which [cuts off the impact](#note-7) from the power law tails of the distribution. We'll rely on an imposed payoff cap to extend to the non-normal case.
+
+Let
+
+\\[ g(Q, y) \equiv e^{y - \lambda Q} - 1 \\]
+
+with capped payoff function for the position given by
+
+\\[ \mathrm{PnL}(Q, t+\nu) = Q \cdot \min \bigg( g(Q, Y_{\nu}), C_p \bigg) \\]
+
+Returning to the conditional expected value and proceeding through the same exercise, changes our expression to
+
+$$\begin{eqnarray}
+\mathbb{E} \bigg[ \mathrm{PnL} (Q, t+\nu) | \mathrm{PnL}_{\lambda = 0} > 0 \bigg] \\
+\approx \mathbb{E} \bigg[ Q \cdot \min \bigg( g(Q, Y_{\nu}), C_p \bigg) | Y_{\nu} > 0 \bigg] \\
+= \frac{Q \cdot [\int_0^{g^{-1}(C_p)} dy \; f_{Y_{\nu}} (y) \cdot g(Q, y) + C_p \int_{g^{-1}(C_p)}^{\infty} dy \; f_{Y_{\nu}} (y) ] }{\int_0^{\infty} dy \; f_{Y_{\nu}} (y)} \\
+= \frac{Q}{1-F_{Y_{\nu}} (0)} \cdot \bigg[ \int_0^{g^{-1}(C_p)} dy \; f_{Y_{\nu}} (y) \cdot (e^{y - \lambda Q} - 1) + C_p \cdot [1 - F_{Y_{\nu}} (g^{-1}(C_p))] \bigg] \\
+= Q \cdot \bigg[ e^{h - \lambda Q} - 1 + (1+C_p) \cdot \frac{1 - F_{Y_{\nu}} (g^{-1}(C_p))}{1-F_{Y_{\nu}} (0)} \bigg]
+\end{eqnarray}$$
+
+\\( h \\) gets capped
+
+\\[ h = \ln \bigg[\frac{\int_0^{g^{-1}(C_p)} dy \; e^{y} f_{Y_{\nu}} (y)}{\int_0^{\infty} dy \; f_{Y_{\nu}} (y)}\bigg] \\]
+
+so the integral in the numerator becomes finite. Market impact parameter that produces negative EV for the scalp when \\( Q > Q_0 \\) is now
+
+\\[ \lambda = \frac{1}{Q_0} \cdot \ln \bigg[\frac{\int_0^{g^{-1}(C_p)} dy \; e^{y} f_{Y_{\nu}} (y)}{ [1-F_{Y_{\nu}}(0)] - (1+C_p) \cdot [1-F_{Y_{\nu}} (g^{-1}(C_p))] }\bigg] \\]
+
+which reduces to our original expression when taking \\( C_p \to \infty \\). We can use numerical integration for the numerator to obtain our parameter value.
+
+
+### Implementation
+
+It is likely easier to target a percentage of our open interest caps vs a nominal open interest amount. Normalize with respect to our open interest cap, \\( Q_{max} \\), such that
+
+\\[ \tilde{\lambda} \equiv \lambda \cdot Q_{max} \\]
+
+\\[ q \equiv \frac{Q}{Q_{max}} \\]
+
+Market impact can then be calculated based off of how much of the allowed open interest the queued open interest will ultimately occupy upon settlement:
+
+\\[ e^{\tilde{\lambda} \cdot q} \\]
+
+with slippage curves we can compare to other AMMs over the open interest range we support, \\( q \in [0, 1] \\).
+
+
+### Gaussian Case
+
+It is still instructive, however, to examine the Gaussian case, which gives a simple closed form solution.
 
 
 ## Considerations
