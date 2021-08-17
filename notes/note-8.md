@@ -174,13 +174,21 @@ Our goal is to have the market impact term \\( e^{\lambda Q} \\) produce bid and
 
 To accomplish this, we suggest setting the market impact parameter to
 
-\\[ \lambda = \frac{1}{Q_0} \cdot \ln \bigg[\frac{\int_0^{g^{-1}(C_p)} dy \; e^{y} f_{Y_{\nu}} (y)}{ [1-F_{Y_{\nu}}(0)] - (1+C_p) \cdot [1-F_{Y_{\nu}} (g^{-1}(C_p))] }\bigg] \\]
+\\[ \lambda = \frac{1}{Q_0} \cdot \ln \bigg[\frac{\int_0^{g^{-1}(Q_0, C_p)} dy \; e^{y} f_{Y_{\nu}} (y)}{ [1-F_{Y_{\nu}}(0)] - (1+C_p) \cdot [1-F_{Y_{\nu}} (g^{-1}(Q_0, C_p))] }\bigg] \\]
 
 such that the expected value (EV) of the PnL for the scalp trade in the case when spot exceeds the spread over the next \\( \nu \\) blocks is less than or equal to zero for \\( Q \geq Q_0 \\).
 
 \\( f_{Y_{\nu}} \\) and \\( F_{Y_{\nu}} \\) are, respectively, the PDF and CDF of \\( Y_{\nu} \sim S(a, b, \mu \nu - 2\delta, \sigma \cdot (\frac{\nu}{a})^{1/a}) \\).
 
 \\( C_p \\) is the payoff cap imposed on the position to [limit the damage](note-7) associated with the tails.
+
+\\( g \\) is the uncapped payoff function for the contract
+
+\\[ g(Q, y) = e^{y - \lambda Q} - 1 \\]
+
+with inverse
+
+\\[ g^{-1}(Q, c) = \ln(1 + c) + \lambda Q \\]
 
 Choices for \\( Q_0 \\) can be framed with respect to a percentage of our market's open interest cap, \\( Q_{max} \\). Governance must choose a value for \\( Q_0 \\) that balances EV risks from the scalp trade vs platform usability risks due to severe slippage. We give suggested values with concrete numbers below.
 
@@ -227,23 +235,27 @@ with capped payoff function for the position given by
 
 \\[ \mathrm{PnL}(Q, t+\nu) = Q \cdot \min \bigg( g(Q, Y_{\nu}), C_p \bigg) \\]
 
+and inverse
+
+\\[ g^{-1}(Q, c) \equiv \ln(1 + c) + \lambda Q \\]
+
 assuming \\( C_p \gg 2 \delta \\). Returning to the conditional expected value and proceeding through the same exercise changes our expression to
 
 $$\begin{eqnarray}
 \mathbb{E} \bigg[ \mathrm{PnL} (Q, t+\nu) | \mathrm{PnL}_{\lambda = 0} > 0 \bigg] \\
 \approx \mathbb{E} \bigg[ Q \cdot \min \bigg( g(Q, Y_{\nu}), C_p \bigg) | Y_{\nu} > 0 \bigg] \\
-= \frac{Q \cdot [\int_0^{g^{-1}(C_p)} dy \; f_{Y_{\nu}} (y) \cdot g(Q, y) + C_p \int_{g^{-1}(C_p)}^{\infty} dy \; f_{Y_{\nu}} (y) ] }{\int_0^{\infty} dy \; f_{Y_{\nu}} (y)} \\
-= \frac{Q}{1-F_{Y_{\nu}} (0)} \cdot \bigg[ \int_0^{g^{-1}(C_p)} dy \; f_{Y_{\nu}} (y) \cdot (e^{y - \lambda Q} - 1) + C_p \cdot [1 - F_{Y_{\nu}} (g^{-1}(C_p))] \bigg] \\
-= Q \cdot \bigg[ e^{h - \lambda Q} - 1 + (1+C_p) \cdot \frac{1 - F_{Y_{\nu}} (g^{-1}(C_p))}{1-F_{Y_{\nu}} (0)} \bigg]
+= \frac{Q \cdot [\int_0^{g^{-1}(Q, C_p)} dy \; f_{Y_{\nu}} (y) \cdot g(Q, y) + C_p \int_{g^{-1}(Q, C_p)}^{\infty} dy \; f_{Y_{\nu}} (y) ] }{\int_0^{\infty} dy \; f_{Y_{\nu}} (y)} \\
+= \frac{Q}{1-F_{Y_{\nu}} (0)} \cdot \bigg[ \int_0^{g^{-1}(Q, C_p)} dy \; f_{Y_{\nu}} (y) \cdot (e^{y - \lambda Q} - 1) + C_p \cdot [1 - F_{Y_{\nu}} (g^{-1}(Q, C_p))] \bigg] \\
+= Q \cdot \bigg[ e^{h - \lambda Q} - 1 + (1+C_p) \cdot \frac{1 - F_{Y_{\nu}} (g^{-1}(Q, C_p))}{1-F_{Y_{\nu}} (0)} \bigg]
 \end{eqnarray}$$
 
 \\( h \\) gets capped
 
-\\[ h = \ln \bigg[\frac{\int_0^{g^{-1}(C_p)} dy \; e^{y} f_{Y_{\nu}} (y)}{\int_0^{\infty} dy \; f_{Y_{\nu}} (y)}\bigg] \\]
+\\[ h = \ln \bigg[\frac{\int_0^{g^{-1}(Q, C_p)} dy \; e^{y} f_{Y_{\nu}} (y)}{\int_0^{\infty} dy \; f_{Y_{\nu}} (y)}\bigg] \\]
 
 and the integral in the numerator becomes finite. The market impact parameter that produces negative EV for the scalp when \\( Q > Q_0 \\) is now
 
-\\[ \lambda = \frac{1}{Q_0} \cdot \ln \bigg[\frac{\int_0^{g^{-1}(C_p)} dy \; e^{y} f_{Y_{\nu}} (y)}{ [1-F_{Y_{\nu}}(0)] - (1+C_p) \cdot [1-F_{Y_{\nu}} (g^{-1}(C_p))] }\bigg] \\]
+\\[ \lambda = \frac{1}{Q_0} \cdot \ln \bigg[\frac{\int_0^{g^{-1}(Q, C_p)} dy \; e^{y} f_{Y_{\nu}} (y)}{ [1-F_{Y_{\nu}}(0)] - (1+C_p) \cdot [1-F_{Y_{\nu}} (g^{-1}(Q, C_p))] }\bigg] \\]
 
 which reduces to our original expression when \\( C_p \to \infty \\). We can use numerical integration for the numerator to obtain our parameter value.
 
@@ -275,11 +287,17 @@ Integrals simplify to
 
 where \\( \Phi \\) is the CDF of the standard normal \\( \mathcal{N}(0, 1) \\). Market impact parameter will simplify to
 
-\\[ \lambda = \frac{1}{Q_0} \cdot \bigg[ \mu - 2\delta + \frac{\sigma^2 \nu}{2} + \ln \rho \bigg] \\]
+\\[ \lambda = \frac{1}{Q_0} \cdot \bigg[ \mu\nu - 2\delta + \frac{\sigma^2 \nu}{2} + \ln \rho \bigg] \\]
 
 where
 
 \\[ \rho \equiv \frac{1 - \Phi \bigg( \frac{2\delta - \mu}{\sigma \sqrt{\nu}} - \sigma \sqrt{\nu} \bigg)}{1 - \Phi \bigg(\frac{2\delta-\mu}{\sigma \sqrt{\nu}} \bigg)} \\]
+
+Note that for [Wiener process](https://en.wikipedia.org/wiki/Wiener_process), the expected value of the moment generating function is finite and known. The unconditioned form of our expression of interest reduces to
+
+\\[ \mathbb{E}[e^{\mu\nu - 2\delta + \sigma W_{\nu}}] = e^{\mu \nu - 2\delta + \frac{\sigma^2 \nu}{2}} \\]
+
+showing from a different angle where our terms in \\( \lambda \\), sans \\( \ln \rho \\), come from.
 
 
 ## Considerations
