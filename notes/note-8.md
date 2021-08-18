@@ -157,7 +157,7 @@ The value at risk due to this long scalp is then
 
 \\[ \mathrm{VaR}(\alpha, \nu) = Q \cdot \bigg[ e^{\mu \nu + \sigma \cdot (\frac{\nu}{a})^{1/a} F^{-1}_{ab}(1-\alpha) - 2\delta - \lambda Q } - 1 \bigg] \\]
 
-which is less than or equal to zero when
+which is equal to zero when
 
 \\[ \delta = \frac{1}{2} \bigg[ \mu \nu + \sigma \cdot \bigg( \frac{\nu}{a} \bigg)^{1/a} F^{-1}_{ab}(1-\alpha) \bigg] \\]
 
@@ -303,6 +303,12 @@ Note that for the [Wiener process](https://en.wikipedia.org/wiki/Wiener_process)
 \\[ \mathbb{E}[e^{\mu\nu - 2\delta + \sigma W_{\nu}}] = e^{\mu \nu - 2\delta + \frac{\sigma^2 \nu}{2}} \\]
 
 showing from a different angle where our terms in \\( \lambda \\), sans \\( \ln \rho \\), come from.
+
+Though the difference between \\( \lambda \\) values for log-normal vs log-stable increments is drastic, due to the tail condition we calibrate off of.
+
+![Image of Lambda Norm v Stable Plot](../assets/oip-1/twap_lag_lambda_norm_v_stable.png)
+
+At negative EV for the scalp trade above 2% of the open interest cap as our target for \\( Q_0 \\) (\\( q = 0.02 \\)), there's a ~25x difference between required \\( \lambda \\) values for log-normal and log-stable fits. Meaning, slippage needs to be 25x worse for the log-stable fit to accurately reflect the negative EV condition we want.
 
 
 ## Considerations
