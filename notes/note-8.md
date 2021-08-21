@@ -286,9 +286,9 @@ It is still instructive however to examine the Gaussian case (\\( a=2 \\)), whic
 
 Integrals simplify to
 
-\\[ \int_0^{\infty} dy \; f_{Y_{\nu}}(y) = 1 - \Phi \bigg(\frac{2\delta-\mu}{\sigma \sqrt{\nu}} \bigg) \\]
+\\[ \int_0^{\infty} dy \; f_{Y_{\nu}}(y) = 1 - \Phi \bigg(\frac{2\delta-\mu \nu}{\sigma \sqrt{\nu}} \bigg) \\]
 
-\\[ \int_0^{\infty} dy \; e^{y} f_{Y_{\nu}}(y) = e^{\mu - 2\delta + \frac{\sigma^2 \nu}{2}} \cdot \bigg[ 1 - \Phi \bigg( \frac{2\delta - \mu}{\sigma \sqrt{\nu}} - \sigma \sqrt{\nu} \bigg) \bigg] \\]
+\\[ \int_0^{\infty} dy \; e^{y} f_{Y_{\nu}}(y) = e^{\mu \nu - 2\delta + \frac{\sigma^2 \nu}{2}} \cdot \bigg[ 1 - \Phi \bigg( \frac{2\delta - \mu \nu}{\sigma \sqrt{\nu}} - \sigma \sqrt{\nu} \bigg) \bigg] \\]
 
 where \\( \Phi \\) is the CDF of the standard normal \\( \mathcal{N}(0, 1) \\). Market impact parameter will simplify to
 
@@ -296,7 +296,7 @@ where \\( \Phi \\) is the CDF of the standard normal \\( \mathcal{N}(0, 1) \\). 
 
 where
 
-\\[ \rho \equiv \frac{1 - \Phi \bigg( \frac{2\delta - \mu}{\sigma \sqrt{\nu}} - \sigma \sqrt{\nu} \bigg)}{1 - \Phi \bigg(\frac{2\delta-\mu}{\sigma \sqrt{\nu}} \bigg)} \\]
+\\[ \rho \equiv \frac{1 - \Phi \bigg( \frac{2\delta - \mu \nu}{\sigma \sqrt{\nu}} - \sigma \sqrt{\nu} \bigg)}{1 - \Phi \bigg(\frac{2\delta-\mu \nu}{\sigma \sqrt{\nu}} \bigg)} \\]
 
 Note that for the [Wiener process](https://en.wikipedia.org/wiki/Wiener_process), the moment generating function is finite and known. The unconditioned form of our expression of interest reduces to
 
