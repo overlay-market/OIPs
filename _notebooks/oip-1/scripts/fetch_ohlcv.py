@@ -3,7 +3,7 @@ import ccxt
 import numpy as np
 
 exchange = ccxt.ftx()
-FILE = 'ethusd_01012020_08012020.csv'
+FILE = 'ethusd_01012020_08232021.csv'
 
 # Python
 
@@ -14,8 +14,8 @@ async def main():
         # alternatively, fetch from a certain starting datetime
         since = exchange.parse8601('2020-01-01T00:00:00Z')
         # alternatively, fetch until current time
-        # until = exchange.milliseconds()
-        until = exchange.parse8601('2020-08-01T00:00:00Z')
+        until = exchange.milliseconds()
+        # until = exchange.parse8601('2020-08-01T00:00:00Z')
         with open(FILE, 'wb') as f:
             while since < until:
                 print('since', since)
