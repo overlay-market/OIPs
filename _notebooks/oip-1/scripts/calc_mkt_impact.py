@@ -14,7 +14,7 @@ CP = 4  # 5x payoff cap
 # uncertainties
 ALPHAS = np.array([0.01, 0.025, 0.05, 0.075, 0.1])
 # target OI threshold beyond which scalp trade is negative EV
-Q0S = np.array([0.01, 0.025, 0.05, 0.075, 0.1])
+Q0S = np.array([0.01, 0.02, 0.03, 0.04, 0.05, 0.06, 0.07, 0.08, 0.09, 0.1])
 
 
 def gaussian():
@@ -23,12 +23,11 @@ def gaussian():
 
 
 def rescale(dist: pystable.STABLE_DIST, t: float) -> pystable.STABLE_DIST:
+    mu = dist.contents.mu_1 * t
     if t > 1:
-        mu = dist.contents.mu_1 * t
         sigma = dist.contents.sigma * \
             (t/dist.contents.alpha)**(1/dist.contents.alpha)
     else:
-        mu = dist.contents.mu_1 / t
         sigma = dist.contents.sigma * \
             ((1/t)/dist.contents.alpha)**(-1/dist.contents.alpha)
 
@@ -72,6 +71,8 @@ def main():
     pystable.fit(dst, log_close, len(log_close))
     print(f"alpha: {dst.contents.alpha}, beta: {dst.contents.beta}, mu: {dst.contents.mu_1}, sigma: {dst.contents.sigma}")
     dst = rescale(dst, 1/T)
+    print("mu", dst.contents.mu_1)
+    print("sigma", dst.contents.sigma)
 
     # calc deltas
     deltas = delta(dst.contents.alpha, dst.contents.beta,
