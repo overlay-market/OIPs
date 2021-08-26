@@ -118,54 +118,6 @@ such that the value at risk to the system from a trader entering into the TWAP s
 where \\( L\_{\tau} \sim S(a, b, 0, (\frac{\tau}{a})^{1/a}) \\).
 
 
-### Concrete Numbers
-
-We use [`pystable`](https://github.com/overlay-market/pystable) to fit 120 days of 10 minute data on the [USDC-WETH SushiSwap pool](https://analytics.sushi.com/pairs/0x397ff1542f962076d0bfe58ea045ffa2d347aca0), from timestamp `1618868463` (April 19, 2021) to `1626472862` (July 16, 2021).
-
-Per-block parameter values obtained are `a = 1.4029884974837792`, `b = -0.008110504596997956`, `mu = -1.4909873693826263e-07`, `sig = 0.00012610528857189945`.
-
-For 99% confidence (`alpha = 0.01`), we have `delta = 0.006551445624571194`. This is a spread of about 65 bps on either side of the TWAP (1.3% total).
-
-Console logs to replicate above are in [this gist](https://gist.github.com/mikeyrf/b8202b738b2f594f87e81cdc3bd5a41c#file-spread-calc-md).
-
-
-### Derivation
-
-Formally, the maximum attainable profit after \\( \nu \\) blocks, \\( \mathrm{VaR}(\alpha, \nu) \\), from the long scalp trade is given by
-
-$$\begin{eqnarray}
-1-\alpha &=& \mathbb{P}[ \mathrm{PnL}(Q, t+\nu) \leq \mathrm{VaR}(\alpha, \nu) | \mathcal{F}_{t-\nu} ] \\
-&\approx& \mathbb{P}\bigg[ Q \cdot \bigg( \frac{P(t)}{P(t-\nu)} e^{-2\delta - \lambda Q} - 1 \bigg) \leq \mathrm{VaR}(\alpha, \nu) | \mathcal{F}_{t-\nu} \bigg] \\
-&=& \mathbb{P}\bigg[ Q \cdot \bigg( e^{\mu \nu + \sigma L_{\nu} -2\delta - \lambda Q} - 1 \bigg) \leq \mathrm{VaR}(\alpha, \nu) \bigg]
-\end{eqnarray}$$
-
-assuming confidence \\( 1-\alpha \\), where \\( Q \\) is the long open interest taken out by the trader.
-
-Our market contracts can only rely on stale information from the oracle feed before the current time \\( t \\): \\( \mathcal{F}_{t-\nu} \\). We've made simplifying assumptions to reflect this by having our entry and exit TWAP values
-
-- \\( \mathrm{TWAP}(t, t+\nu) \sim \mathrm{TWAP}(t, t+\Delta) \sim P(t) \\)
-- \\( \mathrm{TWAP}(t-\nu, t) \sim P(t-\nu) \\)
-
-take similar values to the spot price \\( \nu \\) blocks in the past. To understand why, reference our first plot in [responsive spreads](#responsive-spreads):
-
-- Jump occurs at t=195250
-- Spot at t=195250 jumps from 1985 to ~2000
-- 10m TWAP at t=195250 remains in line with spot 10m prior (before jump)
-- 10m TWAP at t=195290 (40 blocks or 10m after jump) finally catches up with the spot value at t=195250
-
-The value at risk due to this long scalp is then
-
-\\[ \mathrm{VaR}(\alpha, \nu) = Q \cdot \bigg[ e^{\mu \nu + \sigma \cdot (\frac{\nu}{a})^{1/a} F^{-1}_{ab}(1-\alpha) - 2\delta - \lambda Q } - 1 \bigg] \\]
-
-which is equal to zero when
-
-\\[ \delta = \frac{1}{2} \bigg[ \mu \nu + \sigma \cdot \bigg( \frac{\nu}{a} \bigg)^{1/a} F^{-1}_{ab}(1-\alpha) \bigg] \\]
-
-regardless of market impact on entry, \\( \lambda Q \\).
-
-Setting our static spread \\( \delta \\) to this expression implies that, with confidence \\( 1-\alpha \\), the value at risk to the system after the next \\( \nu \\) blocks from front-running the shorter TWAP will be at most zero, once the TWAP catches up to spot.
-
-
 ## Calibrating \\( \lambda \\)
 
 \\( \lambda Q \\), as an additional market impact term, offers protection against large jumps in spot that *exceed* our expectations used in calibrating \\( \delta \\). Furthermore, imposing significant market impact (i.e. slippage) on large trades guards the system against traders who have more information than what is currently reflected in the market's current spot price.
@@ -192,11 +144,96 @@ with inverse
 
 Choices for \\( Q_0 \\) can be framed with respect to a percentage of our market's open interest cap, \\( Q_{max} \\). Governance must choose a value for \\( Q_0 \\) that balances EV risks from the scalp trade vs platform usability risks due to severe slippage. We give suggested values with concrete numbers below.
 
+### Implementation
 
-### Concrete Numbers
+It is likely easier to target a percentage of our open interest caps vs a nominal open interest amount. Normalize with respect to our open interest cap, \\( Q_{max} \\), such that
+
+\\[ \tilde{\lambda} \equiv \lambda \cdot Q_{max} \\]
+
+\\[ q \equiv \frac{Q}{Q_{max}} \\]
+
+Market impact can then be calculated based off of how much of the allowed open interest the queued open interest will ultimately occupy upon settlement:
+
+\\[ e^{\tilde{\lambda} \cdot q} \\]
+
+with slippage curves we can compare to other AMMs over the open interest range we support, \\( q \in [0, 1] \\).
 
 
-### Derivation
+## Concrete Numbers
+
+### USDC-WETH SushiSwap Pool
+
+We use [`pystable`](https://github.com/overlay-market/pystable) to fit 120 days of 10 minute data on the [USDC-WETH SushiSwap pool](https://analytics.sushi.com/pairs/0x397ff1542f962076d0bfe58ea045ffa2d347aca0), from timestamp `1618868463` (April 19, 2021) to `1626472862` (July 16, 2021).
+
+Assuming 15 second blocks, per-block parameter values obtained are `a = 1.4029884974837792`, `b = -0.008110504596997956`, `mu = -1.4909873693826263e-07`, `sig = 0.00012610528857189945`.
+
+For 99% confidence (`alpha = 0.01`), we have `delta = 0.006551445624571194`. This is a spread of about 65 bps on either side of the TWAP (1.3% total).
+
+Taking the cap to be \\( C_p = 4 \\) for a max PnL of 400% (5x payoff) and requiring negative EV on the scalp for position sizes greater than \\( q_0 = 0.035 \\) (3.5% of the OI cap), yields a normalized `lambda = 0.9388869011391833`. This amounts to about 0.94% slippage for every 1% of OI cap taken with smaller position sizes.
+
+Over the entire range of the cap \\( q \in [0, 1] \\),
+
+
+
+slippage looks slightly better than Uniswap V2. For more volatile feeds, this won't necessarily be the case.
+
+
+### ETH/USD FTX Spot Market
+
+The prior TWAP fits can be slightly misleading since they are taken with respect to 1h TWAP data, which won't be the same as fits to spot.
+
+We use `pystable` again to fit 600 days of 1 minute data on the [ETH/USD spot market](https://ftx.com/en/trade/ETH/USD), from timestamp `1577836800` (December 31, 2019) to `1629729120` (August 8, 2021).
+
+Assuming 15 second blocks, per-block parameter values obtained are `a = 1.3323780695989331`, `b = 0.028298587221832504`, `mu = 5.439488998979958e-06`, `sig = 0.00023820339727490902`.
+
+For 99% confidence (`alpha = 0.01`), we have a much larger `delta = 0.01779753781516955`. At the 95% confidence level (`alpha = 0.05`), we have a tradeable value of `delta = 0.005729735572775284`. The latter is a spread of about 57 bps on either side of the TWAP (1.14% total).
+
+
+### Replication
+
+Console logs to replicate above are in [this gist](https://gist.github.com/mikeyrf/b8202b738b2f594f87e81cdc3bd5a41c#file-spread-calc-md).
+
+Script to fetch SushiSwap pool data is [here](https://github.com/overlay-market/overlay-risk/blob/main/scripts/influx_sushi.py), with TWAP calculation in this [notebook](https://github.com/overlay-market/OIPs/blob/master/_notebooks/oip-1/note-7.ipynb). Script to fetch FTX data is [here](https://github.com/overlay-market/OIPs/blob/master/_notebooks/oip-1/scripts/fetch_ohlcv.py).
+
+
+## Deriving \\( \delta \\)
+
+Formally, the maximum attainable profit after \\( \nu \\) blocks, \\( \mathrm{VaR}(\alpha, \nu) \\), from the long scalp trade is given by
+
+$$\begin{eqnarray}
+1-\alpha &=& \mathbb{P}[ \mathrm{PnL}(Q, t+\nu) \leq \mathrm{VaR}(\alpha, \nu) | \mathcal{F}_{t-\nu} ] \\
+&\approx& \mathbb{P}\bigg[ Q \cdot \bigg( \frac{P(t)}{P(t-\nu)} e^{-2\delta - \lambda Q} - 1 \bigg) \leq \mathrm{VaR}(\alpha, \nu) | \mathcal{F}_{t-\nu} \bigg] \\
+&=& \mathbb{P}\bigg[ Q \cdot \bigg( e^{\mu \nu + \sigma L_{\nu} -2\delta - \lambda Q} - 1 \bigg) \leq \mathrm{VaR}(\alpha, \nu) \bigg]
+\end{eqnarray}$$
+
+assuming confidence \\( 1-\alpha \\), where \\( Q \\) is the long open interest taken out by the trader. Our market contracts can only rely on stale information from the oracle feed before the current time \\( t \\): \\( \mathcal{F}_{t-\nu} \\).
+
+We've made simplifying assumptions by having our entry and exit TWAP values
+
+- \\( \mathrm{TWAP}(t, t+\nu) \sim \mathrm{TWAP}(t, t+\Delta) \sim P(t) \\)
+- \\( \mathrm{TWAP}(t-\nu, t) \sim P(t-\nu) \\)
+
+take similar values to the spot price \\( \nu \\) blocks in the past. To understand why, reference our first plot in [responsive spreads](#responsive-spreads):
+
+- Jump occurs at t=195250
+- Spot at t=195250 jumps from 1985 to ~2000
+- 10m TWAP at t=195250 remains in line with spot 10m prior (before jump)
+- 10m TWAP at t=195290 (40 blocks or 10m after jump) finally catches up with the spot value at t=195250
+
+The value at risk due to this long scalp is then
+
+\\[ \mathrm{VaR}(\alpha, \nu) = Q \cdot \bigg[ e^{\mu \nu + \sigma \cdot (\frac{\nu}{a})^{1/a} F^{-1}_{ab}(1-\alpha) - 2\delta - \lambda Q } - 1 \bigg] \\]
+
+which is equal to zero when
+
+\\[ \delta = \frac{1}{2} \bigg[ \mu \nu + \sigma \cdot \bigg( \frac{\nu}{a} \bigg)^{1/a} F^{-1}_{ab}(1-\alpha) \bigg] \\]
+
+regardless of market impact on entry, \\( \lambda Q \\).
+
+Setting our static spread \\( \delta \\) to this expression implies that, with confidence \\( 1-\alpha \\), the value at risk to the system after the next \\( \nu \\) blocks from front-running the shorter TWAP will be at most zero, once the TWAP catches up to spot.
+
+
+## Deriving \\( \lambda \\)
 
 We want to minimize the expected value of the trader's PnL from the scalp, assuming the PnL would be > 0 without imposing market impact on the trade (i.e. spot has spiked beyond the static spread). Formally, the expected value conditioned on the scalp trade being profitable without market impact is given by
 
@@ -263,21 +300,6 @@ and the integral in the numerator becomes finite. The market impact parameter th
 \\[ \lambda = \frac{1}{Q_0} \cdot \ln \bigg[\frac{\int_0^{g^{-1}(C_p)} dy \; e^{y} f_{Y_{\nu}} (y)}{ [1-F_{Y_{\nu}}(0)] - (1+C_p) \cdot [1-F_{Y_{\nu}} (g^{-1}(C_p))] }\bigg] \\]
 
 which reduces to our original expression when \\( C_p \to \infty \\). We can use numerical integration for the numerator to obtain our parameter value.
-
-
-### Implementation
-
-It is likely easier to target a percentage of our open interest caps vs a nominal open interest amount. Normalize with respect to our open interest cap, \\( Q_{max} \\), such that
-
-\\[ \tilde{\lambda} \equiv \lambda \cdot Q_{max} \\]
-
-\\[ q \equiv \frac{Q}{Q_{max}} \\]
-
-Market impact can then be calculated based off of how much of the allowed open interest the queued open interest will ultimately occupy upon settlement:
-
-\\[ e^{\tilde{\lambda} \cdot q} \\]
-
-with slippage curves we can compare to other AMMs over the open interest range we support, \\( q \in [0, 1] \\).
 
 
 ### Gaussian Case
