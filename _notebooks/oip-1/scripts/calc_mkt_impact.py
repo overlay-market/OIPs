@@ -71,8 +71,6 @@ def main():
     pystable.fit(dst, log_close, len(log_close))
     print(f"alpha: {dst.contents.alpha}, beta: {dst.contents.beta}, mu: {dst.contents.mu_1}, sigma: {dst.contents.sigma}")
     dst = rescale(dst, 1/T)
-    print("mu", dst.contents.mu_1)
-    print("sigma", dst.contents.sigma)
 
     # calc deltas
     deltas = delta(dst.contents.alpha, dst.contents.beta,
@@ -80,7 +78,7 @@ def main():
     df_deltas = pd.DataFrame(data=[ALPHAS, deltas]).T
     df_deltas.columns = ['alpha', 'delta']
     print('deltas:', df_deltas)
-    df_deltas.to_csv(f"csv/{FILENAME}-deltas.csv", index=False)
+    df_deltas.to_csv(f"csv/metrics/{FILENAME}-deltas.csv", index=False)
 
     # calc lambda (mkt impact)
     g_inv = np.log(1+CP)
@@ -99,7 +97,7 @@ def main():
         index=[f"alpha={alpha}" for alpha in ALPHAS]
     )
     print('lambdas:', df_ls)
-    df_ls.to_csv(f"csv/{FILENAME}-lambdas.csv")
+    df_ls.to_csv(f"csv/metrics/{FILENAME}-lambdas.csv")
 
 
 if __name__ == '__main__':
