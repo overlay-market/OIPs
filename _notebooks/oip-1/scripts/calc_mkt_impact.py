@@ -64,8 +64,8 @@ def y(dist: pystable.STABLE_DIST,
 
 def main():
     df = pd.read_csv(FILEPATH)
-    close = df['c'].to_numpy()
-    log_close = [np.log(close[i]/close[i-1]) for i in range(1, len(close))]
+    p = df['c'].to_numpy() if 'c' in df else df['twap']
+    log_close = [np.log(p[i]/p[i-1]) for i in range(1, len(p))]
 
     dst = gaussian()  # use gaussian as init dist to fit from
     pystable.fit(dst, log_close, len(log_close))
