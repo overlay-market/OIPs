@@ -5,7 +5,7 @@ import numpy as np
 from scipy import integrate
 
 
-FILENAME = "ethusd_01012020_08232021"
+FILENAME = "yfiusd_07252020_08262021"
 FILEPATH = f"csv/{FILENAME}.csv"  # datafile
 T = 4  # 1m candle size on datafile
 V = 40  # 10 m shorter TWAP
@@ -45,7 +45,12 @@ def delta(a: float, b: float, mu: float,
     d = pystable.create(alpha=a, beta=b, mu=0.0, sigma=1.0, parameterization=1)
     qs = pystable.q(d, list(1-alphas), len(alphas))
     qs = np.array(qs)
-    return (mu * v + sig * ((v/a)**(1/a)) * qs) / 2.0
+
+    delta_long = (mu * v + sig * ((v/a)**(1/a)) * qs) / 2.0
+    delta_short = (sig * ((v/a)**(1/a)) * qs - mu*v - sig*(v/a)**(1/a)) / 2.0
+
+    # choose the max bw the 2
+    return np.maximum(np.maximum(delta_long, delta_short), np.zeros(len(qs)))
 
 
 def y(dist: pystable.STABLE_DIST,
@@ -62,15 +67,42 @@ def y(dist: pystable.STABLE_DIST,
     )
 
 
+def lmbda(dist: pystable.STABLE_DIST,
+          delta: float, v: float, g_inv: float, q0s: np.ndarray) -> np.ndarray:
+    dst_y = y(dist, delta, v)
+    def integrand(y): return pystable.pdf(dst_y, [y], 1)[0] * np.exp(y)
+
+    # calc long lambda*q
+    numerator, _ = integrate.quad(integrand, 0, g_inv)
+    denominator = 1-pystable.cdf(dst_y, [0], 1)[0] \
+        - (1+CP)*(1-pystable.cdf(dst_y, [g_inv], 1)[0])
+    h_long = np.log(numerator/denominator)
+
+    # calc short lambda*q
+    numerator, _ = integrate.quad(integrand, -np.inf, 0)
+    denominator = pystable.cdf(dst_y, [0], 1)[0]
+    h_short = np.log(2-numerator/denominator)
+
+    # choose the max bw the 2
+    return np.maximum(h_long / q0s, h_short / q0s)
+
+
 def main():
+    print(f'Analyzing file {FILENAME}')
     df = pd.read_csv(FILEPATH)
     p = df['c'].to_numpy() if 'c' in df else df['twap']
     log_close = [np.log(p[i]/p[i-1]) for i in range(1, len(p))]
 
     dst = gaussian()  # use gaussian as init dist to fit from
     pystable.fit(dst, log_close, len(log_close))
-    print(f"alpha: {dst.contents.alpha}, beta: {dst.contents.beta}, mu: {dst.contents.mu_1}, sigma: {dst.contents.sigma}")
+    print(
+        f"fit ... alpha: {dst.contents.alpha}, beta: {dst.contents.beta}, mu: {dst.contents.mu_1}, sigma: {dst.contents.sigma}"
+    )
+
     dst = rescale(dst, 1/T)
+    print(
+        f"rescaled ... alpha: {dst.contents.alpha}, beta: {dst.contents.beta}, mu: {dst.contents.mu_1}, sigma: {dst.contents.sigma}"
+    )
 
     # calc deltas
     deltas = delta(dst.contents.alpha, dst.contents.beta,
@@ -84,12 +116,8 @@ def main():
     g_inv = np.log(1+CP)
     ls = []
     for dlt in deltas:
-        dst_y = y(dst, dlt, V)
-        def integrand(y): return pystable.pdf(dst_y, [y], 1)[0] * np.exp(y)
-        numerator, _ = integrate.quad(integrand, 0, g_inv)
-        denominator = 1-pystable.cdf(dst_y, [0], 1)[0] \
-            - (1+CP)*(1-pystable.cdf(dst_y, [g_inv], 1)[0])
-        ls.append([np.log(numerator/denominator)/q for q in Q0S])
+        lambdas = lmbda(dst, dlt, V, g_inv, Q0S)
+        ls.append(lambdas)
 
     df_ls = pd.DataFrame(
         data=ls,
