@@ -171,12 +171,6 @@ For 99% confidence (`alpha = 0.01`), we have `delta = 0.006551445624571194`. Thi
 
 Taking the cap to be \\( C_p = 4 \\) for a max PnL of 400% (5x payoff) and requiring negative EV on the scalp for position sizes greater than \\( q_0 = 0.035 \\) (3.5% of the OI cap), yields a normalized `lambda = 0.9388869011391833`. This amounts to about 0.94% slippage for every 1% of OI cap taken with smaller position sizes.
 
-Over the entire range of the cap \\( q \in [0, 1] \\),
-
-
-
-slippage looks slightly better than Uniswap V2. For more volatile feeds, this won't necessarily be the case.
-
 
 ### ETH/USD FTX Spot Market
 
@@ -187,6 +181,41 @@ We use `pystable` again to fit 600 days of 1 minute data on the [ETH/USD spot ma
 Assuming 15 second blocks, per-block parameter values obtained are `a = 1.3323780695989331`, `b = 0.028298587221832504`, `mu = 5.439488998979958e-06`, `sig = 0.00023820339727490902`.
 
 For 99% confidence (`alpha = 0.01`), we have a much larger `delta = 0.01779753781516955`. At the 95% confidence level (`alpha = 0.05`), we have a tradeable value of `delta = 0.005729735572775284`. The latter is a spread of about 57 bps on either side of the TWAP (1.14% total).
+
+The following table provides a list of \\( \delta \\) values for different confidence levels \\( \alpha \\)
+
+| \\(\alpha \\) | \\(\delta \\) |
+| --- | ----- |
+| 0.01 | 0.0178 |
+| 0.025 | 0.00925 |
+| 0.05 | 0.00573 |
+| 0.075 | 0.00434 |
+| 0.1 | 0.00354 |
+
+Similarly, for various \\( (\alpha, q_0) \\) combinations, we have \\( \tilde{\lambda} \\) values
+
+| \\( \alpha, q_0 \\) | 0.01 | 0.02 | 0.03 | 0.04 | 0.05 | 0.06 | 0.07 |
+| 0.01 | 10.248 | 5.124 | 3.416 | 2.562 | 2.050 | 1.708 | 1.464 |
+| 0.025 | 5.237 | 2.618 | 1.746 | 1.309 | 1.047 | 0.873 | 0.748 |
+| 0.05 | 3.135 | 1.568 | 1.045 | 0.784 | 0.627 | 0.523 | 0.448 |
+| 0.075 | 2.325 | 1.162 | 0.775 | 0.581 | 0.465 | 0.387 | 0.332 |
+| 0.10 | 1.885 | 0.942 | 0.628 | 0.471 | 0.377 | 0.314 | 0.269 |
+
+We can compare the expected amount of the OI cap we lose to traders versus the typical position size the trader takes. Plotting \\( \alpha \cdot \mathbb{E}[ \mathrm{PnL} \| \mathrm{PnL}_{\lambda = 0} > 0 ] \\) in the range where the trader expects +EV, \\( q \in [0, q_0] \\),
+
+![Image of EV Comparison Plot](../assets/oip-1/twap_lag_ev.png)
+
+shows the more uncertainty we allow in \\( \alpha \\), the more we should expect to lose to scalpers.
+
+Choosing \\( q_0 = 0.05 \\) and \\( \alpha = 0.05 \\), yield tradeable values for our DAI-ETH market of \\( (\delta, \tilde{\lambda} ) = (0.00573, 0.627) \\). Static spread amounts to 57 bps. Slippage amounts to about 63 bps for every 1% of the OI cap.
+
+Comparing our slippage values when fiting FTX ETH/USD, UNI/USD, and YFI/USD prices vs Uniswap V2 slippage (\\( q = \frac{\delta x}{x} \\))
+
+![Image of Slippage Plot](../assets/oip-1/twap_lag_slippage.png)
+
+shows feeds with much heavier tails require far more slippage as protection. Our DAI-ETH fit beats out Uni V2 over the range of interest if our OI cap choice is close to the underlying liquidity in the spot pool.
+
+Backtesting against the last year of FTX historical data for ETH/USD, UNI/USD, YFI/USD, and ALCX/USD, one finds the protocol's loses to the scalp trader would be minimal with our bid/ask spread implementation. In fact, the trader often loses substantially, particularly on the short scalp (approximately -10% of OI cap over 1-1.5 years). Refer to the end of [this Jupyter notebook](https://github.com/overlay-market/OIPs/blob/master/_notebooks/oip-1/note-8.ipynb) for ETH/USD.
 
 
 ### Replication
@@ -299,7 +328,9 @@ and the integral in the numerator becomes finite. The market impact parameter th
 
 \\[ \lambda = \frac{1}{Q_0} \cdot \ln \bigg[\frac{\int_0^{g^{-1}(C_p)} dy \; e^{y} f_{Y_{\nu}} (y)}{ [1-F_{Y_{\nu}}(0)] - (1+C_p) \cdot [1-F_{Y_{\nu}} (g^{-1}(C_p))] }\bigg] \\]
 
-which reduces to our original expression when \\( C_p \to \infty \\). We can use numerical integration for the numerator to obtain our parameter value.
+which reduces to our original expression when \\( C_p \to \infty \\). Note that \\( 1 - F_{Y\_{\nu}}(0) = \alpha \\).
+
+We can use numerical integration for the numerator to obtain our parameter value.
 
 
 ### Gaussian Case
