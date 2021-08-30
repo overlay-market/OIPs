@@ -87,7 +87,7 @@ They have PnL
 
 \\[ \mathrm{PnL} \|_{2} (1) = kn \frac{n}{N+n} - kn \cdot \frac{2N + n}{N+n} \cdot r \\]
 
-which still has significant exposure on the short side to price fluctuations, \\( r \\). Profits for the parasitic funding trade are therefore not risk free and require the trader to move in and out of the market. They have exposure to price, given the parasite's short position size *increases* after funding occurs, increasing their exposure to the short leg of the trade.
+which still has significant exposure on the short side to price fluctuations, \\( r \\). Profits for the parasitic funding trade are therefore *not* risk free and require the trader to move in and out of the market. They have exposure to price, given the parasite's short position size *increases* after funding occurs, increasing their exposure to the short leg of the trade.
 
 
 ### Collateral Approach
@@ -129,11 +129,48 @@ resulting in a risk free profit
 
 \\[ \mathrm{PnL} \|_{2} (1) = kn \frac{n}{N+n} \\]
 
-without exposure to price fluctuations. Applying funding to *open interest* instead of collateral amounts saves us from this parasitic attack.
+without exposure to price fluctuations. Applying funding to *open interest* instead of collateral amounts then saves us from this parasitic attack.
 
 
 ## Concrete Numbers
 
-<!-- Besides example of losing money, also show diff in funding rate effects in OI vs collateral approach -->
+<!-- TODO: Besides example of losing money, also show diff in funding rate effects in OI vs collateral approach -->
+
+Assume \\( n = 1 \\) OVL, \\( N = 99 \\) OVL and that the feed jumps 20% such that \\( r = 0.20 \\). Take the funding rate to be \\( k = 0.0025 \\).
+
+Use the example above, where the first trader enters a long and the second trader enters both a long and a short.
+
+### OI Approach
+
+In taking the OI approach, trader 1's long open interest after one funding period is \\( \mathrm{OI}\_{l} \|_{1} (1) = n - kn \cdot \frac{n}{N+n} = 0.999975 \\) OVL. They pay 1% of the total funding payment for the period.
+
+Trader 2's long open interest after one funding period is \\( \mathrm{OI}\_{l} \|\_{2} (1) = N - kn \cdot \frac{N}{N+n} = 98.997525 \\) OVL. Their short open interest after one funding period is \\( \mathrm{OI}\_{s} \|\_{2} (1) = N + kn = 99.0025 \\) OVL. They pay 99% of the total funding payment, effectively shifting it to their position size on the short side.
+
+PnL for the first trader after the 20% jump in price is
+
+\\[ \mathrm{PnL} \|_{1} (1) = 0.999975 \cdot (1+0.20) - 1 = 0.19997 \; \mathrm{OVL} \\]
+
+PnL for the second trader, however, on the parasitic funding trade is
+
+\\[ \mathrm{PnL} \|_{2} (1) = 98.997525 \cdot (1 + 0.20) + 99.0025 \cdot (1 - 0.20) - 198 = -0.00097 \; \mathrm{OVL} \\]
+
+on a funding payment opportunity of \\( 0.0025 \\) OVL. What was assumed to be a sure gain of +0.0025 OVL, actually turned into a loss of -0.00097 OVL. Even a 1% gain in the feed (\\( r = 0.01 \\)) would result in a loss of -2.475e-05 OVL for trader 2.
+
+### Collateral Approach
+
+Contrast with the traditional collateral approach but applied to our system. After one funding period, trader 1 would pay 0.000025 from their collateral, still 1% of the total funding payment.
+
+Their PnL would change to
+
+\\[ \mathrm{PnL} \|_{1} (1) = 1.0 \cdot (1+0.20) - 1 - 0.000025 = 0.199975 \; \mathrm{OVL} \\]
+
+slightly higher than in the OI approach. Trader 2, however, makes risk free profit. They pay 0.002475 OVL in funding for their long but receive 0.0025 OVL in funding for their short, a net gain of 2.5e-05 OVL. This is simply trader 1's portion of the funding payment.
+
+Trader 2's PnL would change to
+
+\\[ \mathrm{PnL} \|_{2} (1) = 99 \cdot (1 + 0.20) + 99 \cdot (1 - 0.20) - 0.002475 + 0.0025 - 198 = 0.000025 \; \mathrm{OVL} \\]
+
+yielding risk free profit.
+
 
 ## Considerations
