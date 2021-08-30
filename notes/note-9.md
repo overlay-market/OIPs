@@ -26,21 +26,23 @@ However, the example shows that if we had taken the traditional approach to fund
 
 ### Background
 
-Assume two traders. The first goes long with position size \\( n \\). The second goes *both* long and short with size \\( N \\). The second trader chooses size \\( N \gg n \\), to try to siphon off funding payments that would have otherwise been used as incentive for a true short.
+The simple but illustrative example of the parasitic funding trade is as follows.
 
-Imbalance in open interest is then initially at \\( t=0 \\)
+Assume there are two traders. The first goes long with position size \\( n \\). The second goes *both* long and short each with size \\( N \\). The second trader chooses size \\( N \gg n \\), to try to siphon off funding payments that would have otherwise been used as incentive for a true short.
+
+Imbalance in open interest is then initially
 
 \\[ \mathrm{OI}\_{imb} (0) = n \\]
 
-since \\( \mathrm{OI}\_{l} (0) = N+n \\) and \\( \mathrm{OI}\_{s} (0) = N \\).
+at \\( t=0 \\), since \\( \mathrm{OI}\_{l} (0) = N+n \\) and \\( \mathrm{OI}\_{s} (0) = N \\).
 
 When the next funding period passes at \\( t=1 \\), the long side transfers \\( k n \\) in open interest to the short side. The imbalance reduces to
 
 \\[ \mathrm{OI}\_{imb} (1) = n \cdot (1-2k) \\]
 
-with aggregates \\( \mathrm{OI}\_{l} (1) = N+n - kn \\) and \\( \mathrm{OI}\_{s} (1) = N + kn \\).
+with aggregate open interest values, \\( \mathrm{OI}\_{l} (1) = N+n - kn \\) and \\( \mathrm{OI}\_{s} (1) = N + kn \\), for each side. Each trader pays a pro-rata share of funding from their stakes in the long side of the market.
 
-Each trader pays a pro-rata share of funding. Trader 1's long position size becomes
+Trader 1's long position size becomes
 
 \\[ \mathrm{OI}\_{l} \|_{1} (1) = \frac{n}{N+n} \cdot (N+n-kn) \\]
 
@@ -57,4 +59,4 @@ Assume after one funding period, the price feed has changed by \\( r \\) percent
 
 ## Approach to Funding
 
-Usually, funding payments are paid directly to a trader's collateral amount *without* changing the size of their positions (OI). Given 
+Usually, funding payments are paid directly to/from a trader's collateral amount *without* changing the size of their positions -- the number of "contracts" they hold. Given
