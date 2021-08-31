@@ -134,8 +134,6 @@ without exposure to price fluctuations. Applying funding to *open interest* inst
 
 ## Concrete Numbers
 
-<!-- TODO: Besides example of losing money, also show diff in funding rate effects in OI vs collateral approach -->
-
 Assume \\( n = 1 \\) OVL, \\( N = 99 \\) OVL and that the feed jumps 20% such that \\( r = 0.20 \\). Take the funding rate to be \\( k = 0.0025 \\).
 
 Use the example above, where the first trader enters a long and the second trader enters both a long and a short.
@@ -174,3 +172,15 @@ yielding risk free profit.
 
 
 ## Considerations
+
+Traders have to be careful in adjusting to this unusual approach we're taking to funding. Your exposure to the trade, along with collateral amounts, increases/decreases with funding payments through our aggregate open interest quantities.
+
+Traders can see this through our expression for the value of their position
+
+\\[ \mathrm{V} (t) = \mathrm{OI} (t) - D \pm \mathrm{OI} (t) \cdot \bigg(\frac{P(t)}{P(0)} - 1 \bigg) \\]
+
+where \\( \mathrm{N}(t) \equiv \mathrm{OI} (t) - D \\) is the collateral we associate with the trader's position. \\( D = N \cdot (L - 1) \\) is their debt to the protocol for taking out leverage \\( L \\) on their initially deposited collateral \\( N \\).
+
+As funding is paid, \\( \mathrm{N}(t) \\) decreases alongside \\( \mathrm{OI} (t) \\) (\\(D\\) is static).
+
+How does this compare in terms of funding fees paid by the trader?
