@@ -28,7 +28,7 @@ However, the example shows that if we had taken the traditional approach to fund
 
 The simple but illustrative example of the parasitic funding trade is as follows.
 
-Assume there are two traders. The first goes long with position size \\( n \\). The second goes *both* long and short each with size \\( N \\). The second trader chooses size \\( N \gg n \\), to try to siphon off funding payments that would have otherwise been used as incentive for a true short.
+Assume there are two traders. The first goes long with position size \\( n \\). The second goes *both* long and short with size \\( N \\) on each side. The second trader chooses size \\( N \gg n \\), to try to siphon off funding payments that would have otherwise been used as incentive for a true short.
 
 Imbalance in open interest (OI) is then initially
 
@@ -61,9 +61,9 @@ Assume after one funding period, the price feed has changed by \\( r \\) percent
 
 Usually, funding payments are credited/debited as PnL to/from a trader's position *without* changing the size of the position -- the number of "contracts" they hold. Meaning collateral changes, but OI remains the same.
 
-For simplicity in the math and the smart contract implementation, we chose to instead also alter traders' position sizes on funding. This allowed us to effectively treat open interest as our "pooled" quantity for [bookkeeping in market contracts](note-5) -- we no longer would need to loop through all positions and update their associated collateral amounts on funding.
+For simplicity in the math and the smart contract implementation, we chose to also alter traders' position sizes on funding. This allowed us to effectively treat open interest as our "pooled" quantity for [bookkeeping in market contracts](note-5) -- we no longer would need to loop through all positions and update their associated collateral amounts on funding.
 
-The downside to our approach is traders will gain or lose exposure over time due to funding. In working through the parasitic funding attack, it's clear this is actually a feature and not a bug. If we don't change position size on funding given the way we use funding to incentivize OI balance vs traditional price convergence, we become susceptible to parasitic funding attacks.
+The downside to our approach is traders will gain or lose exposure over time due to funding. In working through the parasitic funding attack, it's clear this is actually a feature and not a bug. If we don't change position size given the way we use funding to incentivize OI balance vs traditional price convergence, we become susceptible to parasitic funding attacks.
 
 ### OI Approach
 
@@ -75,7 +75,7 @@ with PnL
 
 \\[ \mathrm{PnL} \|_{1} (1) = n \cdot (1 - \frac{kn}{N+n}) \cdot r - kn \cdot \frac{n}{N+n} \\]
 
-assuming 1x leverage for simplicity. The combined value of trader 2's positions is
+having assumed 1x leverage for simplicity. The combined value of trader 2's positions is
 
 $$\begin{eqnarray}
 \mathrm{V} |_{2} (1) &=& \frac{N}{N+n} \cdot (N+n-kn) \cdot (1 + r) + (N + kn) \cdot (1-r) \\
@@ -87,7 +87,7 @@ They have PnL
 
 \\[ \mathrm{PnL} \|_{2} (1) = kn \frac{n}{N+n} - kn \cdot \frac{2N + n}{N+n} \cdot r \\]
 
-which still has significant exposure on the short side to price fluctuations, \\( r \\). Profits for the parasitic funding trade are therefore *not* risk free and require the trader to move in and out of the market. They have exposure to price, given the parasite's short position size *increases* after funding occurs, increasing their exposure to the short leg of the trade.
+which still has exposure on the short side to price fluctuations through \\( r \\). Profits for the parasitic funding trade are therefore *not* risk free and require the trader to move in and out of the market. They have exposure to price, given the parasite's short position size *increases* after funding occurs, increasing their exposure to the short leg of the trade.
 
 
 ### Collateral Approach
@@ -179,8 +179,31 @@ Traders can see this through our expression for the value of their position
 
 \\[ \mathrm{V} (t) = \mathrm{OI} (t) - D \pm \mathrm{OI} (t) \cdot \bigg(\frac{P(t)}{P(0)} - 1 \bigg) \\]
 
-where \\( \mathrm{N}(t) \equiv \mathrm{OI} (t) - D \\) is the collateral we associate with the trader's position. \\( D = N \cdot (L - 1) \\) is their debt to the protocol for taking out leverage \\( L \\) on their initially deposited collateral \\( N \\).
+where \\( \mathrm{N}(t) \equiv \mathrm{OI} (t) - D \\) is the collateral we associate with the position. \\( D = N \cdot (L - 1) \\) is their debt to the protocol for taking out leverage \\( L \\) on their initially deposited collateral \\( N \\).
 
 As funding is paid, \\( \mathrm{N}(t) \\) decreases alongside \\( \mathrm{OI} (t) \\) (\\(D\\) is static).
 
-How does this compare in terms of funding fees paid by the trader?
+
+### Fees Paid
+
+How does this compare in terms of funding fees paid by the trader? Trader 1's PnL after one funding period shows the difference.
+
+With the OI approach, their PnL is
+
+$$\begin{eqnarray}
+\mathrm{PnL} |_{1} (1) &=& n \cdot (1 - \frac{kn}{N+n}) \cdot r - kn \cdot \frac{n}{N+n} \\
+&=& n \cdot r - kn \cdot \frac{n}{N+n} \cdot (1 + r)
+\end{eqnarray}$$
+
+but with the collateral approach
+
+\\[ \mathrm{PnL} \|_{1} (1) = n \cdot r - kn \cdot \frac{n}{N+n} \\]
+
+where \\( k \cdot \frac{n}{N+n} \\) is the funding rate for this period. The adjustment in position size to pay funding (OI approach) effectively increases their funding cost by
+
+\\[ kn \cdot \frac{n}{N+n} \cdot r \\]
+
+to maintain the position. For the numbers above, this amounts to a difference of 0.000005 OVL or a 20% higher funding rate vs the base they would have paid for their pro-rata share at 1% of 0.25%, given price spiked 20%.
+
+
+### Effective Leverage
