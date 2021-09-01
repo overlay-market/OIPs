@@ -74,27 +74,11 @@ shows markets remain tradeable.
 
 ## Spot Manipulation
 
-Uniswap offers the TWAP as a method for offering a [manipulation-resistant on-chain oracle](https://uniswap.org/whitepaper.pdf).
+Uniswap offers the TWAP as a method for offering a [manipulation-resistant on-chain oracle](https://uniswap.org/whitepaper.pdf). There are two scenarios to be wary of with our bid-ask approach:
 
-<!--
+1. Spot jumps and a trader manipulates the pool back to the original price to minimize the spread and effectively obtain the scalp profit.
 
-However, we're suggesting using *both* the TWAP and the current spot price to determine what entry and exit prices to give traders. At first glance, [this is rather concerning](https://samczsun.com/taking-undercollateralized-loans-for-fun-and-for-profit/).
-
-Are Overlay markets now susceptible to manipulation of the spot price?
-
-Take the example of an attacker manipulating the spot price upward. In another round of sims, we add a shock of ~10% over 100 blocks
-
-![Image of Twap Attack Plot](../assets/oip-1/twap_attack.png)
-
-to use as an example.
-
-**Q: Are we comparing the rate against known good rates as samczsun suggests? There's an attack potentially with spot manipulation**
-
-![Image of Twap Attack With Spread Plot](../assets/oip-1/twap_attack_spread.png)
-
-*NOTE: There is a possible attack on others positions: user manipulates the spot price to cause other user's queued OI to settle at a worse price than they would have had otherwise. This grief attack doesn't cause any profit for the user who is causing it however so it's a complete burning of capital. Given liquid spot markets take significant amounts of capital to manipulate, it seems unlikely we should be overly concerned about this griefing attack.*
-*
-* -->
+2. Over several blocks, a trader swaps through a spot feed we support into OVL and uses the proceeds to immediately enter trades on the feed's associated Overlay market, before the shorter TWAP can catch up to the spot move.
 
 
 ## Calibrating \\( \delta \\)
@@ -215,7 +199,7 @@ Comparing our slippage values when fiting FTX ETH/USD, UNI/USD, and YFI/USD pric
 
 shows feeds with much heavier tails require far more slippage as protection. Our DAI-ETH fit beats out Uni V2 over the range of interest if our OI cap choice is close to the underlying liquidity in the spot pool.
 
-Backtesting against the last year of FTX historical data for ETH/USD, UNI/USD, YFI/USD, and ALCX/USD, one finds the protocol's loses to the scalp trader would be minimal with our bid/ask spread implementation. In fact, the trader often loses substantially, particularly on the short scalp (approximately -10% of OI cap over 1-1.5 years). Refer to the end of [this Jupyter notebook](https://github.com/overlay-market/OIPs/blob/master/_notebooks/oip-1/note-8.ipynb) for ETH/USD.
+Backtesting against the last year of FTX historical data for ETH/USD, UNI/USD, YFI/USD, and ALCX/USD, one finds the protocol's losses to the scalp trader would be minimal with our bid/ask spread implementation. In fact, the trader often loses substantially, particularly on the short scalp (approximately -10% of OI cap over 1-1.5 years). Refer to the end of [this Jupyter notebook](https://github.com/overlay-market/OIPs/blob/master/_notebooks/oip-1/note-8.ipynb) for ETH/USD.
 
 
 ### Replication
