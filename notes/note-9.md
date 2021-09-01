@@ -207,3 +207,32 @@ to maintain the position. For the numbers above, this amounts to a difference of
 
 
 ### Effective Leverage
+
+The difference in funding has an effect on the current leverage a position has. We'll generalize a bit here with some formalism. Take the effective leverage of a position as its notional (value + debt) divided by its value such that
+
+\\[ \mathrm{EL}(t) \equiv 1 + \frac{D}{\mathrm{V}(t)} \\]
+
+and define the funding *rates* paid by the longs for this period and received by the shorts as
+
+$$\begin{eqnarray}
+f_l(t) &\equiv& k \cdot \frac{\mathrm{OI}_{imb} (t)}{\mathrm{OI}_{l}(t)} \\
+f_s(t) &\equiv& k \cdot \frac{\mathrm{OI}_{imb} (t)}{\mathrm{OI}_{s}(t)}
+\end{eqnarray}$$
+
+Open interest associated with trader 1's position after one funding period in the OI approach becomes
+
+\\[ \mathrm{OI}\_{l} \|\_{1} (1) = \mathrm{OI}\_{l} \|\_{1} (0) \cdot \bigg [ 1 - f_l(0) \bigg] \\]
+
+such that the value of their position is
+
+$$\begin{eqnarray}
+\mathrm{V}_{l} |_{1} (1) &=& \mathrm{OI}_{l} |_{1} (1) \cdot (1 + r) - D \\
+&=& \mathrm{OI}_{l} |_{1} (0) \cdot \bigg[ 1 - f_l(0) \bigg] \cdot (1 + r) - D \\
+&=& \mathrm{N}|_{1} (0) + \mathrm{OI}_{l} |_{1} (0) \cdot \bigg[r - f_l(0) \cdot (1 + r) \bigg]
+\end{eqnarray}$$
+
+Compare this with the collateral only approach to funding for the value of the position \\( \mathrm{N}\|\_{1} (0) + \mathrm{OI}_{l} \|\_{1} (0) \cdot [r - f_l (0) ] \\), and we see the OI approach scales the rate of return further than paying from collateral only. The difference between the two approaches is the cost term \\( -\mathrm{OI}\_{l} \|\_{1} (0) \cdot f_l(0) \cdot r \\).
+
+The associated effect on leverage is clear. For positive \\( r > 0 \\), the paying long will have a smaller position value, and thus higher effective leverage than in the traditional collateral approach to funding. Still, the position will be less levered than the prior period as long as \\( f_l(0) < \frac{r}{1+r} \\).
+
+Conversely, for negative \\( r < 0 \\), the paying long will have a larger position value and thus smaller effective leverage. The additional term then buffers moves in \\( r \\) for the postion value of the paying long.
