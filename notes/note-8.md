@@ -35,11 +35,13 @@ To prevent traders from taking advantage of the lag, one solution is to add a "b
 
 We propose the bid \\( B \\) and ask \\( A \\) prices offered to traders at time \\( t \\) be
 
-\\[ B(t, Q_s) = \min \bigg[\mathrm{TWAP}(t-\nu, t), \mathrm{TWAP}(t-\Delta, t) \bigg] \cdot e^{-\delta - \lambda Q_s} \\]
+\\[ B(t) = \min \bigg[\mathrm{TWAP}(t-\nu, t), \mathrm{TWAP}(t-\Delta, t) \bigg] \cdot e^{-\delta} \\]
 
-\\[ A(t, Q_l) = \max \bigg[\mathrm{TWAP}(t-\nu, t), \mathrm{TWAP}(t-\Delta, t) \bigg] \cdot e^{\delta + \lambda Q_l}  \\]
+\\[ A(t) = \max \bigg[\mathrm{TWAP}(t-\nu, t), \mathrm{TWAP}(t-\Delta, t) \bigg] \cdot e^{\delta}  \\]
 
-where \\( \nu \ll \Delta \\).
+where \\( \nu \ll \Delta \\), with an upfront market impact fee burned from staked collateral of
+
+\\[ \mathrm{OI}\_{a} \cdot \bigg[ 1 - e^{-\lambda Q_a} \bigg] \\]
 
 Longs receive the ask as their entry price and the bid as their exit price. Shorts receive the bid as their entry price and the ask as their exit price.
 
@@ -47,7 +49,7 @@ Longs receive the ask as their entry price and the bid as their exit price. Shor
 
 \\( \delta \\) is a static spread, on top of the bid-ask TWAP values, used to discourage front-running of the shorter TWAP, which acts as a proxy for spot. Spot values from Uniswap pools shouldn't be used, as they [are vulnerable to manipulation](https://samczsun.com/taking-undercollateralized-loans-for-fun-and-for-profit/).
 
-\\( \lambda Q_a \\) is a market impact term to minimize the damage associated with front-running the TWAP in the event the spot price spikes above the static spread. \\( Q_a \\) is the queued open interest on side \\( a \in \\{ l, s \\} \\), imposed when new positions are built.
+\\( \lambda Q_a \\) is a market impact term to minimize the damage associated with front-running the TWAP in the event the spot price spikes above the static spread, imposed when new positions are built. \\( \mathrm{OI}\_{a} \\) is the unadjusted open interest for the trade. \\( Q_a \\) is the rolling queued open interest on side \\( a \in \\{ l, s \\} \\) over the last \\( \nu \\) blocks. It should include the trader's proposed \\( \mathrm{OI}\_{a} \\).
 
 Applying a static spread with \\( \delta = 0.00624957 \\) to the 1.5 hours of simulated data plotted above
 
@@ -70,7 +72,6 @@ and 3 months of simulated data
 ![Image of Twap Lag With Spread Full Plot](../assets/oip-1/twap_lag_double_spread_all.png)
 
 shows markets remain tradeable.
-
 
 
 ## Calibrating \\( \delta \\)
@@ -133,6 +134,11 @@ Market impact can then be calculated based off of how much of the allowed open i
 \\[ e^{\tilde{\lambda} \cdot q} \\]
 
 with slippage curves we can compare to other AMMs over the open interest range we support, \\( q \in [0, 1] \\).
+
+Further, the manner in which we enforce market impact is important. If we choose to adjust bid/ask values for market impact, we either ruin the fungibility of position shares (ERC-1155) or have traders not know what their exact slippage will be until the next oracle fetch occurs. The latter is terrible UX as a whale could come in after a small fish in the same update period and cause slippage for the small fish to be massive.
+
+Alternatively, imposing market impact as an upfront fee burned from staked collateral when users build their positions maintains fungibility of the position shares and does not burn small fish, which is why we've chosen this approach.
+
 
 
 ## Concrete Numbers
@@ -243,7 +249,8 @@ Setting our static spread \\( \delta \\) to this expression implies that, with c
 We want to minimize the expected value of the trader's PnL from the scalp, assuming the PnL would be > 0 without imposing market impact on the trade (i.e. spot has spiked beyond the static spread). Formally, the expected value conditioned on the scalp trade being profitable without market impact is given by
 
 $$\begin{eqnarray}
-\mathbb{E} \bigg[ \mathrm{PnL} (Q, t+\nu) | \mathrm{PnL}_{\lambda = 0} > 0 \bigg] &\approx& \mathbb{E} \bigg[ Q \cdot \bigg( e^{Y_{\nu} - \lambda Q} - 1 \bigg) | Y_{\nu} > 0 \bigg] \\
+\mathbb{E} \bigg[ \mathrm{PnL} (Q, t+\nu) | \mathrm{PnL}_{\lambda = 0} > 0 \bigg] &\approx& \mathbb{E} \bigg[ Q e^{- \lambda Q} \cdot \bigg( e^{Y_{\nu}} - 1 \bigg) - Q \cdot \bigg( 1 - e^{- \lambda Q} \bigg) | Y_{\nu} > 0 \bigg] \\
+&=& \mathbb{E} \bigg[ Q \cdot \bigg( e^{Y_{\nu} - \lambda Q} - 1 \bigg) | Y_{\nu} > 0 \bigg] \\
 &=& \frac{Q \int_0^{\infty} dy \; f_{Y_{\nu}} (y) \cdot [e^{y - \lambda Q} - 1]}{\int_0^{\infty} dy \; f_{Y_{\nu}} (y)} \\
 &=& Q \cdot \bigg[\frac{e^{- \lambda Q} \int_0^{\infty} dy \; e^{y} f_{Y_{\nu}} (y)}{\int_0^{\infty} dy \; f_{Y_{\nu}} (y)} - 1\bigg] \\
 &=& Q \cdot \bigg[e^{h - \lambda Q} - 1\bigg]
