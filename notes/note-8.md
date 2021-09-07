@@ -268,7 +268,7 @@ gives a VaR equal to zero when
 
 Setting our static spread \\( \delta \\) to this expression implies that, with confidence \\( 1-\alpha \\), the value at risk to the system after the next \\( \nu \\) blocks from front-running the shorter TWAP will be at most zero, once the TWAP catches up to spot.
 
-Above, we've assumed no cap is imposed on the payoff function of the scalp. Assume now we cap the payoff function, which [cuts off the impact](#note-7) from the power law tails of the distribution.
+Above, we've assumed no cap is imposed on the payoff function of the scalp. Assume now we cap the payoff function, which [cuts off the impact](#note-7) from the tails of the distribution.
 
 Let
 
@@ -342,7 +342,7 @@ If we target a particular \\( Q_0 \\) beyond which the trade is negative EV, our
 
 where \\( Q \geq Q_0 \\) has an unprofitable expected value even when spot spikes beyond the static spread.
 
-For anything other than \\( a = 2 \\) (Gaussian), the top integral will be undefined since the \\( p \\) moment of a stable distribution [is infinite](https://cpb-us-w2.wpmucdn.com/sites.coecis.cornell.edu/dist/9/287/files/2019/08/Nolan-9-Nolan_Financial-Modeling-w-heavy-tailed-stable-2.pdf) when \\( p \geq a \\). This can be resolved with caps on the payoff function, which [cuts off the impact](#note-7) from the power law tails of the distribution. We'll rely on an imposed payoff cap to extend to the non-normal case, with \\( C_p \\) and \\( g(y) \\) defined as in the prior section.
+For anything other than \\( a = 2 \\) (Gaussian), the top integral will be undefined since the \\( p \\) moment of a stable distribution [is infinite](https://cpb-us-w2.wpmucdn.com/sites.coecis.cornell.edu/dist/9/287/files/2019/08/Nolan-9-Nolan_Financial-Modeling-w-heavy-tailed-stable-2.pdf) when \\( p \geq a \\). This can be resolved with caps on the payoff function, which [cuts off the impact](#note-7) from the tails of the distribution. We'll rely on an imposed payoff cap to extend to the non-normal case, with \\( C_p \\) and \\( g(y) \\) defined as in the prior section.
 
 Returning to the conditional expected value and proceeding through the same exercise changes our expression to
 
