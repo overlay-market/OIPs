@@ -41,7 +41,7 @@ We propose the bid \\( B \\) and ask \\( A \\) prices offered to traders at time
 
 where \\( \nu \ll \Delta \\), with an upfront market impact fee burned from staked collateral of
 
-\\[ \mathrm{OI}\_{a} \cdot \bigg[ 1 - e^{-\lambda Q_a} \bigg] \\]
+\\[ Q \cdot \bigg[ 1 - e^{-\lambda Q_a} \bigg] \\]
 
 Longs receive the ask as their entry price and the bid as their exit price. Shorts receive the bid as their entry price and the ask as their exit price.
 
@@ -49,7 +49,7 @@ Longs receive the ask as their entry price and the bid as their exit price. Shor
 
 \\( \delta \\) is a static spread, on top of the bid-ask TWAP values, used to discourage front-running of the shorter TWAP, which acts as a proxy for spot. Spot values from Uniswap pools shouldn't be used, as they [are vulnerable to manipulation](https://samczsun.com/taking-undercollateralized-loans-for-fun-and-for-profit/).
 
-\\( \lambda Q_a \\) is a market impact term to minimize the damage associated with front-running the TWAP in the event the spot price spikes above the static spread, imposed when new positions are built. \\( \mathrm{OI}\_{a} \\) is the unadjusted open interest for the trade. \\( Q_a \\) is the rolling queued open interest on side \\( a \in \\{ l, s \\} \\) over the last \\( \nu \\) blocks. It should include the trader's proposed \\( \mathrm{OI}\_{a} \\).
+\\( \lambda Q_a \\) is a market impact term to minimize the damage associated with front-running the TWAP in the event the spot price spikes above the static spread, imposed when new positions are built. \\( Q \\) is the unadjusted open interest for the trade. \\( Q_a \\) is the rolling queued open interest on side \\( a \in \\{ l, s \\} \\) over the last \\( \nu \\) blocks. It should include the trader's proposed \\( Q \\).
 
 Applying a static spread with \\( \delta = 0.00624957 \\) to the 1.5 hours of simulated data plotted above
 
@@ -82,32 +82,24 @@ Our goal is to have the static spread \\( e^{\pm \delta} \\) produce bid and ask
 
 To accomplish this, we suggest setting the spread to
 
-\\[ \delta = \frac{1}{2} \bigg[ \mu \nu + \sigma \cdot \bigg(\frac{\nu}{a}\bigg)^{1/a} F^{-1}_{ab}(1-\alpha) \bigg] \\]
+\\[ \delta = \max \bigg[ \delta_l, \delta_s \bigg] \\]
 
-such that the value at risk to the system from a trader entering into the TWAP scalp over the next \\( \nu \\) blocks is equal to zero with confidence \\( 1-\alpha \\).
+where
 
-\\( F^{-1}_{ab} \\) is the inverse CDF for the standard [Levy stable](https://en.wikipedia.org/wiki/Stable_distribution) \\( S(a, b, 0, 1) \\).
+$$\begin{eqnarray}
+\delta_l &=& \frac{1}{2} F_{X_{\nu}}^{-1}\bigg( F_{X_{\nu}}(g^{-1}(C_p)) - \alpha \bigg) \\
+\delta_s &=& - \frac{1}{2} F_{X_{\nu}}^{-1}(\alpha)
+\end{eqnarray}$$
+
+such that the value at risk to the system from a trader entering into the TWAP scalp over the next \\( \nu \\) blocks is zero with confidence \\( 1-\alpha \\).
+
+\\( F_{X_{\nu}} \\) and \\( F_{X_{\nu}}^{-1} \\) are, respectively, the CDF and inverse CDF of the [Levy stable](https://en.wikipedia.org/wiki/Stable_distribution) random variable \\( X_{\nu} \sim S(a, b, \mu \nu, \sigma \cdot (\frac{\nu}{a})^{1/a}) \\).
 
 \\( \mu \\), \\( \sigma \\), \\( a \\) and \\( b \\) are parameters expressed per-block above, fit using historical data assuming log-stable increments for the underlying spot price
 
 \\[ P(t+\tau) = P(t) e^{\mu \tau + \sigma L\_{\tau}} \\]
 
 where \\( L\_{\tau} \sim S(a, b, 0, (\frac{\tau}{a})^{1/a}) \\).
-
-
-## Calibrating \\( \lambda \\)
-
-\\( \lambda Q \\), as an additional market impact term, offers protection against large jumps in spot that *exceed* our expectations used in calibrating \\( \delta \\). Furthermore, imposing significant market impact (i.e. slippage) on large trades guards the system against traders who have more information than what is currently reflected in the market's current spot price.
-
-Our goal is to have the market impact term \\( e^{\lambda Q} \\) produce bid and ask values that will minimize the expected profits from the scalp in the e.x. 1% of the time *when* spot jumps more than the static spread over a 10 minute interval.
-
-To accomplish this, we suggest setting the market impact parameter to
-
-\\[ \lambda = \frac{1}{Q_0} \cdot \ln \bigg[\frac{\int_0^{g^{-1}(C_p)} dy \; e^{y} f_{Y_{\nu}} (y)}{ [1-F_{Y_{\nu}}(0)] - (1+C_p) \cdot [1-F_{Y_{\nu}} (g^{-1}(C_p))] }\bigg] \\]
-
-such that the expected value (EV) of the PnL for the scalp trade in the case when spot exceeds the spread over the next \\( \nu \\) blocks is less than or equal to zero for \\( Q \geq Q_0 \\).
-
-\\( f_{Y_{\nu}} \\) and \\( F_{Y_{\nu}} \\) are, respectively, the PDF and CDF of \\( Y_{\nu} \sim S(a, b, \mu \nu - 2\delta, \sigma \cdot (\frac{\nu}{a})^{1/a}) \\).
 
 \\( C_p \\) is the payoff cap imposed on the position to [limit the damage](note-7) associated with the tails.
 
@@ -118,6 +110,28 @@ such that the expected value (EV) of the PnL for the scalp trade in the case whe
 with inverse
 
 \\[ g^{-1}(c) = \ln(1 + c) \\]
+
+
+## Calibrating \\( \lambda \\)
+
+\\( \lambda Q \\), as an additional market impact term, offers protection against large jumps in spot that *exceed* our expectations used in calibrating \\( \delta \\). Furthermore, imposing significant market impact (i.e. slippage) on large trades guards the system against traders who have more information than what is currently reflected in the market's current spot price.
+
+Our goal is to have the market impact term \\( e^{\lambda Q} \\) produce bid and ask values that will minimize the expected profits from the scalp in the e.x. 1% of the time *when* spot jumps more than the static spread over a 10 minute interval.
+
+To accomplish this, we suggest setting the market impact parameter to
+
+\\[ \lambda = \max \bigg[ \lambda_l, \lambda_s \bigg] \\]
+
+where
+
+$$\begin{eqnarray}
+\lambda_l &=& \frac{1}{Q_0} \cdot \ln \bigg[\frac{\int_0^{g^{-1}(C_p)} dy \; e^{y} f_{Y_{\nu}} (y)}{ [1-F_{Y_{\nu}}(0)] - (1+C_p) \cdot [1-F_{Y_{\nu}} (g^{-1}(C_p))] }\bigg] \\
+\lambda_s &=& \frac{1}{Q_0} \cdot \ln \bigg[ 2 - \frac{\int_{-\infty}^{0} dy \; e^{y} f_{Y_{\nu}} (y)}{F_{Y_{\nu}} (0)} \bigg]
+\end{eqnarray}$$
+
+such that the expected value (EV) of the PnL for the scalp trade in the case when spot exceeds the spread over the next \\( \nu \\) blocks is less than or equal to zero for \\( Q \geq Q_0 \\).
+
+\\( f_{Y_{\nu}} \\) and \\( F_{Y_{\nu}} \\) are, respectively, the PDF and CDF of \\( Y_{\nu} \sim S(a, b, \mu \nu - 2\delta, \sigma \cdot (\frac{\nu}{a})^{1/a}) \\).
 
 Choices for \\( Q_0 \\) can be framed with respect to a percentage of our market's open interest cap, \\( Q_{max} \\). Governance must choose a value for \\( Q_0 \\) that balances EV risks from the scalp trade vs platform usability risks due to severe slippage. We give suggested values with concrete numbers below.
 
@@ -137,7 +151,7 @@ with slippage curves we can compare to other AMMs over the open interest range w
 
 Further, the manner in which we enforce market impact is important. If we choose to adjust bid/ask values for market impact, we either ruin the fungibility of position shares (ERC-1155) or have traders not know what their exact slippage will be until the next oracle fetch occurs. The latter is terrible UX as a whale could come in after a small fish in the same update period and cause slippage for the small fish to be massive.
 
-Alternatively, imposing market impact as an upfront fee burned from staked collateral when users build their positions maintains fungibility of the position shares and does not burn small fish, which is why we've chosen this approach.
+Alternatively, imposing market impact as an upfront fee burned from staked collateral when users build their positions maintains fungibility of the position shares and does not burn small fish.
 
 
 
@@ -213,8 +227,8 @@ Formally, the maximum attainable profit after \\( \nu \\) blocks, \\( \mathrm{Va
 
 $$\begin{eqnarray}
 1-\alpha &=& \mathbb{P}[ \mathrm{PnL}(Q, t+\nu) \leq \mathrm{VaR}(\alpha, \nu) | \mathcal{F}_{t-\nu} ] \\
-&\approx& \mathbb{P}\bigg[ Q \cdot \bigg( \frac{P(t)}{P(t-\nu)} e^{-2\delta - \lambda Q} - 1 \bigg) \leq \mathrm{VaR}(\alpha, \nu) | \mathcal{F}_{t-\nu} \bigg] \\
-&=& \mathbb{P}\bigg[ Q \cdot \bigg( e^{\mu \nu + \sigma L_{\nu} -2\delta - \lambda Q} - 1 \bigg) \leq \mathrm{VaR}(\alpha, \nu) \bigg]
+&\approx& \mathbb{P}\bigg[ Q \cdot \bigg( \frac{P(t)}{P(t-\nu)} e^{-2\delta_l - \lambda Q} - 1 \bigg) \leq \mathrm{VaR}(\alpha, \nu) | \mathcal{F}_{t-\nu} \bigg] \\
+&=& \mathbb{P}\bigg[ Q \cdot \bigg( e^{\mu \nu + \sigma L_{\nu} -2\delta_l - \lambda Q} - 1 \bigg) \leq \mathrm{VaR}(\alpha, \nu) \bigg]
 \end{eqnarray}$$
 
 assuming confidence \\( 1-\alpha \\), where \\( Q \\) is the long open interest taken out by the trader. Our market contracts can only rely on stale information from the oracle feed before the current time \\( t \\): \\( \mathcal{F}_{t-\nu} \\).
@@ -233,13 +247,25 @@ take similar values to the spot price \\( \nu \\) blocks in the past. To underst
 
 The value at risk due to this long scalp is then
 
-\\[ \mathrm{VaR}(\alpha, \nu) = Q \cdot \bigg[ e^{\mu \nu + \sigma \cdot (\frac{\nu}{a})^{1/a} F^{-1}_{ab}(1-\alpha) - 2\delta - \lambda Q } - 1 \bigg] \\]
+\\[ \mathrm{VaR}(\alpha, \nu) = Q \cdot \bigg[ e^{\mu \nu + \sigma \cdot (\frac{\nu}{a})^{1/a} F^{-1}_{ab}(1-\alpha) - 2\delta_l - \lambda Q } - 1 \bigg] \\]
 
 which is equal to zero when
 
-\\[ \delta = \frac{1}{2} \bigg[ \mu \nu + \sigma \cdot \bigg( \frac{\nu}{a} \bigg)^{1/a} F^{-1}_{ab}(1-\alpha) \bigg] \\]
+\\[ \delta_l = \frac{1}{2} \bigg[ \mu \nu + \sigma \cdot \bigg( \frac{\nu}{a} \bigg)^{1/a} F^{-1}_{ab}(1-\alpha) \bigg] \\]
 
 regardless of market impact on entry, \\( \lambda Q \\).
+
+Proceeding through similar logic for the short scalp before considering market impact
+
+$$\begin{eqnarray}
+1-\alpha &=& \mathbb{P}[ \mathrm{PnL}(Q, t+\nu) \leq \mathrm{VaR}(\alpha, \nu) | \mathcal{F}_{t-\nu} ] \\
+&\approx& \mathbb{P}\bigg[ Q \cdot \bigg( 1 - e^{\mu \nu + \sigma L_{\nu} + 2\delta_s} \bigg) \leq \mathrm{VaR}(\alpha, \nu) | \mathcal{F}_{t-\nu} \bigg]
+\end{eqnarray}$$
+
+gives a VaR equal to zero when
+
+\\[ \delta_s = \frac{1}{2} \bigg[ -\mu \nu - \sigma \cdot \bigg( \frac{\nu}{a} \bigg)^{1/a} + \sigma \cdot \bigg(\frac{\nu}{a}\bigg)^{1/a} F^{-1}_{ab}(1-\alpha) \bigg] \\]
+
 
 Setting our static spread \\( \delta \\) to this expression implies that, with confidence \\( 1-\alpha \\), the value at risk to the system after the next \\( \nu \\) blocks from front-running the shorter TWAP will be at most zero, once the TWAP catches up to spot.
 
