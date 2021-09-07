@@ -161,11 +161,11 @@ Alternatively, imposing market impact as an upfront fee burned from staked colla
 
 We use [`pystable`](https://github.com/overlay-market/pystable) to fit 120 days of 10 minute data on the [USDC-WETH SushiSwap pool](https://analytics.sushi.com/pairs/0x397ff1542f962076d0bfe58ea045ffa2d347aca0), from timestamp `1618868463` (April 19, 2021) to `1626472862` (July 16, 2021).
 
-Assuming 15 second blocks, per-block parameter values obtained are `a = 1.4029884974837792`, `b = -0.008110504596997956`, `mu = -1.4909873693826263e-07`, `sig = 0.00012610528857189945`.
+Assuming 15 second blocks, per-block parameter values obtained are `a = 1.4029884974837792`, `b = -0.008110504596997956`, `mu = -1.4909873693826263e-07`, `sig = 0.00012610528857189945`. Take the payoff cap to be \\( C_p = 4 \\) for a max PnL of 400% (5x payoff).
 
-For 99% confidence (`alpha = 0.01`), we have `delta = 0.006551445624571194`. This is a spread of about 65 bps on either side of the TWAP (1.3% total).
+For 99% confidence (`alpha = 0.01`), we have `delta = 0.0068548970717639225`. This is a spread of about 65 bps on either side of the TWAP (1.4% total).
 
-Taking the cap to be \\( C_p = 4 \\) for a max PnL of 400% (5x payoff) and requiring negative EV on the scalp for position sizes greater than \\( q_0 = 0.035 \\) (3.5% of the OI cap), yields a normalized `lambda = 0.9388869011391833`. This amounts to about 0.94% slippage for every 1% of OI cap taken with smaller position sizes.
+Requiring negative EV on the scalp for position sizes greater than \\( q_0 = 0.03 \\) (3% of the OI cap), yields a normalized `lambda = 1.076380317981746`. This amounts to about 1.08% slippage for every 1% of OI cap taken with smaller position sizes.
 
 
 ### ETH/USD FTX Spot Market
@@ -174,16 +174,16 @@ The prior TWAP fits can be slightly misleading since they are taken with respect
 
 We use `pystable` again to fit 600 days of 1 minute data on the [ETH/USD spot market](https://ftx.com/en/trade/ETH/USD), from timestamp `1577836800` (December 31, 2019) to `1629729120` (August 8, 2021).
 
-Assuming 15 second blocks, per-block parameter values obtained are `a = 1.3323780695989331`, `b = 0.028298587221832504`, `mu = 5.439488998979958e-06`, `sig = 0.00023820339727490902`.
+Assuming 15 second blocks, per-block parameter values obtained are `a = 1.3323780695989331`, `b = 0.028298587221832504`, `mu = 5.439488998979958e-06`, `sig = 0.00023820339727490902`. Take the payoff cap to be \\( C_p = 4 \\) for a max PnL of 400% (5x payoff).
 
-For 99% confidence (`alpha = 0.01`), we have a much larger `delta = 0.01779753781516955`. At the 95% confidence level (`alpha = 0.05`), we have a tradeable value of `delta = 0.005729735572775284`. The latter is a spread of about 57 bps on either side of the TWAP (1.14% total).
+For 99% confidence (`alpha = 0.01`), we have a much larger `delta = 0.01772033390453983`. At the 95% confidence level (`alpha = 0.05`), we have a tradeable value of `delta = 0.005725031958894104`. The latter is a spread of about 57 bps on either side of the TWAP (1.14% total).
 
 The following table provides a list of \\( \delta \\) values for different confidence levels \\( \alpha \\)
 
 | \\(\alpha \\) | \\(\delta \\) |
 | --- | ----- |
-| 0.01 | 0.0178 |
-| 0.025 | 0.00925 |
+| 0.01 | 0.0177 |
+| 0.025 | 0.00923 |
 | 0.05 | 0.00573 |
 | 0.075 | 0.00434 |
 | 0.1 | 0.00354 |
@@ -191,11 +191,11 @@ The following table provides a list of \\( \delta \\) values for different confi
 Similarly, for various \\( (\alpha, q_0) \\) combinations, we have \\( \tilde{\lambda} \\) values
 
 | \\( \alpha, q_0 \\) | 0.01 | 0.02 | 0.03 | 0.04 | 0.05 | 0.06 | 0.07 |
-| 0.01 | 10.248 | 5.124 | 3.416 | 2.562 | 2.050 | 1.708 | 1.464 |
-| 0.025 | 5.237 | 2.618 | 1.746 | 1.309 | 1.047 | 0.873 | 0.748 |
-| 0.05 | 3.135 | 1.568 | 1.045 | 0.784 | 0.627 | 0.523 | 0.448 |
-| 0.075 | 2.325 | 1.162 | 0.775 | 0.581 | 0.465 | 0.387 | 0.332 |
-| 0.10 | 1.885 | 0.942 | 0.628 | 0.471 | 0.377 | 0.314 | 0.269 |
+| 0.01 | 10.204 | 5.102 | 3.401 | 2.551 | 2.041 | 1.701 | 1.458 |
+| 0.025 | 5.228 | 2.614 | 1.743 | 1.307 | 1.046 | 0.871 | 0.747 |
+| 0.05 | 3.132 | 1.566 | 1.044 | 0.783 | 0.626 | 0.522 | 0.447 |
+| 0.075 | 2.323 | 1.162 | 0.774 | 0.581 | 0.465 | 0.387 | 0.332 |
+| 0.10 | 1.884 | 0.942 | 0.628 | 0.471 | 0.377 | 0.314 | 0.269 |
 
 We can compare the expected amount of the OI cap we lose to traders versus the typical position size the trader takes. Plotting \\( \alpha \cdot \mathbb{E}[ \mathrm{PnL} \| \mathrm{PnL}_{\lambda = 0} > 0 ] \\) in the range where the trader expects +EV, \\( q \in [0, q_0] \\),
 
@@ -203,7 +203,7 @@ We can compare the expected amount of the OI cap we lose to traders versus the t
 
 shows the more uncertainty we allow in \\( \alpha \\), the more we should expect to lose to scalpers.
 
-Choosing \\( q_0 = 0.05 \\) and \\( \alpha = 0.05 \\), yield tradeable values for our ETH-DAI market of \\( (\delta, \tilde{\lambda} ) = (0.00573, 0.627) \\). Static spread amounts to 57 bps. Slippage amounts to about 63 bps for every 1% of the OI cap.
+Choosing \\( q_0 = 0.05 \\) and \\( \alpha = 0.05 \\), yield tradeable values for our ETH-DAI market of \\( (\delta, \tilde{\lambda} ) = (0.00573, 0.626) \\). Static spread amounts to 57 bps. Slippage amounts to about 63 bps for every 1% of the OI cap.
 
 Comparing our slippage values when fiting FTX ETH/USD, UNI/USD, and YFI/USD prices vs Uniswap V2 slippage (\\( q = \frac{\delta x}{x} \\))
 
