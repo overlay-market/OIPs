@@ -264,10 +264,48 @@ $$\begin{eqnarray}
 
 gives a VaR equal to zero when
 
-\\[ \delta_s = \frac{1}{2} \bigg[ -\mu \nu - \sigma \cdot \bigg( \frac{\nu}{a} \bigg)^{1/a} + \sigma \cdot \bigg(\frac{\nu}{a}\bigg)^{1/a} F^{-1}_{ab}(1-\alpha) \bigg] \\]
-
+\\[ \delta_s = \frac{1}{2} \bigg[ -\mu \nu - \sigma \cdot \bigg(\frac{\nu}{a}\bigg)^{1/a} F^{-1}_{ab}(\alpha) \bigg] \\]
 
 Setting our static spread \\( \delta \\) to this expression implies that, with confidence \\( 1-\alpha \\), the value at risk to the system after the next \\( \nu \\) blocks from front-running the shorter TWAP will be at most zero, once the TWAP catches up to spot.
+
+Above, we've assumed no cap is imposed on the payoff function of the scalp. Assume now we cap the payoff function, which [cuts off the impact](#note-7) from the power law tails of the distribution.
+
+Let
+
+\\[ g(y) \equiv e^{y} - 1 \\]
+
+with capped payoff function for the long position given by
+
+\\[ \mathrm{PnL}(Q, t+\nu) = Q \cdot \min \bigg( g(X_{\nu} - 2\delta - \lambda Q), C_p \bigg) \\]
+
+and \\( X_{\nu} \equiv \mu \nu + \sigma L_{\nu} \sim S(a, b, \mu \nu, \sigma \cdot (\frac{\nu}{a})^{1/a}) \\). Inverse of \\( g \\) is
+
+\\[ g^{-1}(c) \equiv \ln(1 + c) \\]
+
+The VaR for our scalp, when accounting for the cap, gets altered slightly
+
+$$\begin{eqnarray}
+1-\alpha = \mathbb{P}\bigg[ Q \cdot \min[g(X_{\nu} - 2\delta_l), C_p] \leq \mathrm{VaR} \bigg] \\
+\approx \mathbb{P}\bigg[ Q \cdot g(X_{\nu} - 2\delta_l) \leq \mathrm{VaR} | g(X_{\nu}) \leq C_p \bigg] \cdot \mathbb{P}\bigg[g(X_{\nu}) \leq C_p \bigg] + \\
+\mathbb{P}\bigg[Q \cdot C_p \leq \mathrm{VaR} | g(X_{\nu}) > C_p \bigg] \cdot \mathbb{P}\bigg[g(X_{\nu}) > C_p \bigg]
+\end{eqnarray}$$
+
+Assume \\( C_p \gg 2 \delta \\) and, with probability 1, the max value at risk we take on if we breach the cap is simply the position size times the cap, \\( \mathbb{P}[Q \cdot C_p \leq \mathrm{VaR} \| g(X_{\nu}) > C_p ] = 1 \\). We again ignore market impact in deriving an expression for the static spread. The expression above simplifies to
+
+$$\begin{eqnarray}
+1-\alpha &=& \mathbb{P}\bigg[ X_{\nu} \leq 2\delta_l + g^{-1}\bigg(\frac{\mathrm{VaR}}{Q}\bigg) \bigg] + 1 - \mathbb{P}\bigg[ X_{\nu} \leq g^{-1}(C_p) \bigg] \\
+&=& F_{X_{\nu}}\bigg( 2\delta_l + g^{-1}\bigg(\frac{\mathrm{VaR}}{Q}\bigg) \bigg) + 1 - F_{X_{\nu}} \bigg(g^{-1}(C_p) \bigg)
+\end{eqnarray}$$
+
+VaR then becomes
+
+\\[ \mathrm{VaR}(\alpha, \nu) = Q \cdot g \bigg( F_{X_{\nu}}^{-1}[ F_{X_{\nu}}(g^{-1}(C_p)) - \alpha ] - 2\delta_l \bigg)  \\]
+
+which is zero when
+
+\\[ \delta_l = \frac{1}{2} F_{X_{\nu}}^{-1}\bigg( F_{X_{\nu}}(g^{-1}(C_p)) - \alpha \bigg) \\]
+
+There is no cap on the short side of the trade as long as \\( C_p \geq 1 \\), so the short spread calculation, \\( \delta_s \\), is unaffected for this adjustment.
 
 
 ## Deriving \\( \lambda \\)
@@ -304,21 +342,9 @@ If we target a particular \\( Q_0 \\) beyond which the trade is negative EV, our
 
 where \\( Q \geq Q_0 \\) has an unprofitable expected value even when spot spikes beyond the static spread.
 
-For anything other than \\( a = 2 \\) (Gaussian), the top integral will be undefined since the \\( p \\) moment of a stable distribution [is infinite](https://cpb-us-w2.wpmucdn.com/sites.coecis.cornell.edu/dist/9/287/files/2019/08/Nolan-9-Nolan_Financial-Modeling-w-heavy-tailed-stable-2.pdf) when \\( p \geq a \\). This can be resolved with caps on the payoff function, which [cuts off the impact](#note-7) from the power law tails of the distribution. We'll rely on an imposed payoff cap to extend to the non-normal case.
+For anything other than \\( a = 2 \\) (Gaussian), the top integral will be undefined since the \\( p \\) moment of a stable distribution [is infinite](https://cpb-us-w2.wpmucdn.com/sites.coecis.cornell.edu/dist/9/287/files/2019/08/Nolan-9-Nolan_Financial-Modeling-w-heavy-tailed-stable-2.pdf) when \\( p \geq a \\). This can be resolved with caps on the payoff function, which [cuts off the impact](#note-7) from the power law tails of the distribution. We'll rely on an imposed payoff cap to extend to the non-normal case, with \\( C_p \\) and \\( g(y) \\) defined as in the prior section.
 
-Let
-
-\\[ g(y) \equiv e^{y} - 1 \\]
-
-with capped payoff function for the position given by
-
-\\[ \mathrm{PnL}(Q, t+\nu) = Q \cdot \min \bigg( g(Y_{\nu} - \lambda Q), C_p \bigg) \\]
-
-and inverse
-
-\\[ g^{-1}(c) \equiv \ln(1 + c) \\]
-
-assuming \\( C_p \gg 2 \delta \\). Returning to the conditional expected value and proceeding through the same exercise changes our expression to
+Returning to the conditional expected value and proceeding through the same exercise changes our expression to
 
 $$\begin{eqnarray}
 \mathbb{E} \bigg[ \mathrm{PnL} (Q, t+\nu) | \mathrm{PnL}_{\lambda = 0} > 0 \bigg] \\
