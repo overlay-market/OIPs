@@ -52,7 +52,7 @@ with \\( i \\) type tokens as the quote and \\( o \\) type tokens as the base cu
 
 The number of quote tokens \\( A_i \\) need to swap into the pool to move the price from \\( SP^o_i \to SP^{\prime o}_i \\) and the number of base tokens \\( A_o \\) received out from said swap are found to be
 
-\\[ A_i = B_i \cdot \bigg[ \bigg( \frac{SP^{\prime o}_i }{SP^o_i} \bigg)^{\frac{w_o}{w_o+w_i}} \bigg] \\]
+\\[ A_i = B_i \cdot \bigg[ \bigg( \frac{SP^{\prime o}_i }{SP^o_i} \bigg)^{\frac{w_o}{w_o+w_i}} - 1 \bigg] \\]
 \\[ A_o = B_o \cdot \bigg[ 1 - \bigg( \frac{SP^{\prime o}_i }{SP^o_i} \bigg)^{-\frac{w_i}{w_o+w_i}} \bigg] \\]
 
 The Balancer oracle reports the geometric TWAP
@@ -107,4 +107,7 @@ where
 
 As arbitrageurs bring the spot price back, the value of the tokens received by the attacker from the spot pool is \\( SP^o_i A_o \\). The capital lost to slippage is then given by
 
-\\[ \mathrm{Slippage}\_{i \to o} = SP^o_i A_o - A_i \\]
+$$\begin{eqnarray}
+\mathrm{Slippage}_{i \to o} &=& SP^o_i A_o - A_i \\
+&=& B_i \cdot \bigg\{\frac{w_o}{w_i} \cdot \bigg[ 1 - \bigg( \frac{SP^{\prime o}_i }{SP^o_i} \bigg)^{-\frac{w_i}{w_o+w_i}} \bigg] - \bigg( \frac{SP^{\prime o}_i }{SP^o_i} \bigg)^{\frac{w_o}{w_o+w_i}} + 1 \bigg\}
+\end{eqnarray}$$
