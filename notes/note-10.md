@@ -43,6 +43,7 @@ where
 
 - \\( B_k \\) is the number of \\( k \\) type tokens in the pool
 - \\( w_k \\) is the weight for \\( k \\) type tokens in the pool
+- \\( \sum_k w_k = 1 \\)
 
 The spot price inferred from the relative number of tokens in the pool is
 
@@ -57,7 +58,7 @@ The number of quote tokens \\( A_i \\) need to swap into the pool to move the pr
 
 The Balancer oracle reports the geometric TWAP
 
-\\[ SP_i^o(t_1, t_2) = \bigg( \prod_{k=t_1}^{t_2} SP_i^o(k) \bigg)^{\frac{1}{t_2-t_1}} \\]
+\\[ \mathrm{TWAP}\_i^o(t_1, t_2) = \bigg( \prod_{k=t_1}^{t_2} SP_i^o(k) \bigg)^{\frac{1}{t_2-t_1}} \\]
 
 given the accumulator value is stored as the sum of the logarithm of price.
 
@@ -126,9 +127,17 @@ Let
 
 where \\( SP^{\prime o}_i \\) is registered in the accumulator over the last \\( \nu \\) blocks and the prior \\( \Delta - \nu \\) blocks of the TWAP averaging window registered \\( SP^o_i \\). A bit of algebra with the geometric TWAP yields
 
+$$\begin{eqnarray}
+P(t) &=& \mathrm{TWAP}_i^o(t - \Delta, t) \\
+&=& \bigg( \prod_{k=t - \Delta}^{t-\nu} SP_i^o \cdot \prod_{k=t - \nu}^{t} SP^{\prime o}_i \bigg)^{\frac{1}{\Delta}} \\
+&=& SP_i^o \cdot e^{\frac{\nu}{\Delta} \cdot x_{sp}}
+\end{eqnarray}$$
+
+When the price (and therefore TWAP) is about equal to \\( SP_i^o \\) in the \\( \Delta \\) blocks prior to manipulation, we can express the spot price change in terms of the TWAP change simply as
+
 \\[ e^{x\_{sp}} = e^{\frac{\Delta}{\nu} \cdot x} \\]
 
-Then, our PnL for the attack can be expressed as function of the manipulated TWAP change \\( x \\):
+Our PnL for the attack in terms of \\( x \\) is
 
 $$\begin{eqnarray}
 \mathrm{PnL}_{\textrm{attack}}(x) &=& \mathrm{OI} \cdot \bigg[ e^{x - 2\delta} - 1 \bigg] - \nu B_i \cdot \bigg\{ e^{\frac{\Delta}{\nu} \cdot \frac{w_o}{w_o+w_i} \cdot x} - 1 - \frac{w_o}{w_i} \cdot \bigg[ 1 - e^{- \frac{\Delta}{\nu} \cdot \frac{w_i}{w_o+w_i} \cdot x} \bigg] \bigg\}
@@ -136,3 +145,49 @@ $$\begin{eqnarray}
 
 
 ## Break-Even Values
+
+To overcome slippage and net an overall PnL for the attack greater than zero, the trader must have entered into an Overlay position with OI larger than
+
+\\[ \mathrm{OI}_B (x) = \nu B_i \cdot \frac{e^{\frac{\Delta}{\nu} \cdot \frac{w_o}{w_o+w_i} \cdot x} - 1 - \frac{w_o}{w_i} \cdot \bigg[ 1 - e^{- \frac{\Delta}{\nu} \cdot \frac{w_i}{w_o+w_i} \cdot x} \bigg]}{e^{x-2\delta} - 1} \\]
+
+Any amount of open interest on the Overlay leg of the trade larger than \\( \mathrm{OI}_{B} \\) yields a profitable attack for the trader. If our open interest caps are lower than the minimum for this break-even value, it won't be possible for the attacker to enter the backrunning trade profitably and thus traders won't have an incentive to perform the attack.
+
+Note that capital lost to slippage, \\( \mathrm{Slippage}\_{i \to o} \\), for a given desired change to the TWAP is smallest when \\( \nu \to \Delta \\). Intuitively, it costs less to swap a small amount every block for \\( \Delta \\) blocks to manipulate the TWAP (assuming price doesn't move significantly otherwise, which is a stretch) vs attempting to manipulate the value of the TWAP all in one block. Therefore, the minimum value for \\( \mathrm{OI}_B \\) will occur when \\( \nu = \Delta \\):
+
+\\[ \mathrm{OI}_B (x) \|\_{\nu = \Delta} = \Delta \cdot B_i \cdot \frac{e^{\frac{w_o}{w_o+w_i} \cdot x} - 1 - \frac{w_o}{w_i} \cdot \bigg[ 1 - e^{- \frac{w_i}{w_o+w_i} \cdot x} \bigg]}{e^{x-2\delta} - 1} \\]
+
+To break-even, total upfront cost including the capital needed to manipulate spot will be
+
+\\[ \mathrm{UC}_B (x)\|\_{\nu = \Delta} = \frac{\mathrm{OI}_B (x)\|\_{\nu = \Delta}}{L} + \Delta \cdot A_i \\]
+
+Before examining the critical points of \\( \mathrm{OI}_B \\) for the relevant minimum, it helps to look at a few plots. For plots, take:
+
+- \\( B_i = \$ 10 \textrm{M} \\)
+- \\( \Delta = \nu = 240 \\)
+- \\( w_o = w_i = \frac{1}{2} \\)
+- \\( \delta = 0.0025 \\)
+- \\( L = 5 \\)
+
+Over the majority of the range of possible TWAP changes \\( x \in [4\delta, \infty) \\),
+
+![Image of Break-Even OI Over All Range](../assets/oip-1/balancer_oib_z1.png)
+
+break-even open interest appears smallest when \\( x \to 0^{+} \\) and \\( x \to \infty \\) (y-axis in $). Zooming in around \\( x \in [0, 6\delta] \\), however,
+
+![Image of Break-Even OI Over Short Range](../assets/oip-1/balancer_oib_z2.png)
+![Image of Break-Even UC Over Short Range](../assets/oip-1/balancer_ucb_z2.png)
+
+shows a minimum for \\( \mathrm{OI}_b \\) occurs near \\( x = 4\delta \\). Upfront costs in these ranges are reasonable for an attacker to obtain. Further plotting for \\( x \in [2\delta, 20\delta] \\) highlights the local minimum:
+
+![Image of Break-Even OI Over Short Range 2](../assets/oip-1/balancer_oib_z3.png)
+
+For larger values of \\( x \\), break-even open interest matches the prior minimum around \\( x = 10 \\)
+
+![Image of Break-Even OI Over Long Range](../assets/oip-1/balancer_oib_z4.png)
+![Image of Break-Even UC Over Long Range](../assets/oip-1/balancer_ucb_z1.png)
+
+but break-even upfront costs become massive on the order of $353.8B, which is close to the entire market cap of ETH to date. Therefore, \\( x \to \infty \\) isn't a concern.
+
+## Critical Points
+
+<!-- TODO: Comment on L'Hopital for x to zero when spread is zero vs not zero -->
