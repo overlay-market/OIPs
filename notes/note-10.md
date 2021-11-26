@@ -20,9 +20,9 @@ Two issues to address with this note:
 
 Balancer V2 is the only existing AMM that offers *both* historical snapshots of price and liquidity accumulator values queryable on-chain and a deterministic liquidity profile. The combination of these two makes it possible for us to offer a reliable market on their geometric TWAP oracles, as we can use the liquidity oracle to adjust our open interest caps such that the spot manipulation trade is not profitable.
 
-The backrunning trade works like so:
+What I'll call the backrunning trade works like so:
 
-1. Alice takes out an Overlay position on the Balancer V2 spot TWAP feed
+1. Alice takes out an Overlay position on the Balancer V2 TWAP feed
 2. Alice swaps tokens through the spot pool for \\( \nu \\) blocks to increase/decrease price in her Overlay position's favor
 3. Alice exits the Overlay position
 
@@ -72,9 +72,9 @@ where \\( \pm = +1 \\) if long and \\( \pm = -1 \\) if short. The open interest 
 
 \\[ \mathrm{OI} = N \cdot L \\]
 
-for a collateral amount deposited \\( N \\) and a leverage choice \\( L \\). The debt the user owes to the system is \\( D = N \cdot (L - 1) \\).
+for a collateral amount deposited \\( N \\) and a leverage choice \\( L \\). The debt the user owes to the system is \\( D = N \cdot (L - 1) \\). We ignore funding payments for this note.
 
-To combat a trader who attempts to front-run the information lag inherent in the manipulation-resistant oracle value used by the Overlay market vs the "real" spot value, we added a [bid-ask spread and market impact](note-8) to all trades on the platform. The price ratio \\( P(t) / P(i) \\) effectively becomes
+To combat a trader who attempts to front-run the information lag inherent in the manipulation-resistant oracle value used by the Overlay market vs the "real" spot value, we added a [bid-ask spread and market impact](note-8) to all trades on the platform. The Overlay market price ratio \\( P(t) / P(i) \\) effectively becomes
 
 \\[ \frac{P(t)}{P(i)} = e^{x \mp 2\delta } \\]
 
@@ -82,6 +82,7 @@ where
 
 - \\( \delta \\) is a static spread
 - \\( \mp = -1 \\) for longs and \\( \mp = +1 \\) for shorts
+- \\( e^x \\) is the price ratio between the final and initial TWAP values
 
 The trader pays an upfront impact fee on position size, but for a position built up over a long enough time horizon (e.g. effectively "TWAPing" in), this fee can trend to zero.
 
@@ -93,8 +94,9 @@ For the backrunning trade, we assume
 - Market impact fees are zero, taking the limit of a trader slowly entering into their Overlay position prior to manipulating spot
 - Trading fees are zero and ignore gas costs
 - Arbitrageurs bring the spot price on Balancer back from \\( SP^{\prime o}_i \to SP^o_i \\) at the beginning of each successive block, after the accumulator registers the manipulated price \\( SP^{\prime o}_i \\)
+- Overlay market feed uses the Balancer geometric TWAP averaged over the last \\( \Delta \\) blocks
 
-The attacker manipulates the spot price from \\( SP^o_i \to SP^{\prime o}_i \\).
+The attacker enters a position on Overlay. They then manipulate the spot price from \\( SP^o_i \to SP^{\prime o}_i \\) for \\( \nu \\) successive blocks. They finally exit the Overlay position.
 
 To profitably execute the attack, the attacker must overcome the static spread applied to entry and exit prices on the Overlay position. PnL for the attack is
 
@@ -105,9 +107,32 @@ where
 - \\( \mathrm{PnL}\_{\textrm{Overlay}} \\) is the profit from the Overlay leg of the trade
 - \\( \mathrm{Slippage}\_{i \to o} \\) are the funds lost to slippage on the spot leg
 
-As arbitrageurs bring the spot price back, the value of the tokens received by the attacker from the spot pool is \\( SP^o_i A_o \\). The capital lost to slippage is then given by
+As we assume arbitrageurs bring the spot price back each block, the value of the tokens received by the attacker from the spot pool will be \\( SP^o_i A_o \\). Thus, the capital lost to slippage is
 
 $$\begin{eqnarray}
-\mathrm{Slippage}_{i \to o} &=& SP^o_i A_o - A_i \\
-&=& B_i \cdot \bigg\{\frac{w_o}{w_i} \cdot \bigg[ 1 - \bigg( \frac{SP^{\prime o}_i }{SP^o_i} \bigg)^{-\frac{w_i}{w_o+w_i}} \bigg] - \bigg( \frac{SP^{\prime o}_i }{SP^o_i} \bigg)^{\frac{w_o}{w_o+w_i}} + 1 \bigg\}
+\mathrm{Slippage}_{i \to o} &=& \nu \cdot (SP^o_i A_o - A_i) \\
+&=& - \nu B_i \cdot \bigg\{ \bigg( \frac{SP^{\prime o}_i }{SP^o_i} \bigg)^{\frac{w_o}{w_o+w_i}} - 1 - \frac{w_o}{w_i} \cdot \bigg[ 1 - \bigg( \frac{SP^{\prime o}_i }{SP^o_i} \bigg)^{-\frac{w_i}{w_o+w_i}} \bigg] \bigg\}
 \end{eqnarray}$$
+
+having manipulated for \\( \nu \\) blocks.
+
+Assume the attacker takes a long position on Overlay and manipulates spot price upward (same results will hold for the short). Profits from the Overlay leg of the trade will be
+
+\\[ \mathrm{PnL}\_{\textrm{Overlay}} = \mathrm{OI} \cdot \bigg[ e^{x - 2\delta} - 1 \bigg] \\]
+
+Let
+
+\\[ \frac{SP^{\prime o}_i}{SP^o_i} \equiv e^{x\_{sp}} \\]
+
+where \\( SP^{\prime o}_i \\) is registered in the accumulator over the last \\( \nu \\) blocks and the prior \\( \Delta - \nu \\) blocks of the TWAP averaging window registered \\( SP^o_i \\). A bit of algebra with the geometric TWAP yields
+
+\\[ e^{x\_{sp}} = e^{\frac{\Delta}{\nu} \cdot x} \\]
+
+Then, our PnL for the attack can be expressed as function of the manipulated TWAP change \\( x \\):
+
+$$\begin{eqnarray}
+\mathrm{PnL}_{\textrm{attack}}(x) &=& \mathrm{OI} \cdot \bigg[ e^{x - 2\delta} - 1 \bigg] - \nu B_i \cdot \bigg\{ e^{\frac{\Delta}{\nu} \cdot \frac{w_o}{w_o+w_i} \cdot x} - 1 - \frac{w_o}{w_i} \cdot \bigg[ 1 - e^{- \frac{\Delta}{\nu} \cdot \frac{w_i}{w_o+w_i} \cdot x} \bigg] \bigg\}
+\end{eqnarray}$$
+
+
+## Break-Even Values
