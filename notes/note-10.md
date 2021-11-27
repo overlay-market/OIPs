@@ -190,4 +190,8 @@ but break-even upfront costs become massive on the order of $353.8B, which is cl
 
 ## Critical Points
 
-<!-- TODO: Comment on L'Hopital for x to zero when spread is zero vs not zero -->
+The spread is what saves us from the backrunning trade. This is easiest to see as \\( x \to 0^{+} \\) for different values of \\( \delta \\).
+
+When \\( \delta = 0 \\), L'Hopital gives \\( \lim_{x \to 0^{+}} \mathrm{OI}_B = 0 \\) and we lose the infinite behavior around \\( x = 2\delta \\). Cost of attack is effectively zero for small enough price changes. Yet when \\( \delta > 0 \\), we have infinite behavior around \\( x = 2\delta \\), and there doesn't exist a positive break-even open interest that makes the trade profitable \\( x \to 0^{+} \\).
+
+From the plots, it appears that \\( x = 4\delta \\) is likely to be our critical value for which break-even open interest to execute the backrunning trade is at a minimum. Below, we derive this to \\( \mathcal{O}(\delta^2) \\), assuming \\( x \\) is of similar order to \\( \delta \\).
