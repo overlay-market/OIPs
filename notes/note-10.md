@@ -90,6 +90,16 @@ The trader pays an upfront impact fee on position size, but for a position built
 
 ## Backrunning Trade
 
+### Summary
+
+Enforcing an upper bound on the Overlay market's open interest cap of
+
+\\[ C_Q \leq \Delta \cdot B_i \cdot \frac{w_o}{w_o + w_i} \cdot 4\delta \\]
+
+makes the backrunning trade unprofitable in all reasonable cases.
+
+### Setup
+
 For the backrunning trade, we assume
 
 - Market impact fees are zero, taking the limit of a trader slowly entering into their Overlay position prior to manipulating spot
