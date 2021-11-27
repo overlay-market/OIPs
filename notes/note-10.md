@@ -177,7 +177,7 @@ break-even open interest appears smallest when \\( x \to 0^{+} \\) and \\( x \to
 ![Image of Break-Even OI Over Short Range](../assets/oip-1/balancer_oib_z2.png)
 ![Image of Break-Even UC Over Short Range](../assets/oip-1/balancer_ucb_z2.png)
 
-shows a minimum for \\( \mathrm{OI}_b \\) occurs near \\( x = 4\delta \\). Upfront costs in these ranges are reasonable for an attacker to obtain. Further plotting for \\( x \in [2\delta, 20\delta] \\) highlights the local minimum:
+shows a minimum for \\( \mathrm{OI}_b \\) occurs near \\( x = 4\delta \\). Upfront costs in these ranges of about $14M are reasonable for a well-motivated attacker to obtain. Further plotting for \\( x \in [2\delta, 20\delta] \\) highlights the local minimum:
 
 ![Image of Break-Even OI Over Short Range 2](../assets/oip-1/balancer_oib_z3.png)
 
@@ -192,6 +192,50 @@ but break-even upfront costs become massive on the order of $353.8B, which is cl
 
 The spread is what saves us from the backrunning trade. This is easiest to see as \\( x \to 0^{+} \\) for different values of \\( \delta \\).
 
-When \\( \delta = 0 \\), L'Hopital gives \\( \lim_{x \to 0^{+}} \mathrm{OI}_B = 0 \\) and we lose the infinite behavior around \\( x = 2\delta \\). Cost of attack is effectively zero for small enough price changes. Yet when \\( \delta > 0 \\), we have infinite behavior around \\( x = 2\delta \\), and there doesn't exist a positive break-even open interest that makes the trade profitable \\( x \to 0^{+} \\).
+When \\( \delta = 0 \\), L'Hopital gives \\( \lim_{x \to 0^{+}} \mathrm{OI}_B = 0 \\) and we lose the infinite behavior around \\( x = 2\delta \\). Cost of attack is effectively zero for small enough price changes. Yet when \\( \delta > 0 \\), we have infinite behavior around \\( x = 2\delta \\), and there doesn't exist a positive break-even open interest that makes the trade profitable as \\( x \to 0^{+} \\).
 
-From the plots, it appears that \\( x = 4\delta \\) is likely to be our critical value for which break-even open interest to execute the backrunning trade is at a minimum. Below, we derive this to \\( \mathcal{O}(\delta^2) \\), assuming \\( x \\) is of similar order to \\( \delta \\).
+From the plots, it appears that \\( x = 4\delta \\) is likely to be our critical value for which break-even open interest is at a minimum. Below, we derive this to \\( \mathcal{O}(x^2) \\), assuming \\( x \\) is of similar order to \\( \delta \\) for the ranges we care to protect against.
+
+Critical points \\( x_c \\) occur for
+
+\\[ \frac{d\mathrm{OI}_B}{dx}\bigg\|\_{x = x_c} = 0 \\]
+
+With a bit of work, I find
+
+$$\begin{eqnarray}
+\frac{d\mathrm{OI}_B}{dx} = \frac{\Delta \cdot B_i}{(e^{x - 2\delta} - 1)^2} \cdot \bigg\{ (e^{x - 2\delta} - 1) \cdot \frac{w_o}{w_o + w_i} \cdot \bigg[ e^{\frac{w_o}{w_o+w_i} \cdot x} - e^{-\frac{w_i}{w_o+w_i} \cdot x} \bigg] \\
+- e^{x - 2\delta} \cdot \bigg[ e^{\frac{w_o}{w_o+w_i} \cdot x} - 1 - \frac{w_o}{w_i} \cdot \bigg( 1 - e^{- \frac{w_i}{w_o+w_i} \cdot x} \bigg) \bigg] \bigg\}
+\end{eqnarray}$$
+
+which is zero when
+
+$$\begin{eqnarray}
+0 = \bigg\{ (e^{x - 2\delta} - 1) \cdot \frac{w_o}{w_o + w_i} \cdot \bigg[ e^{\frac{w_o}{w_o+w_i} \cdot x} - e^{-\frac{w_i}{w_o+w_i} \cdot x} \bigg] \\
+- e^{x - 2\delta} \cdot \bigg[ e^{\frac{w_o}{w_o+w_i} \cdot x} - 1 - \frac{w_o}{w_i} \cdot \bigg( 1 - e^{- \frac{w_i}{w_o+w_i} \cdot x} \bigg) \bigg] \bigg\} \bigg|_{x=x_c}
+\end{eqnarray}$$
+
+Expanding to second order in \\( x \\) and \\( \delta \\),
+
+\\[ e^{x-2\delta} - 1 = (x-2\delta) \cdot \bigg[ 1 + \frac{1}{2} \cdot (x - 2\delta) \bigg] + \mathcal{O}(x^3) \\]
+\\[ e^{\frac{w_o}{w_o + w_i} \cdot x} - e^{- \frac{w_i}{w_o + w_i} \cdot x} = x \cdot \bigg[ 1 + \frac{1}{2} \cdot x \cdot \frac{w_o^2 + w_i^2}{(w_o + w_i)^2} \bigg] + \mathcal{O}(x^3) \\]
+\\[ e^{\frac{w_o}{w_o+w_i} \cdot x} - 1 - \frac{w_o}{w_i} \cdot \bigg( 1 - e^{- \frac{w_i}{w_o+w_i} \cdot x} \bigg) = \frac{w_o}{w_o + w_i} \cdot \frac{x^2}{2} + \mathcal{O}(x^3) \\]
+
+I get roots
+
+\\[ 0 = x_c \cdot ( \frac{x_c}{2} - 2\delta ) + \mathcal{O}(x^3) \\]
+
+for critical points \\( x_c \\) of order \\( \delta \\). Or
+
+\\[ x_c = \\{ 0, 4\delta \\} \\]
+
+Plugging in for \\( \mathrm{OI}_B (x = x_c) \\) when \\( x_c = 4\delta \\), we have a minimum for the break-even open interest at the critical value of concern:
+
+\\[ \mathrm{OI}_B (x=4\delta)\|\_{\nu = \Delta} \approx \Delta \cdot B_i \cdot \frac{w_o}{w_o + w_i} \cdot 4\delta \\]
+
+This places an upper bound on the Overlay market open interest cap of
+
+\\[ C_{Q} \leq \Delta \cdot B_i \cdot \frac{w_o}{w_o + w_i} \cdot 4\delta \\]
+
+to prevent the backrunning trade from being profitable. Using Balancer's liquidity oracle, our market contracts can obtain a relatively accurate value for the time-weighted average of \\( B_i \\) to enforce this check.
+
+Going through a similar exercise with the short Overlay position, I find \\( x_c = \\{ 0, -4\delta \\} \\) and a similar expression for \\( \mathrm{OI}_B (x = x_c) \\) at \\( -4\delta \\) but with weights interchanged. Choosing the smaller weight as the upper bound prevents the backrunning trade from being profitable in either case.
