@@ -13,7 +13,7 @@ This note aims to address the following issues with [funding](note-4) raised by 
 
 - How should we think about our [market exposure](https://hackmd.io/@abdk/ry_09yFut) for risk estimation purposes? And what quantity (associated with market exposure) are we looking to minimize over time through funding?
 
-- When an imbalance exists between longs and shorts, the protocol takes market risk [without being compensated for the risk](https://hackmd.io/@abdk/HydvIc4FY). How can we rethink funding such that the protocol is "compensated" for the imbalance risk it assumes by burning a portion of the funding payment?
+- When an imbalance exists between longs and shorts, the protocol takes market risk [without being compensated for the risk](https://hackmd.io/@abdk/HydvIc4FY). How can we rethink funding such that the protocol is "compensated" for the imbalance risk it assumes?
 
 
 ## Market Exposure
@@ -68,7 +68,7 @@ If we use funding to incentivize number of contracts be balanced between longs a
 
 ### Imbalance in Number of Contracts
 
-What is the exposure the protocol now assumes when the number of contracts remain unbalanced for a period of time?
+What is the exposure the protocol now assumes when the number of contracts remain imbalanced for a period of time?
 
 Instead of the long trader exiting all of their contracts like in the prior example, assume they exit a portion \\( a \cdot \mathrm{OI} \\) of their contracts at \\( t_1 \\) and re-enter with another \\( a \cdot \mathrm{OI} \\) contracts at a later time \\( t_2 \\). The open interest (number of contracts) is \\( (1-a) \cdot \mathrm{OI} \\) on the long side and \\( \mathrm{OI} \\) on the short side from \\( t_1 \leq t \leq t_2 \\).
 
@@ -82,3 +82,51 @@ such that the total exposure the protocol assumes is the price exposure on the c
 The protocol should aim to have the contract imbalance \\( \mathrm{OI}\_{imb} = \mathrm{OI}\_{l} - \mathrm{OI}\_{s} = - a \cdot \mathrm{OI} \\) from \\( t_1 \leq t \leq t_2 \\) decay toward zero through funding payments.
 
 ## Funding Burns
+
+Assume we adopt the proposed solution above to the market exposure issues. Through funding, we look to incentivize a drawdown in contract imbalance between the long and short sides at any given time, as the protocol acts as the counterparty to this imbalance while it exists.
+
+The second issue raised concerns the protocol acting as the counterparty to this imbalance from \\( t_1 \leq t \leq t_2 \\), without actually being compensated for the risk it takes.
+
+Using Mikhail's example, if we have 1000 OI long and 800 OI short, the protocol is effectively 200 OI short as it covers the imbalance liability. In the prior implementation of funding, the entire funding payment is paid from traders on the long side to traders on the short side, so the protocol does not receive any payment for the risk of being 200 OI short.
+
+[A solution to this problem](https://hackmd.io/@abdk/HydvIc4FY) would be to pay the protocol its pro-rata share of the funding payment for the exposure it takes on. In the above example, the protocol would receive and burn 20% of the funding payment sent by the longs to be compensated for its share of the short side.
+
+
+### Proposed Reformulation
+
+Assume longs outweigh shorts for the derivations below, even though our expressions will be the same when the opposite is true. Additionally, assume funding payments happen continuously in time.
+
+Given a state for the number of contracts on either side at \\( t \\), what should the state look like at \\( t+dt \\) for infinitesimally small \\( dt \\)?
+
+As longs outweigh shorts in this example, a funding payment should be taken from the longs and paid to the shorts, burning the protocol's pro-rata share of the short side. If \\( b(t) \equiv \frac{\|\mathrm{OI}_{imb}\|}{\mathrm{OI}\_l} \\) is the protocol's pro-rata fraction of the liability, we assume the following for the state change
+
+$$\begin{eqnarray}
+\mathrm{OI}_{l}(t+dt) - \mathrm{OI}_{l}(t) &=& - d\mathrm{FP}(t) \\
+\mathrm{OI}_{s}(t+dt) - \mathrm{OI}_{s}(t) &=& [1-b(t)] \cdot d\mathrm{FP}(t) \\
+\mathrm{OI}_{b}(t+dt) - \mathrm{OI}_{b}(t) &=& b(t) \cdot d\mathrm{FP}(t)
+\end{eqnarray}$$
+
+where \\( d\mathrm{FP} \\) is the funding payment paid and \\( \mathrm{OI}_b \\) is the cumulative number of contracts burned. Reframing these in terms of the total number of contracts outstanding \\( \mathrm{OI} = \mathrm{OI}\_l + \mathrm{OI}\_s \\) and the imbalance in contracts \\( \mathrm{OI}\_{imb} = \mathrm{OI}\_l - \mathrm{OI}\_s \\),
+
+$$\begin{eqnarray}
+\mathrm{OI}(t+dt) - \mathrm{OI}(t) &=& -b(t) \cdot d\mathrm{FP}(t) \\
+\mathrm{OI}_{imb}(t+dt) - \mathrm{OI}_{imb}(t) &=& -[2 - b(t)] \cdot d\mathrm{FP}(t)
+\end{eqnarray}$$
+
+where we can rewrite the fraction of contracts burned as \\( b(t) = \frac{2 \|\mathrm{OI}\_{imb}\|}{\mathrm{OI} + \|\mathrm{OI}\_{imb}\|} \\). This simplifies our expression for the time evolution of the imbalance to
+
+\\[ \mathrm{OI}\_{imb}(t+dt) - \mathrm{OI}\_{imb}(t) = - \frac{2 \mathrm{OI}(t)}{\mathrm{OI}(t) + \|\mathrm{OI}\_{imb}(t)\|} \cdot d\mathrm{FP}(t) \\]
+
+Take the infinitesimal funding payment paid at \\( t \\) to be
+
+\\[ d\mathrm{FP}(t) = dt \cdot \frac{\mathrm{OI}(t) + \|\mathrm{OI}\_{imb}(t)\|}{\mathrm{OI}(t)} \cdot k \cdot \mathrm{OI}\_{imb}(t) \\]
+
+where \\( k \\) is our funding constant. The drawdown to the contract imbalance over time simplifies to the continuous version of the original form from the [prior funding note](note-4):
+
+\\[ d\mathrm{OI}\_{imb} = - 2k \cdot \mathrm{OI}_{imb} \cdot dt \\]
+
+having taken \\( d\mathrm{OI}\_{imb} = \mathrm{OI}\_{imb} (t+dt) - \mathrm{OI}\_{imb} (t) \\). The solution is
+
+\\[ \mathrm{OI}\_{imb}(t) = \mathrm{OI}\_{imb}(0) \cdot e^{-2kt} \\]
+
+which draws down the imbalance risk to zero over time.
