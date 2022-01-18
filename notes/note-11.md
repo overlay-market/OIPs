@@ -187,4 +187,16 @@ $$\begin{eqnarray}
 
 which is easily implementable in our smart contracts.
 
+We can derive the rate paid and received by each party involved in funding after a bit more simplification.
+
+$$\begin{eqnarray}
+f_{l}(t) = \frac{1}{\mathrm{OI}_l} \frac{d\mathrm{OI}_l}{dt} = -2k \cdot \frac{\mathrm{OI}_{imb}(t)}{\mathrm{OI}(t)} \\
+f_{s}(t) = \frac{1}{\mathrm{OI}_s} \frac{d\mathrm{OI}_s}{dt} = 2k \cdot \frac{\mathrm{OI}_{imb}(t)}{\mathrm{OI}(t)} \\
+f_{b}(t) = \frac{1}{|\mathrm{OI}_{imb}|} \frac{d\mathrm{OI}_b}{dt} = 2k \cdot \frac{|\mathrm{OI}_{imb}(t)|}{\mathrm{OI}(t)}
+\end{eqnarray}$$
+
+When \\( f_l \\), \\( f_s \\), or \\( f_b \\) are negative, the respective party is paying. When positive, it is receiving. Longs receive a funding rate \\( f_l \\) on their number of contracts held, shorts receive a rate of \\( f_s \\), and the protocol receives a rate \\( f_b \\).
+
+Notice the magnitude of all of these rates are the same, which is likely a good thing for risk -- whatever funding rate level the market deems as appropriate at the current time is being paid to the respective counterparty in full for the risk assumed. Our prior implementation seemed a bit strange when the funding rate magnitudes for longs vs shorts differed.
+
 *TODO: Plots ...*
