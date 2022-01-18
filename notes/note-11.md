@@ -166,4 +166,25 @@ Then the time evolution of the number of contracts burned is simply
 \\[ \mathrm{OI}\_b (t) = \mathrm{OI}(0) \cdot \bigg[ 1 - \sqrt{ 1 - \bigg(\frac{\mathrm{OI}_{imb}(0)}{\mathrm{OI}(0)}\bigg)^2 \cdot \bigg( 1 - e^{-4kt} \bigg) } \bigg] \\]
 
 
-### Interpretation
+### Summary and Plots
+
+We can summarize funding *with burn* in the following expressions. The time evolution of the imbalance, total contracts, and contracts burned becomes
+
+$$\begin{eqnarray}
+\mathrm{OI}_{imb}(t) &=& \mathrm{OI}_{imb}(0) \cdot e^{-2kt} \\
+\mathrm{OI}(t) &=& \mathrm{OI} (0) \cdot \sqrt{ 1 - \bigg(\frac{\mathrm{OI}_{imb}(0)}{\mathrm{OI}(0)}\bigg)^2 \cdot \bigg( 1 - e^{-4kt} \bigg) } \\
+\mathrm{OI}_{b}(t) &=& \mathrm{OI}(0) \cdot \bigg[ 1 - \sqrt{ 1 - \bigg(\frac{\mathrm{OI}_{imb}(0)}{\mathrm{OI}(0)}\bigg)^2 \cdot \bigg( 1 - e^{-4kt} \bigg) } \bigg]
+\end{eqnarray}$$
+
+assuming the infinitesimal funding payment should be \\( d\mathrm{FP}(t) = dt \cdot \frac{\mathrm{OI}(t) + \|\mathrm{OI}\_{imb}(t)\|}{\mathrm{OI}(t)} \cdot k \cdot \mathrm{OI}\_{imb}(t) \\).
+
+One can use these to determine the state of the open interest on the long and short sides at any time \\( t \\) in the future with
+
+$$\begin{eqnarray}
+\mathrm{OI}_{l}(t) &=& \frac{1}{2} \cdot \bigg[ \mathrm{OI}(t) + \mathrm{OI}_{imb}(t) \bigg] \\
+\mathrm{OI}_s(t) &=& \frac{1}{2} \cdot \bigg[ \mathrm{OI}(t) - \mathrm{OI}_{imb}(t) \bigg]
+\end{eqnarray}$$
+
+which is easily implementable in our smart contracts.
+
+*TODO: Plots ...*
