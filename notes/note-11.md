@@ -199,4 +199,12 @@ When \\( f_l \\), \\( f_s \\), or \\( f_b \\) are negative, the respective party
 
 Notice the magnitude of all of these rates are the same, which is likely a good thing for risk -- whatever funding rate level the market deems as appropriate at the current time is being paid to the respective counterparty in full for the risk assumed. Our prior implementation seemed a bit strange when the funding rate magnitudes for longs vs shorts differed.
 
-*TODO: Plots ...*
+To visualize the dynamics over time, plots of the contract imbalance, total contracts, and contracts burned over 30 days are below:
+
+![Image of OI imbalance over time](../assets/oip-1/funding_revise_oiimb.png)
+
+![Image of total OI over time](../assets/oip-1/funding_revise_oi.png)
+
+![Image of OI burn over time](../assets/oip-1/funding_revise_oib.png)
+
+Initial conditions used for the plots were `k = 4e-07 / sec` (about 1% every 8 hours), `oi_imb_0 = 0.5`, `oi_0 = 1`. Jupyter notebook for the plots is [here](../_notebooks/oip-1/note-11.ipynb). The extreme `k` value was used to exaggerate the expected behavior.
