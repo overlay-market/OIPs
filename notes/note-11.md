@@ -15,69 +15,93 @@ This note aims to address the following issues with [funding](note-4) raised by 
 
 - When an imbalance exists between longs and shorts, the protocol takes market risk [without being compensated for the risk](https://hackmd.io/@abdk/HydvIc4FY). How can we rethink funding such that the protocol is "compensated" for the imbalance risk it assumes?
 
+## Notation
+
+I've been a bit loose with my definitions in prior notes, particularly with respect to open interest. I'll clean it up here. There are two quantities of interest we care about when determining the value of an Overlay position. They are:
+
+- Open interest: \\( \mathrm{OI} \\)
+- Position size (notional): \\( Q \\)
+
+Up until now, I've been taking the open interest of the position to be equivalent to the size of the position in OVL terms. This isn't technically right.
+
+Instead, when an Overlay position is built by a trader at time \\( t \\), define the notional of the position to be
+
+\\[ Q \equiv N \cdot L \\]
+
+where \\( N \\) is the initial collateral in OVL backing the position and \\( L \\) is the chosen initial leverage. \\( Q \\) is in units of OVL. Now, let the open interest associated with this position be the *number of contracts* the trader entered into, where the number of contracts for a position is given by
+
+\\[ \mathrm{OI} \equiv \frac{Q}{P} \\]
+
+\\( P \\) is the entry price of the position fetched from the feed at time \\( t \\) when the position is built.
 
 ## Market Exposure
 
 ### Context
 
-One can understand the first issue issue raised through the following example.
+In prior notes, we assumed the PnL associated with a position is given by
 
-Assume there are two traders. Both initially enter the market at the same time \\( t_0 \\) with the same position size in OVL terms \\( \mathrm{OI}\_{l} = \mathrm{OI}\_{s} = \mathrm{OI} \\) and same entry price \\( P_0 \\). Their positions perfectly balance each other, as the PnL exposure the protocol assumes on each side is
+\\[ \mathrm{PnL}(t+\tau) = \pm Q \cdot \bigg[ \frac{P(t+\tau)}{P(t)} - 1 \bigg] \\]
 
-\\[ \mathrm{PnL}\_{l}\|\_{t_0 \leq t \leq t_1} = \mathrm{OI} \cdot \bigg[ \frac{P_t}{P_0} - 1 \bigg] \\]
-\\[ \mathrm{PnL}\_{s}\|\_{t_0 \leq t \leq t_1} = \mathrm{OI} \cdot \bigg[ 1- \frac{P_t}{P_0} \bigg] \\]
+at some time \\( t+\tau \\), where \\( \pm = +1 \\) when the position is long and \\( \pm = -1 \\) when short.
+
+One can understand the first issue issue to be addressed by this note through the following example.
+
+Assume there are two traders. Both initially enter the market at the same time \\( t_0 \\) with the same position size in OVL terms \\( Q_{l} = Q_{s} = Q \\) and same entry price \\( P = P(t_0) \\). Their positions perfectly balance each other, as the PnL exposure the protocol assumes on each side is
+
+\\[ \mathrm{PnL}\_{l}\|\_{t_0 \leq t \leq t_1} = Q \cdot \bigg[ \frac{P(t)}{P(t_0)} - 1 \bigg] \\]
+\\[ \mathrm{PnL}\_{s}\|\_{t_0 \leq t \leq t_1} = Q \cdot \bigg[ 1- \frac{P(t)}{P(t_0)} \bigg] \\]
 
 such that the total exposure is zero: \\( \mathrm{PnL}\|\_{t_0 \leq t \leq t_1} = \mathrm{PnL}\_{l} + \mathrm{PnL}\_{s} = 0 \\).
 
-The long trader then exits their position at \\( t_1 \\) while the short remains. The protocol realizes the long PnL through a mint or a burn. Another trader then enters a long position with the same open interest as the last to rebalance the position size on the market, but with a different entry price \\( P_1 \\). Including the realized profits, PnL exposure after \\( t_1 \\) becomes
+The long trader then exits their position at \\( t_1 \\) while the short remains. The protocol realizes the long PnL through a mint or a burn. Another trader then enters a long position with the same notional position size as the last to *rebalance the position size* on the market, but with a different entry price \\( P(t_1) \\). Including the realized profits, PnL exposure after \\( t_1 \\) becomes
 
-\\[ \mathrm{PnL}\_{l}\|\_{t \geq t_1} = \mathrm{OI} \cdot \bigg[ \frac{P_1}{P_0} - 1 \bigg] + \mathrm{OI} \cdot \bigg[ \frac{P_t}{P_1} - 1 \bigg] \\]
-\\[ \mathrm{PnL}\_{s}\|\_{t \geq t_1} = \mathrm{OI} \cdot \bigg[ 1- \frac{P_t}{P_0} \bigg] \\]
+\\[ \mathrm{PnL}\_{l}\|\_{t \geq t_1} = Q \cdot \bigg[ \frac{P(t_1)}{P(t_0)} - 1 \bigg] + Q \cdot \bigg[ \frac{P(t)}{P(t_1)} - 1 \bigg] \\]
+\\[ \mathrm{PnL}\_{s}\|\_{t \geq t_1} = Q \cdot \bigg[ 1- \frac{P(t)}{P(t_0)} \bigg] \\]
 
-such that the total exposure the protocol assumes is: \\( \mathrm{PnL}\|\_{t \geq t_1} = \mathrm{PnL}\_{l} + \mathrm{PnL}\_{s} = \mathrm{OI} \cdot [\frac{P_1}{P_0} - 1 + \frac{P_t}{P_1} \cdot (1 - \frac{P_1}{P_0})] \\).
+such that the total exposure the protocol assumes is: \\( \mathrm{PnL}\|\_{t \geq t_1} = \mathrm{PnL}\_{l} + \mathrm{PnL}\_{s} = Q \cdot [\frac{P(t_1)}{P(t_0)} - 1 + \frac{P(t)}{P(t_1)} \cdot (1 - \frac{P(t_1)}{P(t_0)})] \\).
 
-This is non-zero even though another trader immediately re-enters on the long side at \\( t_1 \\) to rebalance the position size (notional in OVL terms) on the market. This is due to the difference in entry prices between positions built at \\( t_0 \\) versus the one built at \\( t_1 \\).
+This is non-zero even though another trader immediately re-enters on the long side at \\( t_1 \\) to rebalance the position size on the market. This is due to the difference in entry prices between positions built at \\( t_0 \\) versus the one built at \\( t_1 \\).
 
 If we use funding to incentivize position size be balanced between longs and shorts on a market, the protocol will continuously accumulate exposure due to the difference in entry prices for each trade.
 
 
 ### Proposed Solution
 
-If we instead incentivize balance in the "number of contracts" on each side, we eliminate the issue. Assuming OVL collateral \\( N \\) staked to back a position with initial leverage \\( L \\) and entry price \\( P_0 \\), redefine open interest to be the number of contracts on a side (vs the position size in OVL terms) such that
+If we instead incentivize balance in the number of contracts on each side, we eliminate the issue. Assuming OVL collateral \\( N \\) staked to back a position with initial leverage \\( L \\) and entry price \\( P(t) \\) when building the position at time \\( t \\), express the PnL of the position as
 
-- Position size in OVL terms (notional): \\( Q = N \cdot L \\)
-- Open interest (number of contracts): \\( \mathrm{OI} = \frac{Q}{P_0} \\)
-- PnL of the position: \\( \mathrm{PnL} = \pm \mathrm{OI} \cdot [P_t - P_0] \\)
+\\[ \mathrm{PnL}(t+\tau) = \pm \mathrm{OI} \cdot [P(t+\tau) - P(t)] \\]
 
-Returning to the prior example, PnL exposure after both traders enter at \\( t_0 \\) with the same position size \\( Q_0 \\) and number of contracts \\( \mathrm{OI} = \frac{Q_0}{P_0} \\) is
+where the open interest associated with the position is the number of contracts entered into at build: \\( \mathrm{OI} = \frac{Q}{P(t)} \\).
 
-\\[ \mathrm{PnL}\_{l}\|\_{t_0 \leq t \leq t_1} = \mathrm{OI} \cdot \bigg[ P_t - P_0 \bigg] \\]
-\\[ \mathrm{PnL}\_{s}\|\_{t_0 \leq t \leq t_1} = \mathrm{OI} \cdot \bigg[ P_0 - P_t \bigg] \\]
+Returning to the prior example, PnL exposure after both traders enter at \\( t_0 \\) with the same position size \\( Q_0 \\) and number of contracts \\( \mathrm{OI} = \frac{Q_0}{P(t_0)} \\) is
+
+\\[ \mathrm{PnL}\_{l}\|\_{t_0 \leq t \leq t_1} = \mathrm{OI} \cdot \bigg[ P(t) - P(t_0) \bigg] \\]
+\\[ \mathrm{PnL}\_{s}\|\_{t_0 \leq t \leq t_1} = \mathrm{OI} \cdot \bigg[ P(t_0) - P(t) \bigg] \\]
 
 such that total exposure before the unwind is still zero: \\( \mathrm{PnL}\|\_{t_0 \leq t \leq t_1} = \mathrm{PnL}\_{l} + \mathrm{PnL}\_{s} = 0 \\).
 
-At \\( t_1 \\), the long exits and re-enters again with the same *number of contracts*, but this time with different position size \\( Q_1 = \mathrm{OI} \cdot P_1 \\) in OVL terms. Including the realized profits, PnL exposure after \\( t_1 \\) becomes
+At \\( t_1 \\) the long exits and re-enters again, this time with different position size \\( Q_1 \\) but the same *number of contracts* \\( \mathrm{OI} = \frac{Q_1}{P(t_1)} \\). Including the realized profits, PnL exposure after \\( t_1 \\) becomes
 
-\\[ \mathrm{PnL}\_{l}\|\_{t \geq t_1} = \mathrm{OI} \cdot \bigg[ P_1 - P_0 \bigg] + \mathrm{OI} \cdot \bigg[ P_t - P_1 \bigg] \\]
-\\[ \mathrm{PnL}\_{s}\|\_{t \geq t_1} = \mathrm{OI} \cdot \bigg[ P_0 - P_t \bigg] \\]
+\\[ \mathrm{PnL}\_{l}\|\_{t \geq t_1} = \mathrm{OI} \cdot \bigg[ P(t_1) - P(t_0) \bigg] + \mathrm{OI} \cdot \bigg[ P(t) - P(t_1) \bigg] \\]
+\\[ \mathrm{PnL}\_{s}\|\_{t \geq t_1} = \mathrm{OI} \cdot \bigg[ P(t_0) - P(t) \bigg] \\]
 
 such that the total exposure the protocol assumes remains zero: \\( \mathrm{PnL}\|\_{t \geq t_1} = \mathrm{PnL}\_{l} + \mathrm{PnL}\_{s} = 0 \\).
 
-If we use funding to incentivize number of contracts be balanced between longs and shorts on a market (instead of notional), we solve the issue with differing entry prices.
+If we use funding to incentivize number of contracts be balanced between longs and shorts on a market instead of position size, we solve the issue with differing entry prices.
 
 
 ### Imbalance in Number of Contracts
 
 What is the exposure the protocol now assumes when the number of contracts remain imbalanced for a period of time?
 
-Instead of the long trader exiting all of their contracts like in the prior example, assume they exit a portion \\( a \cdot \mathrm{OI} \\) of their contracts at \\( t_1 \\) and re-enter with another \\( a \cdot \mathrm{OI} \\) contracts at a later time \\( t_2 \\). The open interest (number of contracts) is \\( (1-a) \cdot \mathrm{OI} \\) on the long side and \\( \mathrm{OI} \\) on the short side from \\( t_1 \leq t \leq t_2 \\).
+Instead of the long trader exiting all of their contracts like in the prior example, assume they exit a portion \\( a \cdot \mathrm{OI} \\) of their contracts at \\( t_1 \\) and re-enter with another \\( a \cdot \mathrm{OI} \\) contracts at a later time \\( t_2 \\). The open interest is \\( (1-a) \cdot \mathrm{OI} \\) on the long side and \\( \mathrm{OI} \\) on the short side from \\( t_1 \leq t \leq t_2 \\).
 
 PnL exposure after \\( t_2 \\) becomes
 
-\\[ \mathrm{PnL}\_{l}\|\_{t \geq t_2} = (1-a) \cdot \mathrm{OI} \cdot \bigg[ P_t - P_0 \bigg] + a \cdot \mathrm{OI} \cdot \bigg[ P_1 - P_0 \bigg] + a \cdot \mathrm{OI} \cdot \bigg[ P_t - P_2 \bigg] \\]
-\\[ \mathrm{PnL}\_{s}\|\_{t \geq t_2} = \mathrm{OI} \cdot \bigg[ P_0 - P_t \bigg] \\]
+\\[ \mathrm{PnL}\_{l}\|\_{t \geq t_2} = (1-a) \cdot \mathrm{OI} \cdot \bigg[ P(t) - P(t_0) \bigg] + a \cdot \mathrm{OI} \cdot \bigg[ P(t_1) - P(t_0) \bigg] + a \cdot \mathrm{OI} \cdot \bigg[ P(t) - P(t_2) \bigg] \\]
+\\[ \mathrm{PnL}\_{s}\|\_{t \geq t_2} = \mathrm{OI} \cdot \bigg[ P(t_0) - P(t) \bigg] \\]
 
-such that the total exposure the protocol assumes is the price exposure on the contract imbalance from \\( t_1 \leq t \leq t_2 \\): \\( \mathrm{PnL}\|\_{t \geq t_2} = \mathrm{PnL}\_{l} + \mathrm{PnL}\_{s} = a \cdot \mathrm{OI} \cdot [ P_1 - P_2 ] \\).
+such that the total exposure the protocol assumes is the price exposure on the contract imbalance from \\( t_1 \leq t \leq t_2 \\): \\( \mathrm{PnL}\|\_{t \geq t_2} = \mathrm{PnL}\_{l} + \mathrm{PnL}\_{s} = a \cdot \mathrm{OI} \cdot [ P(t_1) - P(t_2) ] \\).
 
 The protocol should aim to have the contract imbalance \\( \mathrm{OI}\_{imb} = \mathrm{OI}\_{l} - \mathrm{OI}\_{s} = - a \cdot \mathrm{OI} \\) from \\( t_1 \leq t \leq t_2 \\) decay toward zero through funding payments.
 
@@ -94,9 +118,9 @@ A solution to this problem proposed by Mikhail would be to pay the protocol its 
 
 ### Setup
 
-We'll explore this solution. Assume longs outweigh shorts for the derivations below, even though our expressions will be the same when the opposite is true. Additionally, assume funding payments happen continuously in time.
+We'll explore this solution. Assume longs outweigh shorts in the derivations below, even though our expressions will be the same when the opposite is true. Additionally, assume funding payments happen continuously in time.
 
-Given a state for the number of contracts on either side at \\( t \\), what should the state look like at \\( t+dt \\) for infinitesimally small \\( dt \\)?
+Given a state for the number of contracts on the long and short sides at \\( t \\), what should the state look like at \\( t+dt \\) for infinitesimally small \\( dt \\)?
 
 As longs outweigh shorts, a funding payment should be taken from the longs and paid to the shorts, burning the protocol's pro-rata share on the short side. As \\( b(t) \equiv \frac{\|\mathrm{OI}_{imb}\|}{\mathrm{OI}\_l} \\) is the protocol's pro-rata fraction of the liability, we assume the following for the state change
 
@@ -128,7 +152,7 @@ where \\( k \\) is our funding constant, then the drawdown to the contract imbal
 
 \\[ d\mathrm{OI}\_{imb} = - 2k \cdot \mathrm{OI}_{imb} \cdot dt \\]
 
-having taken \\( d\mathrm{OI}\_{imb} = \mathrm{OI}\_{imb} (t+dt) - \mathrm{OI}\_{imb} (t) \\). Integrating, the solution is
+where \\( d\mathrm{OI}\_{imb} = \mathrm{OI}\_{imb} (t+dt) - \mathrm{OI}\_{imb} (t) \\). Integrating from time \\( 0 \\) to \\( t \\), the solution is
 
 \\[ \mathrm{OI}\_{imb}(t) = \mathrm{OI}\_{imb}(0) \cdot e^{-2kt} \\]
 
