@@ -23,3 +23,6 @@ This note aims to address the following issues:
 
 
 ### ETH Denominators
+
+
+## Impermanent Loss & Funding
