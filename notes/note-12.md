@@ -40,10 +40,46 @@ From a protocol perspective, the upside to these strategies is there should exis
 
 ## Replicating Portfolio
 
-### OVL Denominators
+Assume:
+
+- Liquidity miners are incentivized to stake ETH/OVL LP tokens to earn OVL rewards
+- An Overlay market on ETH/OVL has been launched
+- A lending pool with OVL and ETH deposits exists on a lending protocol
+
+Ignore funding from holding the Overlay position.
+
+Ignore impermanent loss from holding the LP tokens by assuming the amount of spot ETH and OVL held throughout remains 50/50.
+
+Take the price \\( P(t) \\) of the Uni V3 ETH/OVL TWAP feed to be in units of number of OVL / number of ETH (i.e. ETH is the base, OVL is the quote). The value of the LP token without impermanent loss in OVL terms is simply
+
+\\[ V_{LP}(t) = N + \frac{N}{P(0)} \cdot P(t) \\]
+
+at some time \\( t \geq 0 \\) in the future, for \\( N \\) OVL and \\( \frac{N}{P(0)} \\) ETH initially deposited to the spot pool for the LP token.
+
+### Single-Sided OVL Staking
+
+The trader that prefers exposure to only OVL can take out a 1x short on the Overlay market for ETH/OVL in addition to their LP token exposure.
+
+The value of the 1x short in OVL terms will be approximately
+
+\\[ V_{short}(t) = N - \frac{N}{P(0)} \cdot \bigg[ P(t) - P(0) \bigg] \\]
+
+when ignoring funding, for an initial \\( N \\) OVL of collateral deposited to back the position.
+
+Total value of the vault with OVL preference in OVL terms is then
+
+$$\begin{eqnarray}
+V_{vault} (t) &=& V_{LP}(t) + V_{short}(t) \\
+&=& 3 N
+\end{eqnarray}$$
+
+which is independent of the price of ETH relative to OVL. The replicating portfolio acts like \\( 3N \\) worth of OVL collateral, when ignoring funding and impermanent loss.
 
 
-### ETH Denominators
+### Single-Sided ETH Staking
 
 
 ## Impermanent Loss & Funding
+
+
+## Countering with Basis Trading
