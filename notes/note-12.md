@@ -58,7 +58,7 @@ at some time \\( t \geq 0 \\) in the future, for \\( N \\) OVL and \\( \frac{N}{
 
 ### Single-Sided OVL Staking
 
-The trader that prefers exposure to only OVL can take out a 1x short on the Overlay market for ETH/OVL in addition to their LP token exposure.
+To replicate liquidity mining by only staking OVL, the trader that prefers exposure to only OVL can take out a 1x short on the Overlay market for ETH/OVL in addition to their LP token exposure.
 
 The value of the 1x short in OVL terms will be approximately
 
@@ -75,8 +75,33 @@ V_{vault} (t) &=& V_{LP}(t) + V_{short}(t) \\
 
 which is independent of the price of ETH relative to OVL. The replicating portfolio acts like \\( 3N \\) worth of OVL collateral, when ignoring funding and impermanent loss.
 
-
 ### Single-Sided ETH Staking
+
+To replicate liquidity mining by only staking ETH, the trader that prefers exposure to only ETH can borrow OVL with ETH collateral and take out a 1x long on the Overlay market for ETH/OVL in addition to their LP token exposure.
+
+The value of the 1x long in OVL terms will be approximately
+
+\\[ V_{long} (t) = N + \frac{N}{P(0)} \cdot \bigg[ P(t) - P(0) \bigg] \\]
+
+when ignoring funding, for an initial \\( N \\) OVL of collateral deposited to back the position. To obtain that initial amount of OVL collateral, the trader takes out an ETH collateralized loan of \\( N \\) OVL from a lending protocol, for a vault debt in OVL terms of
+
+\\[ V_{debt}(t) = -N \\]
+
+Total value of the vault with ETH preference in OVL terms is then
+
+$$\begin{eqnarray}
+V_{vault} (t) &=& V_{LP}(t) + V_{long}(t) + V_{debt}(t) \\
+&=& 2 \cdot \frac{N}{P(0)} \cdot P(t)
+\end{eqnarray}$$
+
+which in ETH terms
+
+$$\begin{eqnarray}
+V^{ETH}_{vault} (t) &=& \frac{V_{vault}(t)}{P(t)} \\
+&=& 2 \cdot \frac{N}{P(0)}
+\end{eqnarray}$$
+
+is independent of the price of ETH relative to OVL. The replicating portfolio acts like \\( 2 \cdot \frac{N}{P(0)} \\) worth of ETH collateral, when ignoring funding and impermanent loss.
 
 
 ## Impermanent Loss & Funding
