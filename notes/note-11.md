@@ -5,7 +5,7 @@ title: Funding Revisited
 status: WIP
 author: Michael Feldman (@mikeyrf)
 discussions-to: oip-1
-created: 2021-01-16
+created: 2022-01-16
 updated: N/A
 ---
 

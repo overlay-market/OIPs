@@ -5,7 +5,7 @@ title: Single-Sided Liquidity Mining
 status: WIP
 author: Michael Feldman (@mikeyrf)
 discussions-to: oip-1
-created: 2021-04-12
+created: 2022-04-12
 updated: N/A
 ---
 
@@ -102,9 +102,3 @@ V^{ETH}_{vault} (t) &=& \frac{V_{vault}(t)}{P(t)} \\
 \end{eqnarray}$$
 
 is independent of the price of ETH relative to OVL. The replicating portfolio acts like \\( 2 \cdot \frac{N}{P(0)} \\) worth of ETH collateral, when ignoring funding and impermanent loss.
-
-
-## Impermanent Loss & Funding
-
-
-## Countering with Basis Trading
