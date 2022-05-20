@@ -57,11 +57,11 @@ $$\begin{eqnarray}
 
 To simplify the math for the purposes of this note, take the spot price to be driven by a Wiener process
 
-\\[ \frac{P(t)}{P(0)} = e^{(r - \frac{\sigma^2}{2}) \tau + \sigma W_{\tau}} \\]
+\\[ \frac{P(\tau)}{P(0)} = e^{(r - \frac{\sigma^2}{2}) \tau + \sigma W_{\tau}} \\]
 
 with drift \\( r \\) and volatility \\( \sigma \\). Then, the expected value is given by
 
-\\[ \mathbb{E}^Q\bigg[ \frac{P(t)}{P(0)} \bigg] = e^{r_Q\tau} \\]
+\\[ \mathbb{E}_Q\bigg[ \frac{P(\tau)}{P(0)} \bigg] = e^{r_Q\tau} \\]
 
 under the risk-neutral measure \\( Q \\).
 
@@ -69,33 +69,33 @@ under the risk-neutral measure \\( Q \\).
 
 Graph of PnL liability *not* necessarily assuming no-arbitrage imbalance level at \\( t=0 \\).
 
-<iframe src="https://www.desmos.com/calculator/co2ymz2lfm?embed" width="500" height="500" style="border: 1px solid #ccc" frameborder=0></iframe>
+<iframe src="https://www.desmos.com/calculator/74d0jtfuw4?embed" width="500" height="500" style="border: 1px solid #ccc" frameborder=0></iframe>
 
 
 ### No-Arbitrage
 
 Graph of PnL liability assuming no-arbitrage imbalance level at \\( t=0 \\).
 
-<iframe src="https://www.desmos.com/calculator/ovc5q9j0c2?embed" width="500" height="500" style="border: 1px solid #ccc" frameborder=0></iframe>
+<iframe src="https://www.desmos.com/calculator/vl0yo9m7u0?embed" width="500" height="500" style="border: 1px solid #ccc" frameborder=0></iframe>
 
 
 ## Stability
 
-The system appears very stable when \\( r \ll 2k \\), particularly assuming the no-arbitrage limit. Stable in the sense of inflation of currency supply is nominal given profit liability charts.
+The system appears very stable in the no-arbitrage limit when \\( r_Q \ll 2k \\). Stable in the sense of inflation of currency supply is nominal given the profit liability charts above.
 
-The system appears to potentially become unstable when \\( r \geq 2k \\) and no-arbitrage breaks down. Additional circuit breaker and cap mechanisms limit the damage to this type of tail event.
+The system appears to potentially become unstable when \\( r \geq 2k \\) and no-arbitrage breaks down. Additional circuit breaker and cap mechanisms we have limit the damage to this type of event.
 
 To verify stability, one can look at the first and second derivative of the expected value under the risk-neutral measure of the profit liability with respect to time in the limit as \\( t \to 0 \\)
 
 $$\begin{eqnarray}
-\lim_{\tau \to 0} \frac{d}{d\tau} \mathbb{E}^Q\bigg[\mathrm{PnL}_{liability}(\tau)\bigg] &=& P(0) \cdot \mathrm{OI}_{imb}(0) \cdot \bigg( r_Q - f_Q \bigg) = 0 \\
-\lim_{\tau \to 0} \frac{d^2}{d\tau^2} \mathbb{E}^Q\bigg[\mathrm{PnL}_{liability}(\tau)\bigg] &=& P(0) \cdot \mathrm{OI}_{imb}(0) \cdot r_Q \cdot \bigg( r_Q - 2k \bigg)
+\lim_{\tau \to 0} \frac{d}{d\tau} \mathbb{E}_Q\bigg[\mathrm{PnL}_{liability}(\tau)\bigg] &=& P(0) \cdot \mathrm{OI}_{imb}(0) \cdot \bigg( r_Q - f_Q \bigg) = 0 \\
+\lim_{\tau \to 0} \frac{d^2}{d\tau^2} \mathbb{E}_Q\bigg[\mathrm{PnL}_{liability}(\tau)\bigg] &=& P(0) \cdot \mathrm{OI}_{imb}(0) \cdot r_Q \cdot \bigg( r_Q - 2k \bigg)
 \end{eqnarray}$$
 
-This imposes a condition on our governance chosen value for \\( k \\) in order to achieve a concave liability function in time
+This imposes a condition on our governance chosen value for \\( k \\) in order to achieve a concave liability function in time i.e. \\( \lim_{\tau \to 0} \frac{d^2}{d\tau^2} \mathbb{E}\_Q\bigg[\mathrm{PnL}_{liability}(\tau)\bigg] < 0 \\):
 
-\\[ \lim_{\tau \to 0} \frac{d^2}{d\tau^2} \mathbb{E}^Q\bigg[\mathrm{PnL}_{liability}(\tau)\bigg] < 0 \\]
+\\[ r_Q < 2k \\]
 
 Fortunately, we calibrate \\( k \\) using VaR at 95, 99% levels, which will produce \\( r_Q \ll 2k \\). As long as this condition holds, the system should be stable.
 
-Governance will need to monitor \\( r_Q \\) vs \\( 2k \\) continuously and adjust \\( k \\) accordingly in the event the spread in "risk-free" rates between OVL and e.g. ETH increases significantly.
+Governance will need to monitor \\( r_Q \\) vs \\( 2k \\) continuously and adjust \\( k \\) accordingly in the event the spread in "risk-free" rates between OVL and e.g. ETH increases significantly. Potentially in V2, \\( k \\) could be adjusted dynamically based on current staking rates in a manipulation-resistant way.
