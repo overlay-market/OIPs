@@ -63,7 +63,7 @@ From Equation (32) of the V1 Core WP, the protocol is liable for
 
 \\[ \mathrm{PnL}\_{liability}(\tau) = -\mathrm{OI}\_{b_r}(\tau) \cdot P(0) + \mathrm{OI}\_{imb}(\tau) \cdot [P(\tau) - P(0)] \\]
 
-at a time \\( t=\tau \\) in the future. \\( t = 0 \\) is now. \\( \mathrm{OI}\_{imb} \\) is the open interest imbalance over time. \\( \mathrm{OI}\_{b_r} \\) is the open interest removed from the system given the protocol's exposure to the market due to the imbalance.
+at a time \\( t=\tau \\) in the future. \\( t = 0 \\) is now. \\( \mathrm{OI}\_{imb} \\) is the open interest imbalance over time. \\( \mathrm{OI}\_{b_r} \\) is the open interest removed from the system (i.e. funding "burn") given the protocol's exposure to the market due to the imbalance.
 
 The profit liability is the amount of OVL the protocol has to print given the initial open interest imbalance at the current time.
 
@@ -88,7 +88,7 @@ under the risk-neutral measure \\( Q \\).
 
 Graph of PnL liability *not* necessarily assuming no-arbitrage imbalance level at \\( \tau=0 \\).
 
-<iframe src="https://www.desmos.com/calculator/74d0jtfuw4?embed" width="500" height="500" style="border: 1px solid #ccc" frameborder=0></iframe>
+<iframe src="https://www.desmos.com/calculator/xfutf8n66z?embed" width="500" height="500" style="border: 1px solid #ccc" frameborder=0></iframe>
 
 
 ### No-Arbitrage
