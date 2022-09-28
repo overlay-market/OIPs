@@ -36,18 +36,18 @@ We define position \\( j \\)'s contribution to the open interest on side \\( a \
 
 \\[ \mathrm{OI}_a (t) = \sum\_{j} N\_{aj} L\_{aj}  \\]
 
-Funding payments are made from longs to shorts when \\( \mathrm{OI}\_l > \mathrm{OI}\_s \\), and shorts to longs when \\( \mathrm{OI}\_l < \mathrm{OI}\_s \\). These are paid out intermittently at every oracle fetch \\( i \in \\{ 0, 1, ..., m \\} \\) between time \\( 0 \\) and \\( t \\).
+Funding payments are made from longs to shorts when \\( \mathrm{OI}\_l > \mathrm{OI}\_s \\), and shorts to longs when \\( \mathrm{OI}\_l < \mathrm{OI}\_s \\). These are paid out intermittently at discrete intervals \\( i \in \\{ 0, 1, ..., m \\} \\) between time \\( 0 \\) and \\( t \\).
 
 For this note, consider the case where \\( \mathrm{OI}_{imb} > 0 \\) so longs outweigh shorts. Our results will be the same when \\( {\mathrm{OI}}\_{imb} < 0 \\).
 
-For further simplicity, assume no more positions are built or unwound on either side such that the total open interest remains a constant: \\( \mathrm{OI}_l + \mathrm{OI}_s = \mathrm{const} \\). The latter assumption will skew our risk estimates, but likely to the more conservative side as funding incentives should trend towards a more balanced book. It also allows us to map time 1:1 with each discrete oracle fetch \\( t = i \\).
+For further simplicity, assume no more positions are built or unwound on either side such that the total open interest remains a constant: \\( \mathrm{OI}_l + \mathrm{OI}_s = \mathrm{const} \\). The latter assumption will skew our risk estimates, but likely to the more conservative side as funding incentives should trend towards a more balanced book.
 
 
 ## Risk-Based Approach to Balancing Markets
 
 ### Imbalance Over Time
 
-What does the evolution of the imbalance look like when we factor in funding payments up to fetch \\( m \\)? In terms of the prior period \\( m-1 \\), open interest on the long side after paying funding will be
+What does the evolution of the imbalance look like when we factor in funding payments up to interval \\( m \\)? In terms of the prior period \\( m-1 \\), open interest on the long side after paying funding will be
 
 \\[ {\mathrm{OI}\_{l}} (m) = {\mathrm{OI}\_{l}}(m-1) - \mathrm{FP}(m-1) \\]
 
@@ -72,7 +72,7 @@ One can view the risk to the system at time \\( t = 0 \\) due to the long imbala
 
 \\[ \mathrm{PnL} (m) = {\mathrm{OI}\_{imb}} (m) \cdot \bigg[ \frac{P (m)}{P(0)} - 1 \bigg] \\]
 
-where \\( P(i) \\) is the market value fetched from the oracle at time \\( i \\). An easy way to arrive at this is to sum the unrealized PnL at time \\( m \\) of all the long *and* short positions that have each been built at time \\( 0 \\).
+where \\( P(i) \\) is the market value fetched from the oracle at interval \\( i \\), abusing notation in mapping \\( t=i \\) to the time at interval \\( i \\). An easy way to arrive at this is to sum the unrealized PnL at time \\( m \\) of all the long *and* short positions that have each been built at time \\( 0 \\).
 
 Take \\( P : \Omega \to \mathbb{R} \\) to be a random variable on the probability space \\( (\Omega, \mathcal{F}, \mathrm{P}) \\) driven by a stochastic process \\( W_t \\)
 
@@ -84,7 +84,7 @@ PnL to be minted/burned at time \\( m \\) for this hypothetical long position re
 
 \\[ \mathrm{PnL} (m) = {\mathrm{OI}\_{imb}}(0) \cdot d^{-m} \cdot \bigg[ e^{\mu m T + \sigma W\_{m T}}  - 1 \bigg] \\]
 
-where \\( T \\) is the length of time between oracle fetches and we define
+where \\( T \\) is the average length of time between intervals and we define
 
 \\[ d \equiv \frac{1}{1 - 2k} \\]
 
@@ -169,9 +169,7 @@ Requiring \\( \mathrm{VaR} \to 0 \\) for large \\( m \\) bounds the value for th
 
 ### Determining \\( \mu \\) and \\( \sigma^2 \\)
 
-We can use maximum likelihood estimation (MLE) from on-chain samples to find our GBM \\( \mu \\) and \\( \sigma^2 \\) values. At launch, we should have these simply inform our chosen \\( k \\) values over rolling time periods, and allow governance to tweak funding rates given existing risk conditions.
-
-Assume \\( T \\) is the `periodSize` of a [sliding window TWAP oracle](note-2), such that funding is paid upon every price update of an Overlay market. Let
+We can use maximum likelihood estimation (MLE) from on-chain samples to find our GBM \\( \mu \\) and \\( \sigma^2 \\) values. Assume \\( T \\) is the `periodSize` of a [sliding window TWAP oracle](note-2). Let
 
 \\[ R(i) = \ln \bigg[ \frac{P(i)}{P(i-1)} \bigg] = \mu T + \sigma [ W_{i T} - W_{(i-1) T} ] \sim \mathcal{N}(\mu T, \sigma^2  T) \\]
 
@@ -219,9 +217,9 @@ having [Levy stable](https://en.wikipedia.org/wiki/Stable_distribution) incremen
 
 The Levy stable CDF is not necessarily expressible analytically and estimation of parameters \\( (a, b, \mu, \sigma) \\) no longer reduces to sample mean and variance, as with GBM. However, there are easy to use [packages](https://cpb-us-w2.wpmucdn.com/sites.coecis.cornell.edu/dist/9/287/files/2019/08/Nolan-9-Nolan_Financial-Modeling-w-heavy-tailed-stable-2.pdf) to help numerically. Particularly important,
 
-\\[ \mathrm{VaR}\_{\alpha} (m) = \mathrm{OI}\_{imb}(0) \cdot d^{-m} \cdot \bigg[ e^{\mu m T + \sigma (\frac{m T}{a})^{\frac{1}{a}} \cdot {F}^{-1}(1-\alpha)} - 1 \bigg] \\]
+\\[ \mathrm{VaR}\_{\alpha} (m) = \mathrm{OI}\_{imb}(0) \cdot d^{-m} \cdot \bigg[ e^{\mu m T + \sigma (\frac{m T}{a})^{\frac{1}{a}} \cdot {F}^{-1}_{ab}(1-\alpha)} - 1 \bigg] \\]
 
-where \\( F^{-1} \\) is the inverse CDF for the standard Levy stable \\( S(a, b, 0, 1) \\).
+where \\( F^{-1}_{ab} \\) is the inverse CDF for the standard Levy stable \\( S(a, b, 0, 1) \\).
 
 
 ## Acknowledgments
