@@ -3,7 +3,7 @@ note: 8
 oip-num: 1
 title: Multi Collateral Positions 
 status: WIP
-author: James Foley (@realisation), Michael Feldman (@mikeyrf)
+author: James Foley (@realisation)
 discussions-to: oip-1
 created: 2021-06-12
 updated: N/A
