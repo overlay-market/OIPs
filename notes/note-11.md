@@ -24,11 +24,11 @@ I've been a bit loose with my definitions in prior notes, particularly with resp
 
 Up until now, I've been taking the open interest of the position to be equivalent to the size of the position in OVL terms. This isn't technically right.
 
-Instead, when an Overlay position is built by a trader at time \\( t \\), define the notional of the position to be
+Instead, when an Overlay position is built by a user at time \\( t \\), define the notional of the position to be
 
 \\[ Q \equiv N \cdot L \\]
 
-where \\( N \\) is the initial collateral in OVL backing the position and \\( L \\) is the chosen initial leverage. \\( Q \\) is in units of OVL. Now, let the open interest associated with this position be the *number of contracts* the trader entered into, where the number of contracts for a position is given by
+where \\( N \\) is the initial collateral in OVL backing the position and \\( L \\) is the chosen initial leverage. \\( Q \\) is in units of OVL. Now, let the open interest associated with this position be the *number of contracts* the user entered into, where the number of contracts for a position is given by
 
 \\[ \mathrm{OI} \equiv \frac{Q}{P} \\]
 
@@ -46,23 +46,23 @@ at some time \\( t+\tau \\), where \\( \pm = +1 \\) when the position is long an
 
 One can understand the first issue issue to be addressed by this note through the following example.
 
-Assume there are two traders. Both initially enter the market at the same time \\( t_0 \\) with the same position size in OVL terms \\( Q_{l} = Q_{s} = Q \\) and same entry price \\( P = P(t_0) \\). Their positions perfectly balance each other, as the PnL exposure the protocol assumes on each side is
+Assume there are two users. Both initially enter the market at the same time \\( t_0 \\) with the same position size in OVL terms \\( Q_{l} = Q_{s} = Q \\) and same entry price \\( P = P(t_0) \\). Their positions perfectly balance each other, as the PnL exposure the protocol assumes on each side is
 
 \\[ \mathrm{PnL}\_{l}\|\_{t_0 \leq t \leq t_1} = Q \cdot \bigg[ \frac{P(t)}{P(t_0)} - 1 \bigg] \\]
 \\[ \mathrm{PnL}\_{s}\|\_{t_0 \leq t \leq t_1} = Q \cdot \bigg[ 1- \frac{P(t)}{P(t_0)} \bigg] \\]
 
 such that the total exposure is zero: \\( \mathrm{PnL}\|\_{t_0 \leq t \leq t_1} = \mathrm{PnL}\_{l} + \mathrm{PnL}\_{s} = 0 \\).
 
-The long trader then exits their position at \\( t_1 \\) while the short remains. The protocol realizes the long PnL through a mint or a burn. Another trader then enters a long position with the same notional position size as the last to *rebalance the position size* on the market, but with a different entry price \\( P(t_1) \\). Including the realized profits, PnL exposure after \\( t_1 \\) becomes
+The long user then exits their position at \\( t_1 \\) while the short remains. The protocol realizes the long PnL through a mint or a burn. Another user then enters a long position with the same notional position size as the last to *rebalance the position size* on the market, but with a different entry price \\( P(t_1) \\). Including the realized profits, PnL exposure after \\( t_1 \\) becomes
 
 \\[ \mathrm{PnL}\_{l}\|\_{t \geq t_1} = Q \cdot \bigg[ \frac{P(t_1)}{P(t_0)} - 1 \bigg] + Q \cdot \bigg[ \frac{P(t)}{P(t_1)} - 1 \bigg] \\]
 \\[ \mathrm{PnL}\_{s}\|\_{t \geq t_1} = Q \cdot \bigg[ 1- \frac{P(t)}{P(t_0)} \bigg] \\]
 
 such that the total exposure the protocol assumes is: \\( \mathrm{PnL}\|\_{t \geq t_1} = \mathrm{PnL}\_{l} + \mathrm{PnL}\_{s} = Q \cdot [\frac{P(t_1)}{P(t_0)} - 1 + \frac{P(t)}{P(t_1)} \cdot (1 - \frac{P(t_1)}{P(t_0)})] \\).
 
-This is non-zero even though another trader immediately re-enters on the long side at \\( t_1 \\) to rebalance the position size on the market. This is due to the difference in entry prices between positions built at \\( t_0 \\) versus the one built at \\( t_1 \\).
+This is non-zero even though another user immediately re-enters on the long side at \\( t_1 \\) to rebalance the position size on the market. This is due to the difference in entry prices between positions built at \\( t_0 \\) versus the one built at \\( t_1 \\).
 
-If we use funding to incentivize position size be balanced between longs and shorts on a market, the protocol will continuously accumulate exposure due to the difference in entry prices for each trade.
+If we use funding to incentivize position size be balanced between longs and shorts on a market, the protocol will continuously accumulate exposure due to the difference in entry prices for each position.
 
 
 ### Proposed Solution
@@ -73,7 +73,7 @@ If we instead incentivize balance in the number of contracts on each side, we el
 
 where the open interest associated with the position is the number of contracts entered into at build: \\( \mathrm{OI} = \frac{Q}{P(t)} \\).
 
-Returning to the prior example, PnL exposure after both traders enter at \\( t_0 \\) with the same position size \\( Q_0 \\) and number of contracts \\( \mathrm{OI} = \frac{Q_0}{P(t_0)} \\) is
+Returning to the prior example, PnL exposure after both users enter at \\( t_0 \\) with the same position size \\( Q_0 \\) and number of contracts \\( \mathrm{OI} = \frac{Q_0}{P(t_0)} \\) is
 
 \\[ \mathrm{PnL}\_{l}\|\_{t_0 \leq t \leq t_1} = \mathrm{OI} \cdot \bigg[ P(t) - P(t_0) \bigg] \\]
 \\[ \mathrm{PnL}\_{s}\|\_{t_0 \leq t \leq t_1} = \mathrm{OI} \cdot \bigg[ P(t_0) - P(t) \bigg] \\]
@@ -94,7 +94,7 @@ If we use funding to incentivize number of contracts be balanced between longs a
 
 What is the exposure the protocol now assumes when the number of contracts remain imbalanced for a period of time?
 
-Instead of the long trader exiting all of their contracts like in the prior example, assume they exit a portion \\( a \cdot \mathrm{OI} \\) of their contracts at \\( t_1 \\) and re-enter with another \\( a \cdot \mathrm{OI} \\) contracts at a later time \\( t_2 \\). The open interest is \\( (1-a) \cdot \mathrm{OI} \\) on the long side and \\( \mathrm{OI} \\) on the short side from \\( t_1 \leq t \leq t_2 \\).
+Instead of the long user exiting all of their contracts like in the prior example, assume they exit a portion \\( a \cdot \mathrm{OI} \\) of their contracts at \\( t_1 \\) and re-enter with another \\( a \cdot \mathrm{OI} \\) contracts at a later time \\( t_2 \\). The open interest is \\( (1-a) \cdot \mathrm{OI} \\) on the long side and \\( \mathrm{OI} \\) on the short side from \\( t_1 \leq t \leq t_2 \\).
 
 PnL exposure after \\( t_2 \\) becomes
 
@@ -111,7 +111,7 @@ The second issue raised concerns the protocol acting as the counterparty to the 
 
 Assume we adopt the proposed solution above to the market exposure issues. Through funding, we look to incentivize a drawdown in contract imbalance between the long and short sides at any given time, as the protocol acts as the counterparty to this imbalance while it exists.
 
-Using [Mikhail's example](https://hackmd.io/@abdk/HydvIc4FY), if we have 1000 OI long and 800 OI short, the protocol is effectively 200 OI short as the protocol covers the imbalance liability. In the prior implementation of funding, the entire funding payment is paid from traders on the long side to traders on the short side, so the protocol does not receive any payment for the risk of being 200 OI short.
+Using [Mikhail's example](https://hackmd.io/@abdk/HydvIc4FY), if we have 1000 OI long and 800 OI short, the protocol is effectively 200 OI short as the protocol covers the imbalance liability. In the prior implementation of funding, the entire funding payment is paid from users on the long side to users on the short side, so the protocol does not receive any payment for the risk of being 200 OI short.
 
 A solution to this problem proposed by Mikhail would be to pay the protocol its pro-rata share of the funding payment for the exposure it takes on. In the above example, the protocol would receive and burn 20% of the funding payment sent by the longs to be compensated for its share of the short side.
 

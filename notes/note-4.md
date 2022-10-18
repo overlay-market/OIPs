@@ -18,7 +18,7 @@ Two issues to address with this note:
 
 ## Context
 
-[Funding payments](note-1) are meant to incentivize a balanced set of positions on each market offered by the protocol so that passive OVL holders, who effectively act as the counterparty to all unbalanced trades in the system, are protected from significant unexpected dilution. This ensures the supply of the settlement currency (OVL) remains relatively stable over longer periods of time -- stable in the sense of governance having the ability to predict the expected worst case inflation rate with a certain degree of confidence due to unbalanced trades on markets.
+[Funding payments](note-1) are meant to incentivize a balanced set of positions on each market offered by the protocol so that passive OVL holders, who effectively act as the counterparty to all unbalanced positions in the system, are protected from significant unexpected dilution. This ensures the supply of the settlement currency (OVL) remains relatively stable over longer periods of time -- stable in the sense of governance having the ability to predict the expected worst case inflation rate with a certain degree of confidence due to unbalanced positions on markets.
 
 For better or worse, governance is given the ability to tune the per-market rate \\( k \\) at which funding flows from longs to shorts or shorts to longs to balance the open interest on a market over time. The purpose of this note is to provide guidance on what to set the value of \\( k \\) to for each individual market.
 
@@ -59,7 +59,7 @@ Subtracting the two and expanding \\( \mathrm{FP}(m-1) \\) gives the time evolut
 
 \\[ {\mathrm{OI}\_{imb}}(m) = {\mathrm{OI}\_{imb}} (m-1) \cdot \bigg( 1 - 2k \bigg) \\]
 
-Rinse and repeat \\( m \\) times to get the time evolution as a function of the open interest imbalance when traders initially enter their positions
+Rinse and repeat \\( m \\) times to get the time evolution as a function of the open interest imbalance when users initially enter their positions
 
 \\[ {\mathrm{OI}\_{imb}} (m) = {\mathrm{OI}\_{imb}}(0) \cdot \bigg( 1 - 2k \bigg)^m \\]
 
@@ -146,7 +146,7 @@ The choice of \\( \alpha \\) dictates how large the lower bound on \\( d \\) is 
 
 ### Choice of \\( k \\)
 
-The conditions on our per-market parameter \\( k \\) imposed above ensure the appropriate limiting behavior as \\( m \to \infty \\): funding payments effectively zero out risk to the system over longer time horizons. However, our choice for an exact value of \\( k \\) for each market should be set by our risk tolerance for the amount of OVL we'd be willing to let the system print *over shorter timeframes*, if all excess notional causing the imbalance were to unwind at the same time *before* funding is able to fully rebalance trades on the market.
+The conditions on our per-market parameter \\( k \\) imposed above ensure the appropriate limiting behavior as \\( m \to \infty \\): funding payments effectively zero out risk to the system over longer time horizons. However, our choice for an exact value of \\( k \\) for each market should be set by our risk tolerance for the amount of OVL we'd be willing to let the system print *over shorter timeframes*, if all excess notional causing the imbalance were to unwind at the same time *before* funding is able to fully rebalance positions on the market.
 
 This translates to setting a market's \\( k \\) value such that the maximum value at risk to the system due to trading on the market, some finite number of blocks \\( m \\) into the future, is equal to a threshold level \\( V\_{\alpha, m} \\) with confidence \\( 1 - \alpha \\). Assume we impose a cap \\( C \\) on the notional allowed on either side of a market
 
@@ -191,7 +191,7 @@ to inform our governance-determined value for \\( k \\).
 
 The analysis above is overly simplistic since:
 
-1. It assumes all traders enter and exit positions at the same time
+1. It assumes all users enter and exit positions at the same time
 
 2. It only examines value at risk to the system on an individual market-by-market basis
 
@@ -199,7 +199,7 @@ The analysis above is overly simplistic since:
 
 While useful, it is not entirely accurate. Further risk work should address each of these concerns:
 
-1: We should think about how differing position entry prices might skew our risk estimates, and whether having funding payments incentivize *only* open interest imbalance is the optimal approach. Remember, we assumed each trader builds their position at the same time \\( 0 \\), which is unrealistic to say the least. This lead to an imbalance PnL dependent on only one entry price \\( P(0) \\) versus some form of an average. Would incorporating a more realistic model of trader behavior change things significantly given our goal is to provide suggestions for \\( k \\)?
+1: We should think about how differing position entry prices might skew our risk estimates, and whether having funding payments incentivize *only* open interest imbalance is the optimal approach. Remember, we assumed each user builds their position at the same time \\( 0 \\), which is unrealistic to say the least. This lead to an imbalance PnL dependent on only one entry price \\( P(0) \\) versus some form of an average. Would incorporating a more realistic model of user behavior change things significantly given our goal is to provide suggestions for \\( k \\)?
 
 2: We should really examine the "portfolio" of markets we're offering and the total value at risk to the system caused by the *sum of imbalances* on each individual market
 

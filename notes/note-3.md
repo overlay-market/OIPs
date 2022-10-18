@@ -16,9 +16,9 @@ Issue to address with this note:
 
 ## Context
 
-In order to take positions on markets offered by the protocol, traders need to lock the settlement currency of the system (OVL). For traders that don't want price exposure to OVL but still wish to take a position on a market, they should be able to construct a "portfolio" that hedges out OVL price risk with respect to another currency like ETH. Below, we address how to construct this type of portfolio as a combination of different positions on separate Overlay markets.
+In order to take positions on markets offered by the protocol, users need to lock the settlement currency of the system (OVL). For users that don't want price exposure to OVL but still wish to take a position on a market, they should be able to construct a "portfolio" that hedges out OVL price risk with respect to another currency like ETH. Below, we address how to construct this type of portfolio as a combination of different positions on separate Overlay markets.
 
-Assume our initial liquidity mining phase is successful, and we're able to bootstrap $20M+ in liquidity on spot markets for the OVL-ETH pair. A [manipulation-resistant TWAP](note-2) on ETH-OVL can then be offered as an additional (inverse) market to trade on Overlay. There are significant benefits to this:
+Assume our initial liquidity mining phase is successful, and we're able to bootstrap $20M+ in liquidity on spot markets for the OVL-ETH pair. A [manipulation-resistant TWAP](note-2) on ETH-OVL can then be offered as an additional (inverse) market to position on Overlay. There are significant benefits to this:
 
 1. We can lever up on OVL price exposure using OVL on Overlay.
 
@@ -31,11 +31,11 @@ The second point is key to understanding how we'll construct this "portfolio" of
 
 ### Summary
 
-To hedge out some price exposure to \\( n q \\) OVL locked in a market position (where \\( 0 < q < 1 \\)), enter into an additional long position of \\( n (1-q) \\) locked on the ETH-OVL market with leverage of \\( 1/(1-q) \\). This is not handled by the contract -- the trader must do this manually. It is an imperfect hedge given the quanto nature of the original market position.
+To hedge out some price exposure to \\( n q \\) OVL locked in a market position (where \\( 0 < q < 1 \\)), enter into an additional long position of \\( n (1-q) \\) locked on the ETH-OVL market with leverage of \\( 1/(1-q) \\). This is not handled by the contract -- the user must do this manually. It is an imperfect hedge given the quanto nature of the original market position.
 
 ### Portfolio Construction
 
-Assume we have a total of \\( n \\) OVL to trade with, and we want to take a position out on an Overlay market feed \\( X \\) while hedging out OVL price risk.
+Assume we have a total of \\( n \\) OVL to position with, and we want to take a position out on an Overlay market feed \\( X \\) while hedging out OVL price risk.
 
 We lock an OVL amount \\( n q \\) with leverage \\( l_X \\) on the \\( X \\) market, where \\( 0 < q < 1 \\). We have an OVL amount \\( n (1 - q) \\) left to use for hedging out some OVL price exposure.
 
@@ -84,7 +84,7 @@ Compared to the ETH PnL we wish to replicate, \\( \frac{(\pm)\_{X} \cdot n l\_{X
 
 We'll start with a relatively conservative case where prices only change a few percentage points to show the benefits of the hedge. Then, move on to a more extreme and likely case, showing why the hedge becomes even more important.
 
-Assume we have \\( n = 100 \\) OVL to trade with, and we decide to long the \\( X \\) feed at 1x leverage.  Further, take the price of OVL to be at parity with ETH such that 1 OVL = 1 ETH.
+Assume we have \\( n = 100 \\) OVL to position with, and we decide to long the \\( X \\) feed at 1x leverage.  Further, take the price of OVL to be at parity with ETH such that 1 OVL = 1 ETH.
 
 #### Case 1: \\(X \uparrow 10\% \\), \\(E \uparrow 5\%\\)
 

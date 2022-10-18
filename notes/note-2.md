@@ -22,7 +22,7 @@ Two issues to address in this note:
 
 Addressing the first question relates to using a [sliding window TWAP oracle](https://github.com/Uniswap/uniswap-v2-periphery/blob/master/contracts/examples/ExampleSlidingWindowOracle.sol) and the cost to attack the feed itself when using a `periodSize << windowSize`.
 
-For context, if we fix the price on Overlay to each fetch from the oracle, we encounter issues with [data freshness](https://uniswap.org/docs/v2/smart-contract-integration/building-an-oracle/) for a fixed window oracle implementation, since we'd be fetching new scalar values every 1-8 hours. From a UX perspective as well, this is horrific since I need to wait the length of the `windowSize` for my trade to settle, which no one will do for a 1-8 hour window.
+For context, if we fix the price on Overlay to each fetch from the oracle, we encounter issues with [data freshness](https://uniswap.org/docs/v2/smart-contract-integration/building-an-oracle/) for a fixed window oracle implementation, since we'd be fetching new scalar values every 1-8 hours. From a UX perspective as well, this is horrific since I need to wait the length of the `windowSize` for my position to settle, which no one will do for a 1-8 hour window.
 
 The alternative would be to use a sliding window TWAP oracle for each of our price feeds. Summary of how it works: every \\( \gamma \\) blocks (`periodSize`), we fetch and store a new [cumulative price value](https://uniswap.org/docs/v2/core-concepts/oracles/) from the Uni/SushiSwap feed. Assume we average our TWAP over \\( \Delta \\) blocks (`windowSize`) and \\( \gamma \ll \Delta \\) (e.g. \\( \gamma = 10 \mathrm{m}, \Delta = 1 \mathrm{h} \\) in block time).
 
@@ -72,12 +72,12 @@ given a consistent spot change \\( \epsilon \\) for \\( \nu \\) blocks.
 
 Using a 1 hour sliding window TWAP on an underlying spot pool having liquidity of $20M+ and setting leverage max to 5x will have a minimum cost of attack of approximately $118M+. This amount scales linearly with liquidity in the spot pool.
 
-Governance can and should set caps on the open interest such that it is not even possible to enter a trade on the Overlay market with the necessary OVL collateral to execute such an attack.
+Governance can and should set caps on the open interest such that it is not even possible to enter a position on the Overlay market with the necessary OVL collateral to execute such an attack.
 
 
 ### Constructing the Trade
 
-The value reported by the sliding window TWAP oracle is what traders will trade on this specific type of Overlay market. Using the above as an attacker, we should be able to take a position on Overlay with max leverage, manipulate the spot price to our advantage, and cash out the Overlay position for a profit. Understanding the break-even cost of such an attack will guide us in what TWAP feeds are suitable for the system as well as what constraints we must place on our max leverage values in order to make the cost of such an attack unreasonable.
+The value reported by the sliding window TWAP oracle is what users will position on this specific type of Overlay market. Using the above as an attacker, we should be able to take a position on Overlay with max leverage, manipulate the spot price to our advantage, and cash out the Overlay position for a profit. Understanding the break-even cost of such an attack will guide us in what TWAP feeds are suitable for the system as well as what constraints we must place on our max leverage values in order to make the cost of such an attack unreasonable.
 
 Before the attack, take the price on the spot constant product \\( x \cdot y = k \\) market maker to be
 
@@ -92,7 +92,7 @@ In the former case, we take out a max leverage long on the corresponding Overlay
 
 #### Option 1: \\( 0 < \epsilon < \infty \\)
 
-In the former case, the trader attacks the Overlay market by increasing the TWAP value. After sending \\( \delta x \\) tokens to the spot pool, reserve 0 changes \\( x \to x + \delta x \\). The recorded price after the change will be
+In the former case, the user attacks the Overlay market by increasing the TWAP value. After sending \\( \delta x \\) tokens to the spot pool, reserve 0 changes \\( x \to x + \delta x \\). The recorded price after the change will be
 
 \\[ P_0 \cdot (1 + \epsilon) = \frac{(x + \delta x)^2}{k} \\]
 
@@ -106,7 +106,7 @@ Say we take out a long position on the corresponding Overlay TWAP market using O
 
 with the total cost to attack the system given by the sum of the collateral locked in the long \\( N \\) and the total tokens needed to manipulate the spot \\( \nu \cdot \delta x \\).
 
-At what point is the attack profitable for the trader? When the value of the max long position exceeds the total cost to attack the system. Or the PnL for the attack
+At what point is the attack profitable for the user? When the value of the max long position exceeds the total cost to attack the system. Or the PnL for the attack
 
 \\[ \mathrm{PnL}_{l} (i) = \nu \bigg[ \frac{N\_x \cdot L}{\Delta} \cdot \epsilon - x \cdot \bigg( \sqrt{1 + \epsilon} - 1 \bigg) \bigg] \\]
 
@@ -123,7 +123,7 @@ for a spot price manipulation per block of \\( 0 < \epsilon < \infty \\).
 
 #### Option 2: \\( -1 < \epsilon < 0 \\)
 
-In the latter case, the trader attacks the Overlay market by decreasing the TWAP value. After sending \\( \delta y \\) tokens to the spot pool, reserve 1 changes \\( y \to y + \delta y \\). The recorded price after the change will be
+In the latter case, the user attacks the Overlay market by decreasing the TWAP value. After sending \\( \delta y \\) tokens to the spot pool, reserve 1 changes \\( y \to y + \delta y \\). The recorded price after the change will be
 
 \\[ P_0 \cdot (1 + \epsilon) = \frac{k}{(y + \delta y)^2} \\]
 
@@ -199,7 +199,7 @@ with y-axis in millions of dollars.
 
 Using this setup of a 1 hour TWAP with max leverage of 5x results in a minimum cost of attack on a $20M spot liquidity pool of approximately $118.56M at \\( \epsilon\_{\mathrm{min}} = 34.1436 \\). The corresponding OVL collateral required to execute such an attack would be about $69.282M. These amounts scale linearly with liquidity in the spot pool.
 
-This further emphasizes the need for caps on open interest on an Overlay TWAP market having a relatively illiquid spot pool (i.e. \\( < $100\mathrm{M} \\)). Governance can set the caps such that it is not even possible to enter a trade with \\( N\|_{B} \\) amount of OVL.
+This further emphasizes the need for caps on open interest on an Overlay TWAP market having a relatively illiquid spot pool (i.e. \\( < $100\mathrm{M} \\)). Governance can set the caps such that it is not even possible to enter a position with \\( N\|_{B} \\) amount of OVL.
 
 
 ## Nuances with Oracles
@@ -214,13 +214,13 @@ As an attacker, I wait to act until the block prior to the end of the update int
 
 ### Queueing Position Builds
 
-To prevent this scenario, users building positions on an Overlay market at times between oracle fetches must receive the value of the feed at the next oracle fetch, such that \\( P(t) = P(i+\gamma) \\). From a UX perspective, this is a bit cumbersome given it takes at worst \\( \gamma \\) blocks for your trade to settle and your settlement price for building a position can vary within that timeframe. However, update intervals of 10 min for \\( \gamma \\) are not terrible and most users will likely choose to build positions close to the end of the update interval to minimize "slippage".
+To prevent this scenario, users building positions on an Overlay market at times between oracle fetches must receive the value of the feed at the next oracle fetch, such that \\( P(t) = P(i+\gamma) \\). From a UX perspective, this is a bit cumbersome given it takes at worst \\( \gamma \\) blocks for your position to settle and your settlement price for building a position can vary within that timeframe. However, update intervals of 10 min for \\( \gamma \\) are not terrible and most users will likely choose to build positions close to the end of the update interval to minimize "slippage".
 
-From an implementation perspective, settling the price for all positions in the prior update interval is relatively easy to accomplish, as the first user to build a trade in the next update interval sets the price for all positions in the prior interval. This is flash loan resistant as long as the price update happens prior to position entry. For redundancy, we can use [keepers](https://docs.keep3r.network/keepers) over slightly longer time horizons than \\( \gamma \\) (gas considerations here) to settle outstanding positions in the event a particular market does not see substantial volume.
+From an implementation perspective, settling the price for all positions in the prior update interval is relatively easy to accomplish, as the first user to build a position in the next update interval sets the price for all positions in the prior interval. This is flash loan resistant as long as the price update happens prior to position entry. For redundancy, we can use [keepers](https://docs.keep3r.network/keepers) over slightly longer time horizons than \\( \gamma \\) (gas considerations here) to settle outstanding positions in the event a particular market does not see substantial volume.
 
 ### Settling on Unwind
 
-Notice, however, this "free" minting can only occur when *building* a position. For unwinding an existing position, the user has already chosen to go long or short so can only save a portion of their loss or gain given their knowledge of the spot market within the current update interval. Since changes to the 1h TWAP within a 10 minute update interval \\( \epsilon_{\mathrm{TWAP}} \\) are approximately 1/6 of any spot changes, these deviations on Overlay market prices will likely be relatively small for a 10 minute candle on a larger market when compared to 1h TWAP changes over multiple \\( \Delta \\) windows for the position. Thus, from a UX perspective, it is likely best to let the user settle their *exit* price at \\( P(i) \\). Otherwise traders would be forced to unwind a position in two transactions, the trade and then a future withdraw of settled OVL funds from the contract.
+Notice, however, this "free" minting can only occur when *building* a position. For unwinding an existing position, the user has already chosen to go long or short so can only save a portion of their loss or gain given their knowledge of the spot market within the current update interval. Since changes to the 1h TWAP within a 10 minute update interval \\( \epsilon_{\mathrm{TWAP}} \\) are approximately 1/6 of any spot changes, these deviations on Overlay market prices will likely be relatively small for a 10 minute candle on a larger market when compared to 1h TWAP changes over multiple \\( \Delta \\) windows for the position. Thus, from a UX perspective, it is likely best to let the user settle their *exit* price at \\( P(i) \\). Otherwise users would be forced to unwind a position in two transactions, the position and then a future withdraw of settled OVL funds from the contract.
 
 
 ## Considerations

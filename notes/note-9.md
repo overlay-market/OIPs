@@ -11,24 +11,24 @@ updated: N/A
 
 Issue to address with this note:
 
-- Do we have to worry about the [parasitic funding trade](note-6#parasitic-capital)?
+- Do we have to worry about [parasitic funding](note-6#parasitic-capital)?
 
 
 ## Context
 
 While contemplating ways to offer pools of capital yield while supporting the system, a question came up with the current implementation of [funding payments](note-1):
 
-*Given an imbalance in open interest, can a large trader come in and take positions on both the long and short side at the same time, in order to siphon off funding to themselves without price risk?*
+*Given an imbalance in open interest, can a large user come in and take positions on both the long and short side at the same time, in order to siphon off funding to themselves without price risk?*
 
-Going through the example below in detail shows the current implementation of funding in fact *does* expose the parasitic trader to price risk, as funding increases the trader's position size on the side with less aggregate open interest. So we are not vulnerable to this type of attack.
+Going through the example below in detail shows the current implementation of funding in fact *does* expose the parasitic user to price risk, as funding increases the user's position size on the side with less aggregate open interest. So we are not vulnerable to this type of attack.
 
 However, the example shows that if we had taken the traditional approach to funding where only users' collateral amounts are increased/decreased, but position sizes remain intact, we would be vulnerable to this type of parasitic behavior.
 
 ### Background
 
-The simple but illustrative example of the parasitic funding trade is as follows.
+The simple but illustrative example of the parasitic funding position is as follows.
 
-Assume there are two traders. The first goes long with position size \\( n \\). The second goes *both* long and short with size \\( N \\) on each side. The second trader chooses size \\( N \gg n \\), to try to siphon off funding payments that would have otherwise been used as incentive for a true short.
+Assume there are two users. The first goes long with position size \\( n \\). The second goes *both* long and short with size \\( N \\) on each side. The second user chooses size \\( N \gg n \\), to try to siphon off funding payments that would have otherwise been used as incentive for a true short.
 
 Imbalance in open interest (OI) is then initially
 
@@ -40,34 +40,34 @@ When the next funding period passes at \\( t=1 \\), the long side transfers \\( 
 
 \\[ \mathrm{OI}\_{imb} (1) = n \cdot (1-2k) \\]
 
-with aggregate open interest values, \\( \mathrm{OI}\_{l} (1) = N+n - kn \\) and \\( \mathrm{OI}\_{s} (1) = N + kn \\), for each side. Each trader pays a pro-rata share of funding from their stakes in the long side of the market.
+with aggregate open interest values, \\( \mathrm{OI}\_{l} (1) = N+n - kn \\) and \\( \mathrm{OI}\_{s} (1) = N + kn \\), for each side. Each user pays a pro-rata share of funding from their stakes in the long side of the market.
 
-Trader 1's long position size becomes
+User 1's long position size becomes
 
 \\[ \mathrm{OI}\_{l} \|_{1} (1) = \frac{n}{N+n} \cdot (N+n-kn) \\]
 
-Trader 2's long and short position sizes become
+User 2's long and short position sizes become
 
 $$\begin{eqnarray}
 \mathrm{OI}_{l} |_{2} (1) &=& \frac{N}{N+n} \cdot (N+n-kn) \\
 \mathrm{OI}_{s} |_{2} (1) &=& N + kn
 \end{eqnarray}$$
 
-so that trader 2 has total OI on the market of \\( 2N + kn \cdot \frac{n}{N+n} \\).
+so that user 2 has total OI on the market of \\( 2N + kn \cdot \frac{n}{N+n} \\).
 
 Assume after one funding period, the price feed has changed by \\( r \\) percent: \\( P(1) = P(0) \cdot (1 + r) \\).
 
 ## Approach to Funding
 
-Usually, funding payments are credited/debited as PnL to/from a trader's position *without* changing the size of the position -- the number of "contracts" they hold. Meaning collateral changes, but OI remains the same.
+Usually, funding payments are credited/debited as PnL to/from a user's position *without* changing the size of the position -- the number of "contracts" they hold. Meaning collateral changes, but OI remains the same.
 
-For simplicity in the math and the smart contract implementation, we chose to also alter traders' position sizes on funding. This allowed us to effectively treat open interest as our "pooled" quantity for [bookkeeping in market contracts](note-5) -- we no longer would need to loop through all positions and update their associated collateral amounts on funding.
+For simplicity in the math and the smart contract implementation, we chose to also alter users' position sizes on funding. This allowed us to effectively treat open interest as our "pooled" quantity for [bookkeeping in market contracts](note-5) -- we no longer would need to loop through all positions and update their associated collateral amounts on funding.
 
-The downside to our approach is traders will gain or lose exposure over time due to funding. In working through the parasitic funding attack, it's clear this is actually a feature and not a bug. If we don't change position size given the way we use funding to incentivize OI balance vs traditional price convergence, we become susceptible to parasitic funding attacks.
+The downside to our approach is users will gain or lose exposure over time due to funding. In working through the parasitic funding attack, it's clear this is actually a feature and not a bug. If we don't change position size given the way we use funding to incentivize OI balance vs traditional price convergence, we become susceptible to parasitic funding attacks.
 
 ### OI Approach
 
-Working through the example above with our current approach, the value (collateral + PnL) of trader 1's long position after funding is
+Working through the example above with our current approach, the value (collateral + PnL) of user 1's long position after funding is
 
 \\[ \mathrm{V} \|_{1} (1) = \frac{n}{N+n} \cdot (N+n-kn) \cdot (1 + r) \\]
 
@@ -75,7 +75,7 @@ with PnL
 
 \\[ \mathrm{PnL} \|_{1} (1) = n \cdot (1 - \frac{kn}{N+n}) \cdot r - kn \cdot \frac{n}{N+n} \\]
 
-having assumed 1x leverage for simplicity. The combined value of trader 2's positions is
+having assumed 1x leverage for simplicity. The combined value of user 2's positions is
 
 $$\begin{eqnarray}
 \mathrm{V} |_{2} (1) &=& \frac{N}{N+n} \cdot (N+n-kn) \cdot (1 + r) + (N + kn) \cdot (1-r) \\
@@ -87,12 +87,12 @@ They have PnL
 
 \\[ \mathrm{PnL} \|_{2} (1) = kn \frac{n}{N+n} - kn \cdot \frac{2N + n}{N+n} \cdot r \\]
 
-which still has exposure on the short side to price fluctuations through \\( r \\). Profits for the parasitic funding trade are therefore *not* risk free and require the trader to move in and out of the market. They have exposure to price, given the parasite's short position size *increases* after funding occurs, increasing their exposure to the short leg of the trade.
+which still has exposure on the short side to price fluctuations through \\( r \\). Profits for the parasitic funding position are therefore *not* risk free and require the user to move in and out of the market. They have exposure to price, given the parasite's short position size *increases* after funding occurs, increasing their exposure to the short leg of the position.
 
 
 ### Collateral Approach
 
-If we take the usual approach to funding, then we run into the parasitic funding trade. This is the approach taken in the original calculation [here](note-6#parasitic-capital). To see why, assume funding is instead taken from each trader's PnL without affecting the size of their positions.
+If we take the usual approach to funding, then we run into the parasitic funding position. This is the approach taken in the original calculation [here](note-6#parasitic-capital). To see why, assume funding is instead taken from each user's PnL without affecting the size of their positions.
 
 Open interest for each position would remain constant through funding
 
@@ -110,7 +110,7 @@ and only collateral amounts would change
 
 \\[ \mathrm{N}\_{s} \|_{2} (1) = N + kn  \\]
 
-Value (collateral + PnL) of trader 1's position would be
+Value (collateral + PnL) of user 1's position would be
 
 \\[ \mathrm{V} \|_{1} (1) = n \cdot (1+r) - kn \frac{n}{N+n} \\]
 
@@ -118,7 +118,7 @@ with PnL
 
 \\[ \mathrm{PnL} \|_{1} (1) =  nr - kn \frac{n}{N+n} \\]
 
-Trader 2's combination of positions, on the other hand, would have total value
+User 2's combination of positions, on the other hand, would have total value
 
 $$\begin{eqnarray}
 \mathrm{V} |_{2} (1) &=& \bigg[\frac{N}{N+n} \cdot (N+n-kn) + Nr \bigg] + \bigg[N + kn - Nr\bigg] \\
@@ -136,35 +136,35 @@ without exposure to price fluctuations. Applying funding to *open interest* inst
 
 Assume \\( n = 1 \\) OVL, \\( N = 99 \\) OVL and that the feed jumps 20% such that \\( r = 0.20 \\). Take the funding rate to be \\( k = 0.0025 \\).
 
-Use the example above, where the first trader enters a long and the second trader enters both a long and a short.
+Use the example above, where the first user enters a long and the second user enters both a long and a short.
 
 ### OI Approach
 
-In taking the OI approach, trader 1's long open interest after one funding period is \\( \mathrm{OI}\_{l} \|_{1} (1) = n - kn \cdot \frac{n}{N+n} = 0.999975 \\) OVL. They pay 1% of the total funding payment for the period.
+In taking the OI approach, user 1's long open interest after one funding period is \\( \mathrm{OI}\_{l} \|_{1} (1) = n - kn \cdot \frac{n}{N+n} = 0.999975 \\) OVL. They pay 1% of the total funding payment for the period.
 
-Trader 2's long open interest after one funding period is \\( \mathrm{OI}\_{l} \|\_{2} (1) = N - kn \cdot \frac{N}{N+n} = 98.997525 \\) OVL. Their short open interest after one funding period is \\( \mathrm{OI}\_{s} \|\_{2} (1) = N + kn = 99.0025 \\) OVL. They pay 99% of the total funding payment, effectively shifting it to their position size on the short side.
+User 2's long open interest after one funding period is \\( \mathrm{OI}\_{l} \|\_{2} (1) = N - kn \cdot \frac{N}{N+n} = 98.997525 \\) OVL. Their short open interest after one funding period is \\( \mathrm{OI}\_{s} \|\_{2} (1) = N + kn = 99.0025 \\) OVL. They pay 99% of the total funding payment, effectively shifting it to their position size on the short side.
 
-PnL for the first trader after the 20% jump in price is
+PnL for the first user after the 20% jump in price is
 
 \\[ \mathrm{PnL} \|_{1} (1) = 0.999975 \cdot (1+0.20) - 1 = 0.19997 \; \mathrm{OVL} \\]
 
-PnL for the second trader, however, on the parasitic funding trade is
+PnL for the second user, however, on the parasitic funding position is
 
 \\[ \mathrm{PnL} \|_{2} (1) = 98.997525 \cdot (1 + 0.20) + 99.0025 \cdot (1 - 0.20) - 198 = -0.00097 \; \mathrm{OVL} \\]
 
-on a funding payment opportunity of \\( 0.0025 \\) OVL. What was assumed to be a sure gain of +0.0025 OVL, actually turned into a loss of -0.00097 OVL. Even a 1% gain in the feed (\\( r = 0.01 \\)) would result in a loss of -2.475e-05 OVL for trader 2.
+on a funding payment opportunity of \\( 0.0025 \\) OVL. What was assumed to be a sure gain of +0.0025 OVL, actually turned into a loss of -0.00097 OVL. Even a 1% gain in the feed (\\( r = 0.01 \\)) would result in a loss of -2.475e-05 OVL for user 2.
 
 ### Collateral Approach
 
-Contrast with the traditional collateral approach but applied to our system. After one funding period, trader 1 would pay 0.000025 from their collateral, still 1% of the total funding payment.
+Contrast with the traditional collateral approach but applied to our system. After one funding period, user 1 would pay 0.000025 from their collateral, still 1% of the total funding payment.
 
 Their PnL would change to
 
 \\[ \mathrm{PnL} \|_{1} (1) = 1.0 \cdot (1+0.20) - 1 - 0.000025 = 0.199975 \; \mathrm{OVL} \\]
 
-slightly higher than in the OI approach. Trader 2, however, makes risk free profit. They pay 0.002475 OVL in funding for their long but receive 0.0025 OVL in funding for their short, a net gain of 2.5e-05 OVL. This is simply trader 1's portion of the funding payment.
+slightly higher than in the OI approach. User 2, however, makes risk free profit. They pay 0.002475 OVL in funding for their long but receive 0.0025 OVL in funding for their short, a net gain of 2.5e-05 OVL. This is simply user 1's portion of the funding payment.
 
-Trader 2's PnL would change to
+User 2's PnL would change to
 
 \\[ \mathrm{PnL} \|_{2} (1) = 99 \cdot (1 + 0.20) + 99 \cdot (1 - 0.20) - 0.002475 + 0.0025 - 198 = 0.000025 \; \mathrm{OVL} \\]
 
@@ -173,9 +173,9 @@ yielding risk free profit.
 
 ## Considerations
 
-Traders have to be careful in adjusting to this unusual approach we're taking to funding. Your exposure to the trade, along with collateral amounts, increases/decreases with funding payments through our aggregate open interest quantities.
+Users have to be careful in adjusting to this unusual approach we're taking to funding. Your exposure to the position, along with collateral amounts, increases/decreases with funding payments through our aggregate open interest quantities.
 
-Traders can see this through our expression for the value of their position
+Users can see this through our expression for the value of their position
 
 \\[ \mathrm{V} (t) = \mathrm{OI} (t) - D \pm \mathrm{OI} (t) \cdot \bigg(\frac{P(t)}{P(0)} - 1 \bigg) \\]
 
@@ -186,7 +186,7 @@ As funding is paid, \\( \mathrm{N}(t) \\) decreases alongside \\( \mathrm{OI} (t
 
 ### Fees Paid
 
-How does this compare in terms of funding fees paid by the trader? Trader 1's PnL after one funding period shows the difference.
+How does this compare in terms of funding fees paid by the user? User 1's PnL after one funding period shows the difference.
 
 With the OI approach, their PnL is
 
@@ -219,7 +219,7 @@ f_l(t) &\equiv& k \cdot \frac{\mathrm{OI}_{imb} (t)}{\mathrm{OI}_{l}(t)} \\
 f_s(t) &\equiv& k \cdot \frac{\mathrm{OI}_{imb} (t)}{\mathrm{OI}_{s}(t)}
 \end{eqnarray}$$
 
-Open interest associated with trader 1's position after one funding period in the OI approach becomes
+Open interest associated with user 1's position after one funding period in the OI approach becomes
 
 \\[ \mathrm{OI}\_{l} \|\_{1} (1) = \mathrm{OI}\_{l} \|\_{1} (0) \cdot \bigg [ 1 - f_l(0) \bigg] \\]
 

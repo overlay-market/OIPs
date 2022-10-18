@@ -11,14 +11,14 @@ updated: N/A
 
 Issue to address with this note:
 
-- Prevent traders from taking advantage of the fact that the TWAP lags the spot price.
+- Prevent users from taking advantage of the fact that the TWAP lags the spot price.
 
 
 ## Context
 
-Offering Uniswap TWAPs as markets on Overlay comes with a catch. The TWAP averaged over the previous \\( \Delta \\) blocks only catches up to changes in the spot price *after the next* \\( \Delta \\) blocks have gone by. This is easily exploitable as a trader, particularly on large jumps in spot.
+Offering Uniswap TWAPs as markets on Overlay comes with a catch. The TWAP averaged over the previous \\( \Delta \\) blocks only catches up to changes in the spot price *after the next* \\( \Delta \\) blocks have gone by. This is easily exploitable as a user, particularly on large jumps in spot.
 
-A trader could wait for a jump to happen on the spot market, realize the direction the TWAP will be going once it catches up to spot over the next \\( \Delta \\) blocks, and scalp an easily assured profit. We've already seen this on [Kovan](https://kovan.overlay.exchange/) with our old contracts.
+A user could wait for a jump to happen on the spot market, realize the direction the TWAP will be going once it catches up to spot over the next \\( \Delta \\) blocks, and scalp an easily assured profit. We've already seen this on [Kovan](https://kovan.overlay.exchange/) with our old contracts.
 
 For example,
 
@@ -26,14 +26,14 @@ For example,
 
 displaying 1.5 hours of [simulated data](https://github.com/overlay-market/pystable/blob/main/example/montecarlo.py) generated from fits to ETH-DAI historical price data. The TWAP is averaged over an hour.
 
-The 1h TWAP value immediately after spot jumps from 1983.65 to 1995.48 is still around 1985.86, and the 1h TWAP value an hour after the jump catches up is 2002.48. If we offer the long entry and exit prices at the rolling 1h TWAP value, the scalp trade over an hour yields easy money.
+The 1h TWAP value immediately after spot jumps from 1983.65 to 1995.48 is still around 1985.86, and the 1h TWAP value an hour after the jump catches up is 2002.48. If we offer the long entry and exit prices at the rolling 1h TWAP value, the scalp position over an hour yields easy money.
 
 
 ## Responsive Spreads
 
-To prevent traders from taking advantage of the lag, one solution is to add a "bid-ask spread" to the entry and exit values Overlay markets offer to traders. Such a spread should be responsive to large jumps in the most recent spot price while also inheriting the security properties of the TWAP when traders wish to ultimately take profits.
+To prevent users from taking advantage of the lag, one solution is to add a "bid-ask spread" to the entry and exit values Overlay markets offer to users. Such a spread should be responsive to large jumps in the most recent spot price while also inheriting the security properties of the TWAP when users wish to ultimately take profits.
 
-We propose the bid \\( B \\) and ask \\( A \\) prices offered to traders at time \\( t \\) be
+We propose the bid \\( B \\) and ask \\( A \\) prices offered to users at time \\( t \\) be
 
 \\[ B(t) = \min \bigg[\mathrm{TWAP}(t-\nu, t), \mathrm{TWAP}(t-\Delta, t) \bigg] \cdot e^{-\delta} \\]
 
@@ -45,17 +45,17 @@ where \\( \nu \ll \Delta \\), with an upfront market impact fee burned from stak
 
 Longs receive the ask as their entry price and the bid as their exit price. Shorts receive the bid as their entry price and the ask as their exit price.
 
-\\( \mathrm{TWAP}(t-\nu, t) \\) is a shorter TWAP used as a proxy for the most recent spot price. Traders unfortunately receive the worst possible price, but it does protect the system both against the predictability of the lag in the longer TWAP *and* [spot price manipulation](#spot-manipulation). Good starting values to average over would be \\( \nu = 40 \\) for a 10m shorter TWAP and \\( \Delta = 240 \\) for a 1h longer TWAP.
+\\( \mathrm{TWAP}(t-\nu, t) \\) is a shorter TWAP used as a proxy for the most recent spot price. Users unfortunately receive the worst possible price, but it does protect the system both against the predictability of the lag in the longer TWAP *and* [spot price manipulation](#spot-manipulation). Good starting values to average over would be \\( \nu = 40 \\) for a 10m shorter TWAP and \\( \Delta = 240 \\) for a 1h longer TWAP.
 
 \\( \delta \\) is a static spread, on top of the bid-ask TWAP values, used to discourage front-running of the shorter TWAP, which acts as a proxy for spot. Spot values from Uniswap pools shouldn't be used, as they [are vulnerable to manipulation](https://samczsun.com/taking-undercollateralized-loans-for-fun-and-for-profit/).
 
-\\( \lambda Q_a \\) is a market impact term to minimize the damage associated with front-running the TWAP in the event the spot price spikes above the static spread, imposed when new positions are built. \\( Q \\) is the unadjusted open interest for the trade. \\( Q_a \\) is the rolling queued open interest on side \\( a \in \\{ l, s \\} \\) over the last \\( \nu \\) blocks. It should include the trader's proposed \\( Q \\).
+\\( \lambda Q_a \\) is a market impact term to minimize the damage associated with front-running the TWAP in the event the spot price spikes above the static spread, imposed when new positions are built. \\( Q \\) is the unadjusted open interest for the position. \\( Q_a \\) is the rolling queued open interest on side \\( a \in \\{ l, s \\} \\) over the last \\( \nu \\) blocks. It should include the user's proposed \\( Q \\).
 
 Applying a static spread with \\( \delta = 0.00624957 \\) to the 1.5 hours of simulated data plotted above
 
 ![Image of Twap Lag With Spread Plot](../assets/oip-1/twap_lag_double_spread.png)
 
-shows the scalp is no longer profitable over the hour following the jump, as the same long trade now has an entry price at the ask of 1998.31, immediately after the jump, and an exit price at the bid of 1990.01, 1 hour after the jump.
+shows the scalp is no longer profitable over the hour following the jump, as the same long position now has an entry price at the ask of 1998.31, immediately after the jump, and an exit price at the bid of 1990.01, 1 hour after the jump.
 
 The downside with this approach is we likely reduce the amount of higher frequency trading that occurs on the platform. Over shorter time horizons, it becomes more difficult to exit with a profit, as one has to overcome the spread. For example, examining 6 hours of simulated data
 
@@ -63,7 +63,7 @@ The downside with this approach is we likely reduce the amount of higher frequen
 
 shorting the local top here gives an entry price at the bid of 2489.67 and an exit price at the ask of 2459.50, for a profit (without fees) of 1.21%. Spot on the other hand moved 3% over the same period.
 
-Over longer time horizons, traders can still make significant profits. Looking at 2 days
+Over longer time horizons, users can still make significant profits. Looking at 2 days
 
 ![Image of Twap Lag With Spread And Vol Zoom Out Plot](../assets/oip-1/twap_lag_double_spread_vol_zoom_1x.png)
 
@@ -71,7 +71,7 @@ and 3 months of simulated data
 
 ![Image of Twap Lag With Spread Full Plot](../assets/oip-1/twap_lag_double_spread_all.png)
 
-shows markets remain tradeable.
+shows markets remain positionable.
 
 
 ## Calibrating \\( \delta \\)
@@ -91,7 +91,7 @@ $$\begin{eqnarray}
 \delta_s &=& - \frac{1}{2} F_{X_{\nu}}^{-1}(\alpha)
 \end{eqnarray}$$
 
-such that the value at risk to the system from a trader entering into the TWAP scalp over the next \\( \nu \\) blocks is zero with confidence \\( 1-\alpha \\).
+such that the value at risk to the system from a user entering into the TWAP scalp over the next \\( \nu \\) blocks is zero with confidence \\( 1-\alpha \\).
 
 \\( F_{X_{\nu}} \\) and \\( F_{X_{\nu}}^{-1} \\) are, respectively, the CDF and inverse CDF of the [Levy stable](https://en.wikipedia.org/wiki/Stable_distribution) random variable \\( X_{\nu} \sim S(a, b, \mu \nu, \sigma \cdot (\frac{\nu}{a})^{1/a}) \\).
 
@@ -114,7 +114,7 @@ with inverse
 
 ## Calibrating \\( \lambda \\)
 
-\\( \lambda Q \\), as an additional market impact term, offers protection against large jumps in spot that *exceed* our expectations used in calibrating \\( \delta \\). Furthermore, imposing significant market impact (i.e. slippage) on large trades guards the system against traders who have more information than what is currently reflected in the market's current spot price.
+\\( \lambda Q \\), as an additional market impact term, offers protection against large jumps in spot that *exceed* our expectations used in calibrating \\( \delta \\). Furthermore, imposing significant market impact (i.e. slippage) on large positions guards the system against users who have more information than what is currently reflected in the market's current spot price.
 
 Our goal is to have the market impact term \\( e^{\lambda Q} \\) produce bid and ask values that will minimize the expected profits from the scalp in the e.x. 1% of the time *when* spot jumps more than the static spread over a 10 minute interval.
 
@@ -129,11 +129,11 @@ $$\begin{eqnarray}
 \lambda_s &=& \frac{1}{Q_0} \cdot \ln \bigg[ 2 - \frac{\int_{-\infty}^{0} dy \; e^{y} f_{Y_{\nu}} (y)}{F_{Y_{\nu}} (0)} \bigg]
 \end{eqnarray}$$
 
-such that the expected value (EV) of the PnL for the scalp trade in the case when spot exceeds the spread over the next \\( \nu \\) blocks is less than or equal to zero for \\( Q \geq Q_0 \\).
+such that the expected value (EV) of the PnL for the scalp position in the case when spot exceeds the spread over the next \\( \nu \\) blocks is less than or equal to zero for \\( Q \geq Q_0 \\).
 
 \\( f_{Y_{\nu}} \\) and \\( F_{Y_{\nu}} \\) are, respectively, the PDF and CDF of \\( Y_{\nu} \sim S(a, b, \mu \nu - 2\delta, \sigma \cdot (\frac{\nu}{a})^{1/a}) \\).
 
-Choices for \\( Q_0 \\) can be framed with respect to a percentage of our market's open interest cap, \\( Q_{max} \\). Governance must choose a value for \\( Q_0 \\) that balances EV risks from the scalp trade vs platform usability risks due to severe slippage. We give suggested values with concrete numbers below.
+Choices for \\( Q_0 \\) can be framed with respect to a percentage of our market's open interest cap, \\( Q_{max} \\). Governance must choose a value for \\( Q_0 \\) that balances EV risks from the scalp position vs platform usability risks due to severe slippage. We give suggested values with concrete numbers below.
 
 ### Implementation
 
@@ -149,7 +149,7 @@ Market impact can then be calculated based off of how much of the allowed open i
 
 with slippage curves we can compare to other AMMs over the open interest range we support, \\( q \in [0, 1] \\).
 
-Further, the manner in which we enforce market impact is important. If we choose to adjust bid/ask values for market impact, we either ruin the fungibility of position shares (ERC-1155) or have traders not know what their exact slippage will be until the next oracle fetch occurs. The latter is terrible UX as a whale could come in after a small fish in the same update period and cause slippage for the small fish to be massive.
+Further, the manner in which we enforce market impact is important. If we choose to adjust bid/ask values for market impact, we either ruin the fungibility of position shares (ERC-1155) or have users not know what their exact slippage will be until the next oracle fetch occurs. The latter is terrible UX as a whale could come in after a small fish in the same update period and cause slippage for the small fish to be massive.
 
 Alternatively, imposing market impact as an upfront fee burned from staked collateral when users build their positions maintains fungibility of the position shares and does not burn small fish.
 
@@ -172,11 +172,11 @@ Requiring negative EV on the scalp for position sizes greater than \\( q_0 = 0.0
 
 The prior TWAP fits can be slightly misleading since they are taken with respect to 1h TWAP data, which won't be the same as fits to spot.
 
-We use `pystable` again to fit 600 days of 1 minute data on the [ETH/USD spot market](https://ftx.com/en/trade/ETH/USD), from timestamp `1577836800` (December 31, 2019) to `1629729120` (August 8, 2021).
+We use `pystable` again to fit 600 days of 1 minute data on the [ETH/USD spot market](https://ftx.com/en/position/ETH/USD), from timestamp `1577836800` (December 31, 2019) to `1629729120` (August 8, 2021).
 
 Assuming 15 second blocks, per-block parameter values obtained are `a = 1.3323780695989331`, `b = 0.028298587221832504`, `mu = 5.439488998979958e-06`, `sig = 0.00023820339727490902`. Take the payoff cap to be \\( C_p = 4 \\) for a max PnL of 400% (5x payoff).
 
-For 99% confidence (`alpha = 0.01`), we have a much larger `delta = 0.01772033390453983`. At the 95% confidence level (`alpha = 0.05`), we have a tradeable value of `delta = 0.005725031958894104`. The latter is a spread of about 57 bps on either side of the TWAP (1.14% total).
+For 99% confidence (`alpha = 0.01`), we have a much larger `delta = 0.01772033390453983`. At the 95% confidence level (`alpha = 0.05`), we have a positionable value of `delta = 0.005725031958894104`. The latter is a spread of about 57 bps on either side of the TWAP (1.14% total).
 
 The following table provides a list of \\( \delta \\) values for different confidence levels \\( \alpha \\)
 
@@ -197,13 +197,13 @@ Similarly, for various \\( (\alpha, q_0) \\) combinations, we have \\( \tilde{\l
 | 0.075 | 2.323 | 1.162 | 0.774 | 0.581 | 0.465 | 0.387 | 0.332 |
 | 0.10 | 1.884 | 0.942 | 0.628 | 0.471 | 0.377 | 0.314 | 0.269 |
 
-We can compare the expected amount of the OI cap we lose to traders versus the typical position size the trader takes. Plotting \\( \alpha \cdot \mathbb{E}[ \mathrm{PnL} \| \mathrm{PnL}_{\lambda = 0} > 0 ] \\) in the range where the trader expects +EV, \\( q \in [0, q_0] \\),
+We can compare the expected amount of the OI cap we lose to users versus the typical position size the user takes. Plotting \\( \alpha \cdot \mathbb{E}[ \mathrm{PnL} \| \mathrm{PnL}_{\lambda = 0} > 0 ] \\) in the range where the user expects +EV, \\( q \in [0, q_0] \\),
 
 ![Image of EV Comparison Plot](../assets/oip-1/twap_lag_ev.png)
 
 shows the more uncertainty we allow in \\( \alpha \\), the more we should expect to lose to scalpers.
 
-Choosing \\( q_0 = 0.05 \\) and \\( \alpha = 0.05 \\), yield tradeable values for our ETH-DAI market of \\( (\delta, \tilde{\lambda} ) = (0.00573, 0.626) \\). Static spread amounts to 57 bps. Slippage amounts to about 63 bps for every 1% of the OI cap.
+Choosing \\( q_0 = 0.05 \\) and \\( \alpha = 0.05 \\), yield positionable values for our ETH-DAI market of \\( (\delta, \tilde{\lambda} ) = (0.00573, 0.626) \\). Static spread amounts to 57 bps. Slippage amounts to about 63 bps for every 1% of the OI cap.
 
 Comparing our slippage values when fiting FTX ETH/USD, UNI/USD, and YFI/USD prices vs Uniswap V2 slippage (\\( q = \frac{\delta x}{x} \\))
 
@@ -211,7 +211,7 @@ Comparing our slippage values when fiting FTX ETH/USD, UNI/USD, and YFI/USD pric
 
 shows feeds with much heavier tails require far more slippage as protection. Our ETH-DAI fit beats out Uni V2 over the range of interest if our OI cap choice is close to the underlying liquidity in the spot pool.
 
-Backtesting against the last year of FTX historical data for ETH/USD, UNI/USD, YFI/USD, and ALCX/USD, one finds the protocol's losses to the scalp trader would be minimal with our bid/ask spread implementation. In fact, the trader often loses substantially, particularly on the short scalp (approximately -10% of OI cap over 1-1.5 years). Refer to the end of [this Jupyter notebook](https://github.com/overlay-market/OIPs/blob/master/_notebooks/oip-1/note-8.ipynb) for ETH/USD.
+Backtesting against the last year of FTX historical data for ETH/USD, UNI/USD, YFI/USD, and ALCX/USD, one finds the protocol's losses to the scalp user would be minimal with our bid/ask spread implementation. In fact, the user often loses substantially, particularly on the short scalp (approximately -10% of OI cap over 1-1.5 years). Refer to the end of [this Jupyter notebook](https://github.com/overlay-market/OIPs/blob/master/_notebooks/oip-1/note-8.ipynb) for ETH/USD.
 
 
 ### Replication
@@ -223,7 +223,7 @@ Script to fetch SushiSwap pool data is [here](https://github.com/overlay-market/
 
 ## Deriving \\( \delta \\)
 
-Formally, the maximum attainable profit after \\( \nu \\) blocks, \\( \mathrm{VaR}(\alpha, \nu) \\), from the long scalp trade is given by
+Formally, the maximum attainable profit after \\( \nu \\) blocks, \\( \mathrm{VaR}(\alpha, \nu) \\), from the long scalp position is given by
 
 $$\begin{eqnarray}
 1-\alpha &=& \mathbb{P}[ \mathrm{PnL}(Q, t+\nu) \leq \mathrm{VaR}(\alpha, \nu) | \mathcal{F}_{t-\nu} ] \\
@@ -231,7 +231,7 @@ $$\begin{eqnarray}
 &=& \mathbb{P}\bigg[ Q \cdot \bigg( e^{\mu \nu + \sigma L_{\nu} -2\delta_l - \lambda Q} - 1 \bigg) \leq \mathrm{VaR}(\alpha, \nu) \bigg]
 \end{eqnarray}$$
 
-assuming confidence \\( 1-\alpha \\), where \\( Q \\) is the long open interest taken out by the trader. Our market contracts can only rely on stale information from the oracle feed before the current time \\( t \\): \\( \mathcal{F}_{t-\nu} \\).
+assuming confidence \\( 1-\alpha \\), where \\( Q \\) is the long open interest taken out by the user. Our market contracts can only rely on stale information from the oracle feed before the current time \\( t \\): \\( \mathcal{F}_{t-\nu} \\).
 
 We've made simplifying assumptions by having our entry and exit TWAP values
 
@@ -305,12 +305,12 @@ which is zero when
 
 \\[ \delta_l = \frac{1}{2} F_{X_{\nu}}^{-1}\bigg( F_{X_{\nu}}(g^{-1}(C_p)) - \alpha \bigg) \\]
 
-There is no cap on the short side of the trade as long as \\( C_p \geq 1 \\), so the short spread calculation, \\( \delta_s \\), is unaffected for this adjustment.
+There is no cap on the short side of the position as long as \\( C_p \geq 1 \\), so the short spread calculation, \\( \delta_s \\), is unaffected for this adjustment.
 
 
 ## Deriving \\( \lambda \\)
 
-We want to minimize the expected value of the trader's PnL from the scalp, assuming the PnL would be > 0 without imposing market impact on the trade (i.e. spot has spiked beyond the static spread). Formally, the expected value conditioned on the scalp trade being profitable without market impact is given by
+We want to minimize the expected value of the user's PnL from the scalp, assuming the PnL would be > 0 without imposing market impact on the position (i.e. spot has spiked beyond the static spread). Formally, the expected value conditioned on the scalp position being profitable without market impact is given by
 
 $$\begin{eqnarray}
 \mathbb{E} \bigg[ \mathrm{PnL} (Q, t+\nu) | \mathrm{PnL}_{\lambda = 0} > 0 \bigg] &\approx& \mathbb{E} \bigg[ Q e^{- \lambda Q} \cdot \bigg( e^{Y_{\nu}} - 1 \bigg) - Q \cdot \bigg( 1 - e^{- \lambda Q} \bigg) | Y_{\nu} > 0 \bigg] \\
@@ -336,7 +336,7 @@ when
 
 \\[ \lambda Q \geq h \\]
 
-If we target a particular \\( Q_0 \\) beyond which the trade is negative EV, our market impact parameter will be
+If we target a particular \\( Q_0 \\) beyond which the position is negative EV, our market impact parameter will be
 
 \\[ \lambda = \frac{1}{Q_0} \cdot \ln \bigg[\frac{\int_0^{\infty} dy \; e^{y} f_{Y_{\nu}} (y)}{\int_0^{\infty} dy \; f_{Y_{\nu}} (y)}\bigg] \\]
 
@@ -396,16 +396,16 @@ Though the difference between \\( \lambda \\) values for log-normal vs log-stabl
 
 ![Image of Lambda Norm v Stable Plot](../assets/oip-1/twap_lag_lambda_norm_v_stable.png)
 
-At negative EV for the scalp trade above 2% of the open interest cap as our target for \\( Q_0 \\) (\\( q = 0.02 \\)), there's a ~25x difference between required \\( \lambda \\) values for log-normal and log-stable fits. Meaning, slippage needs to be 25x worse for the log-stable fit to accurately reflect the negative EV condition we want.
+At negative EV for the scalp position above 2% of the open interest cap as our target for \\( Q_0 \\) (\\( q = 0.02 \\)), there's a ~25x difference between required \\( \lambda \\) values for log-normal and log-stable fits. Meaning, slippage needs to be 25x worse for the log-stable fit to accurately reflect the negative EV condition we want.
 
 
 ## Spot Manipulation
 
 Uniswap offers the TWAP as a method for offering a [manipulation-resistant on-chain oracle](https://uniswap.org/whitepaper-v3.pdf). There are two scenarios to be wary of with our bid-ask approach:
 
-1. Spot jumps and a trader manipulates the pool back to the original price to minimize the spread and effectively obtain the scalp profit.
+1. Spot jumps and a user manipulates the pool back to the original price to minimize the spread and effectively obtain the scalp profit.
 
-2. Over several blocks, a trader swaps through a spot feed we support into OVL and uses the proceeds to immediately enter trades on the feed's associated Overlay market, before the shorter TWAP can catch up to the spot move.
+2. Over several blocks, a user swaps through a spot feed we support into OVL and uses the proceeds to immediately enter positions on the feed's associated Overlay market, before the shorter TWAP can catch up to the spot move.
 
 For the first scenario, the cost of manipulation is limited to the amount spot *actually* jumps within \\( \nu \\) blocks. Once a real jump occurs, the attacker suppresses the price back to the lagging TWAP value over the following \\( \nu \\) blocks, as they know the scalp will be profitable over the next \\( \Delta \\) blocks once the attack is over, spot recalibrates to the jump, and they've locked in their entry for the scalp.
 
@@ -427,17 +427,17 @@ At a minimum, the attacker will need
 
 \\[ \lim_{\epsilon \to 0} \mathrm{TC}\|_{B} (\epsilon) = \frac{x}{2} \cdot \frac{\nu}{L} = \frac{y}{2} \cdot \frac{\nu}{L} \\]
 
-to execute the scalp trade profitably in scenario 1. Assuming parameters:
+to execute the scalp position profitably in scenario 1. Assuming parameters:
 
 - \\( \nu = 40 \\): for a shorter 10 minute TWAP
 - \\( x = y = \mathrm{$10M} \\): for a spot pool with liquidity of $20M
 - \\( L = 5 \\): for maximum leverage of 5x
 
-The minimum cost of attack comes out to $80M, entered directly into the Overlay market as collateral for the trade. Constraints on market impact \\( \lambda \\) required by the second scenario will make this unprofitable, as we'll show below.
+The minimum cost of attack comes out to $80M, entered directly into the Overlay market as collateral for the position. Constraints on market impact \\( \lambda \\) required by the second scenario will make this unprofitable, as we'll show below.
 
 For the second scenario, the capital used to manipulate the spot market is put to use as collateral for the Overlay market leg of the attack. For instance, say we offer ETH-DAI as an Overlay market. The attacker would swap a significant amount of DAI routed through DAI \\( \to \\) ETH \\( \to \\) OVL on Uniswap, then send the output OVL into a long on the ETH-DAI Overlay market to immediately front-run the known change to the \\( \mathrm{TWAP}(t-\nu, t) \\) value.
 
-Therefore, unlike the first scenario, there really isn't a sunk cost to producing this attack, as long as all of the capital swapped on Uniswap is used as collateral for the trade on Overlay. Market impact ultimately saves us here. Say the attacker takes out \\( Q = L \cdot \delta x \\) worth of long open interest on Overlay immediately after the spot swap to bump up the price. \\( L \\) is the leverage used and \\( \delta x \\) is the capital swapped for on spot.
+Therefore, unlike the first scenario, there really isn't a sunk cost to producing this attack, as long as all of the capital swapped on Uniswap is used as collateral for the position on Overlay. Market impact ultimately saves us here. Say the attacker takes out \\( Q = L \cdot \delta x \\) worth of long open interest on Overlay immediately after the spot swap to bump up the price. \\( L \\) is the leverage used and \\( \delta x \\) is the capital swapped for on spot.
 
 The capital \\( \delta x \\) required to bump the Uniswap spot price up by \\( 0 < \epsilon < \infty \\) is
 

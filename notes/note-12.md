@@ -18,14 +18,14 @@ This note aims to address the following issues:
 
 The benefit of having an Overlay market on ETH/OVL while liquidity miners stake their Uni V3 ETH/OVL LP tokens is those same liquidity miners can construct a portfolio on-chain that uses the Overlay market to hedge out some of the underlying spot LP exposure to the token they least prefer.
 
-For miners that prefer exposure only to OVL, traders can
+For miners that prefer exposure only to OVL, users can
 
 - Liquidity mine with ETH/OVL LP tokens to earn OVL rewards
 - Take out a 1x short on ETH/OVL to hedge LP spot exposure to ETH
 
 The strategy will replicate (to a degree) staking OVL alone to earn OVL rewards.
 
-For miners that prefer exposure only to ETH, traders can
+For miners that prefer exposure only to ETH, users can
 
 - Borrow OVL with ETH
 - Liquidity mine with ETH/OVL LP tokens to earn OVL rewards
@@ -33,9 +33,9 @@ For miners that prefer exposure only to ETH, traders can
 
 The strategy will replicate (to a degree) staking ETH alone to earn OVL rewards.
 
-The downside to both strategies is the trader still experiences impermanent loss (can't be hedged out with Overlay positions) and now has to worry about the funding rate on the Overlay market. The upside is replication of single-sided staking when ignoring impermanent loss and funding.
+The downside to both strategies is the user still experiences impermanent loss (can't be hedged out with Overlay positions) and now has to worry about the funding rate on the Overlay market. The upside is replication of single-sided staking when ignoring impermanent loss and funding.
 
-From a protocol perspective, the upside to these strategies is there should exist natural demand to trade on Overlay markets from liquidity miners.
+From a protocol perspective, the upside to these strategies is there should exist natural demand to position on Overlay markets from liquidity miners.
 
 
 ## Replicating Portfolio
@@ -58,7 +58,7 @@ at some time \\( t \geq 0 \\) in the future, for \\( N \\) OVL and \\( \frac{N}{
 
 ### Single-Sided OVL Staking
 
-To replicate liquidity mining by only staking OVL, the trader that prefers exposure to only OVL can take out a 1x short on the Overlay market for ETH/OVL in addition to their LP token exposure.
+To replicate liquidity mining by only staking OVL, the user that prefers exposure to only OVL can take out a 1x short on the Overlay market for ETH/OVL in addition to their LP token exposure.
 
 The value of the 1x short in OVL terms will be approximately
 
@@ -77,13 +77,13 @@ which is independent of the price of ETH relative to OVL. The replicating portfo
 
 ### Single-Sided ETH Staking
 
-To replicate liquidity mining by only staking ETH, the trader that prefers exposure to only ETH can borrow OVL with ETH collateral and take out a 1x long on the Overlay market for ETH/OVL in addition to their LP token exposure.
+To replicate liquidity mining by only staking ETH, the user that prefers exposure to only ETH can borrow OVL with ETH collateral and take out a 1x long on the Overlay market for ETH/OVL in addition to their LP token exposure.
 
 The value of the 1x long in OVL terms will be approximately
 
 \\[ V_{long} (t) = N + \frac{N}{P(0)} \cdot \bigg[ P(t) - P(0) \bigg] \\]
 
-when ignoring funding, for an initial \\( N \\) OVL of collateral deposited to back the position. To obtain that initial amount of OVL collateral, the trader takes out an ETH collateralized loan of \\( N \\) OVL from a lending protocol, for a vault debt in OVL terms of
+when ignoring funding, for an initial \\( N \\) OVL of collateral deposited to back the position. To obtain that initial amount of OVL collateral, the user takes out an ETH collateralized loan of \\( N \\) OVL from a lending protocol, for a vault debt in OVL terms of
 
 \\[ V_{debt}(t) = -N \\]
 

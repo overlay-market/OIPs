@@ -16,13 +16,13 @@ Issue to address with this note:
 
 ## Context
 
-Overlay allows traders to express a view on a data stream without the need for traditional counterparties to take the other side of their trade. The system accomplishes this through a peer-to-pool model. Traders lock the settlement currency of the system (OVL) in Overlay market contract pools at a time \\( 0 \\) and, in exchange, receive a position token detailing the attributes of their trade. At some time \\( t > 0 \\) in the future when they wish to exit their position, traders can burn the position token through the market contract, and the market contract will compensate them for their profit or loss with more or less OVL than what they initially locked.
+Overlay allows users to express a view on a data stream without the need for traditional counterparties to take the other side of their position. The system accomplishes this through a peer-to-pool model. Users lock the settlement currency of the system (OVL) in Overlay market contract pools at a time \\( 0 \\) and, in exchange, receive a position token detailing the attributes of their position. At some time \\( t > 0 \\) in the future when they wish to exit their position, users can burn the position token through the market contract, and the market contract will compensate them for their profit or loss with more or less OVL than what they initially locked.
 
-To compensate traders for a profitable trade when they exit their position, the market contract mints the amount of OVL associated with the realized profits to the circulating supply. The market contract then returns to the trader the initial OVL collateral locked plus the newly minted OVL.
+To compensate users for a profitable position when they exit their position, the market contract mints the amount of OVL associated with the realized profits to the circulating supply. The market contract then returns to the user the initial OVL collateral locked plus the newly minted OVL.
 
-Conversely, for an unprofitable trade, the market contract removes the amount of OVL associated with the realized losses from the circulating supply, by burning upon exit a portion of the initial OVL collateral locked. The market contract then returns to the trader an amount of OVL equal to the initial collateral locked minus the burnt losses.
+Conversely, for an unprofitable position, the market contract removes the amount of OVL associated with the realized losses from the circulating supply, by burning upon exit a portion of the initial OVL collateral locked. The market contract then returns to the user an amount of OVL equal to the initial collateral locked minus the burnt losses.
 
-In this way, the passive OVL holder effectively acts as the counterparty to all unbalanced trades on Overlay markets through risk of dilution. This includes, in particular, spot OVL-ETH liquidity providers (LPs) that backstop liquidity for traders to enter and exit the system.
+In this way, the passive OVL holder effectively acts as the counterparty to all unbalanced positions on Overlay markets through risk of dilution. This includes, in particular, spot OVL-ETH liquidity providers (LPs) that backstop liquidity for users to enter and exit the system.
 
 A simple example, without leverage and [funding payments](note-1), to illustrate.
 
@@ -42,7 +42,7 @@ At a future time \\( t \\),
 
 If the \\( X \\) feed had gone down 20% instead, the market contract would have burned 2 OVL from the circulating supply and returned 8 OVL to us. The end state would have been a total circulating supply of 7,999,998 OVL, and we would have had a balance of 8 OVL.
 
-Things get more complex when we include leverage and funding into a peer-to-pool model, with multiple positions and traders to account for in a gas-efficient way. The purpose of this note is to outline the accounting with these dynamics.
+Things get more complex when we include leverage and funding into a peer-to-pool model, with multiple positions and users to account for in a gas-efficient way. The purpose of this note is to outline the accounting with these dynamics.
 
 
 ## Dynamics with Leverage and Funding

@@ -21,7 +21,7 @@ Issue to address with this note:
 
 With Overlay, a death spiral can occur through the protocol's OVL-X inverse markets, where X is ETH, DAI, etc., when all open interest on these markets is bearish OVL and a significant price drop of OVL relative to X occurs.
 
-The payout of bearish OVL trades trends toward infinity as the price of OVL relative to X goes to zero, given the nature of the inverse market. Infinite printing by the market contract from this payout would lead to a collapse of the system.
+The payout of bearish OVL positions trends toward infinity as the price of OVL relative to X goes to zero, given the nature of the inverse market. Infinite printing by the market contract from this payout would lead to a collapse of the system.
 
 ### Background
 
@@ -39,7 +39,7 @@ This is particularly worrisome for the OVL-X inverse markets, as PnL to be print
 
 ![Image of Inverse Market Payoff Plot](../assets/oip-1/inverse_payoff.svg)
 
-where we've normalized with respect to initial imbalance and initial price. As the price of OVL relative to X trends toward 0, the protocol is forced to print more and more OVL for profitable bearish trades. Bears can then dump this OVL on spot alongside further bearish positions on the inverse market to collapse the spot price more, print more OVL, and continue dumping. Rinse and repeat, and the system eventually prints to infinity.
+where we've normalized with respect to initial imbalance and initial price. As the price of OVL relative to X trends toward 0, the protocol is forced to print more and more OVL for profitable bearish positions. Bears can then dump this OVL on spot alongside further bearish positions on the inverse market to collapse the spot price more, print more OVL, and continue dumping. Rinse and repeat, and the system eventually prints to infinity.
 
 
 ## Stopping the Death Spiral
@@ -48,11 +48,11 @@ With this note, we build on prior caps work from [WPv1](https://firebasestorage.
 
 To mitigate the death spiral, we can include:
 
-- Payoff caps -- limits the maximum percent change in price offered to traders in a position's payoff function
+- Payoff caps -- limits the maximum percent change in price offered to users in a position's payoff function
 
 - Dynamic OI caps -- limits *new* position builds when the market has printed an excessive amount of OVL over a prior period of time (cooldown on trading)
 
-Constant payoff and OI caps make it possible to enforce a worst case amount printed *per trade*. Dynamic OI caps take this a step further and make it possible to enforce the worst case amount printed *over a period of time*, by limiting trading if excessive printing has happened in the recent past. Thus, the combination of payoff caps with dynamic OI caps offers us an avenue to enforce a worst case inflation rate.
+Constant payoff and OI caps make it possible to enforce a worst case amount printed *per position*. Dynamic OI caps take this a step further and make it possible to enforce the worst case amount printed *over a period of time*, by limiting trading if excessive printing has happened in the recent past. Thus, the combination of payoff caps with dynamic OI caps offers us an avenue to enforce a worst case inflation rate.
 
 The maximum amount the system is allowed to print over a given period of time will then degenerate to
 
@@ -60,13 +60,13 @@ The maximum amount the system is allowed to print over a given period of time wi
 
 irrespective of future price.
 
-- \\( C_{P} \\) is the payoff cap putting a maximum on \\( [\frac{P(m)}{P(0)} - 1] \\) offered to traders. This can be set
+- \\( C_{P} \\) is the payoff cap putting a maximum on \\( [\frac{P(m)}{P(0)} - 1] \\) offered to users. This can be set
 
 - \\( C_{\mathrm{OI}} \\) is the dynamic OI cap putting a maximum on \\( \mathrm{OI}\_{imb} \\) taken on by the market contract. This can be set and lowers/raises dependent on the amount of printing that has occurred in the prior \\( \omega \\) blocks.
 
 ### Payoff Caps
 
-Payoff caps [limit downside exposure](https://www.sciencedirect.com/science/article/abs/pii/S016920700900096X) the protocol has to tail events in the price of the underlying feed, enforcing a predictable (non-random) worst case scenario per trade. Consider a more [empirically accurate model](https://www.jstor.org/stable/2350970) than log-normal for the price of the TWAP market:
+Payoff caps [limit downside exposure](https://www.sciencedirect.com/science/article/abs/pii/S016920700900096X) the protocol has to tail events in the price of the underlying feed, enforcing a predictable (non-random) worst case scenario per position. Consider a more [empirically accurate model](https://www.jstor.org/stable/2350970) than log-normal for the price of the TWAP market:
 
 \\[ P(t) = P(0) e^{\mu t + \sigma L_t} \\]
 
@@ -86,11 +86,11 @@ Worse, improper modeling of tail behavior makes it such that the 99% confidence 
 
 where the horizontal red dashed line represents a CDF value of 0.99. An anticipated upper bound of 3.3x on the percentage change in log price when modeling with the normal distribution (green) with a confidence level of 99%, can turn out to be an actual upper bound of 32x when modeling with the Cauchy distribution (blue) using the same degree of confidence. This is an order of magnitude difference that can result from model or calibration error.
 
-How do we then ensure the protocol is robust with respect to tail events in the price of the underlying feed? Guided by Taleb's work, we cut off the damage associated with the tails: simply by setting a maximum value in the contract payoff for the price delta each trade can have. For the inverse market, the prior PnL plot would reduce to something like
+How do we then ensure the protocol is robust with respect to tail events in the price of the underlying feed? Guided by Taleb's work, we cut off the damage associated with the tails: simply by setting a maximum value in the contract payoff for the price delta each position can have. For the inverse market, the prior PnL plot would reduce to something like
 
 ![Image of Capped Inverse Market Payoff Plot](../assets/oip-1/inverse_payoff_capped.svg)
 
-where any price changes that occur in the tails (orange shaded area) lead to the same finite PnL paid out by the system (top border of orange shaded area). This definitively eliminates the possibility of a single trade printing an infinite amount of OVL.
+where any price changes that occur in the tails (orange shaded area) lead to the same finite PnL paid out by the system (top border of orange shaded area). This definitively eliminates the possibility of a single position printing an infinite amount of OVL.
 
 The price delta at which to place this cap can be linked to our prior VaR work.
 
@@ -109,6 +109,6 @@ Mitigates death spiral through two layers:
 
 1. Cap on contract payoff limits infinite printing from one existing set of short positions on inverse market. We know what is the worst case amount we can print on one "cycle" of OI builds.
 
-2. Dynamic OI cap prevents recycling of collateral from capped short payout immediately into a set of *new* short positions on the inverse market, slowing traders ability to ride price down further after dumping prior profits -- a circuit breaker. Effectively can ensure worst case inflation rate by dynamically limiting max aggregate OI market is willing to take on for prolonged period of time.
+2. Dynamic OI cap prevents recycling of collateral from capped short payout immediately into a set of *new* short positions on the inverse market, slowing users ability to ride price down further after dumping prior profits -- a circuit breaker. Effectively can ensure worst case inflation rate by dynamically limiting max aggregate OI market is willing to take on for prolonged period of time.
 
 Do we have problems if keep bumping up against max inflation rate cap and lowering caps or short circuiting trading constantly? Is this a reason for having smooth increases/decreases in dynamic cap by market contract? Or are sudden stops better?

@@ -11,22 +11,22 @@ updated: N/A
 
 Issue to address with this note:
 
-- How do we provide opportunities for traders to earn rewards by balancing the outstanding longs vs shorts on a market?
+- How do we provide opportunities for users to earn rewards by balancing the outstanding longs vs shorts on a market?
 
 
 ## Stability with Fixed Pricing
 
-Our biggest problem with Overlay is ensuring the supply of the settlement currency (OVL) remains relatively stable over longer periods of time. The goal is to limit excessive inflation that would significantly dilute all passive OVL holders who effectively act as the counterparty to all unbalanced trades, including spot OVL-ETH LPs that backstop liquidity in the system. Ideally, traders should be rewarded for stabilizing the system by taking the other side of any unbalanced market. If we can arrange this, we likely have the appropriate incentivizes for longer time horizons.
+Our biggest problem with Overlay is ensuring the supply of the settlement currency (OVL) remains relatively stable over longer periods of time. The goal is to limit excessive inflation that would significantly dilute all passive OVL holders who effectively act as the counterparty to all unbalanced positions, including spot OVL-ETH LPs that backstop liquidity in the system. Ideally, users should be rewarded for stabilizing the system by taking the other side of any unbalanced market. If we can arrange this, we likely have the appropriate incentivizes for longer time horizons.
 
-As well, keep in mind that different traders will have different preferences. For the example of an ETH-OVL feed (inverse market), some will look to make yield on their ETH, while others will look to make yield on their OVL.
+As well, keep in mind that different users will have different preferences. For the example of an ETH-OVL feed (inverse market), some will look to make yield on their ETH, while others will look to make yield on their OVL.
 
-For each feed, there should be at least two sets of traders with different preferences that can construct a portfolio of positions on Overlay in addition to tokens held from spot exchange swaps such that the trader in question will make yield on their chosen currency of preference by progressively stabilizing the system toward an equilibrium point.
+For each feed, there should be at least two sets of users with different preferences that can construct a portfolio of positions on Overlay in addition to tokens held from spot exchange swaps such that the user in question will make yield on their chosen currency of preference by progressively stabilizing the system toward an equilibrium point.
 
 ## Problems with Floating Price
 
-Floating the price has been ok, but introduced a large amount of additional complexity. Below, we want to explore whether we can offer opportunities for traders to construct "portfolios" that offer consistent yield while using a **fixed price** fetched directly from the oracle i.e., lock price of a new position built at a time \\( t \\) would be the price at the next oracle fetch \\( t^\* \\), where \\( t^\*\_0 < t \leq t^\* \\). Here the star denotes an oracle fetch.
+Floating the price has been ok, but introduced a large amount of additional complexity. Below, we want to explore whether we can offer opportunities for users to construct "portfolios" that offer consistent yield while using a **fixed price** fetched directly from the oracle i.e., lock price of a new position built at a time \\( t \\) would be the price at the next oracle fetch \\( t^\* \\), where \\( t^\*\_0 < t \leq t^\* \\). Here the star denotes an oracle fetch.
 
-We'll go into the mechanisms for accomplishing filling at price \\( P(t^\*) = P^\* \\) even though \\( P(t_0) = P(0) \\) is all of the information we have at time \\( t \\) in a separate note. The strategy in short would be: if the oracle is fetched at \\(t = t^\*\\), then the first trader in `n+1`th update interval of the feed settles all of the trades for the prior `n`th update interval (i.e. sets the price \\(P^\*\\) ), so all trades from \\( t^\*\_0 < t \leq t^\* \\) settle at the same price).
+We'll go into the mechanisms for accomplishing filling at price \\( P(t^\*) = P^\* \\) even though \\( P(t_0) = P(0) \\) is all of the information we have at time \\( t \\) in a separate note. The strategy in short would be: if the oracle is fetched at \\(t = t^\*\\), then the first user in `n+1`th update interval of the feed settles all of the positions for the prior `n`th update interval (i.e. sets the price \\(P^\*\\) ), so all positions from \\( t^\*\_0 < t \leq t^\* \\) settle at the same price).
 
 There's a good argument to be made for the benefits of fixing the price to the oracle fetch. It reduces the number of problems we have to solve from two to one. With a price fixed directly to each oracle fetch, we only have to worry about the stability of the currency supply, since arbitrage opportunities from price tracking the reference feed may not actually solve our stability problems, while also introducing other problems such as e.g., what should the price impact per OVL be.
 
@@ -41,11 +41,11 @@ We will only treat the ETH-OVL market, as it keeps things simpler. The same idea
 
 Furthermore, we will think in terms of "internal time" to keep things simple. That is, each new block is a new time step. Thus time is discrete and we have \\(t_0, t_0+1, \ldots t-1, t, t+1, \ldots \\).
 
-Let the open interest contributed by any one position to the long (short) side be the number \\(N \\) of OVL locked to that side, times the leverage \\(L\\) associated with those \\(N\\)  OVL. Thus, for trader \\( j \\) going long (thus the subscript \\(l\\)) we have
+Let the open interest contributed by any one position to the long (short) side be the number \\(N \\) of OVL locked to that side, times the leverage \\(L\\) associated with those \\(N\\)  OVL. Thus, for user \\( j \\) going long (thus the subscript \\(l\\)) we have
 
 \\[ \mathrm{OI}\_{lj} = L_{lj} \cdot N_{lj}\\]
 
-If that trader has multiple long positions we sum over the OI of each one:
+If that user has multiple long positions we sum over the OI of each one:
 
 \\[\mathrm{OI}\_{lj} = \sum_i L_{lji} N_{lji}\\]
 
@@ -54,7 +54,7 @@ We define the open interest on an entire market as above, summing over first \\(
 
 #### The Setup
 
-Say everyone is an OVL bull to begin with, such that they all go short the ETH-OVL feed (remember, inverse market).  We want some way to encourage traders to take the bear side of the trade, while ensuring that they are rewarded in ETH terms. Then, they are making yield on their ETH and they don't care that they are long ETH-OVL. If everyone is an OVL bear, we want the same mechanism to work for those who want to make yield in OVL terms.
+Say everyone is an OVL bull to begin with, such that they all go short the ETH-OVL feed (remember, inverse market).  We want some way to encourage users to take the bear side of the position, while ensuring that they are rewarded in ETH terms. Then, they are making yield on their ETH and they don't care that they are long ETH-OVL. If everyone is an OVL bear, we want the same mechanism to work for those who want to make yield in OVL terms.
 
 This type of mechanism has already been designed before through funding payments, used as a way to incentivize having the futures price track the spot price. We should flip this on its head and instead *fix the price* but use the funding payment as a means to incentivize *balancing of position notionals* (Synthetix is also [exploring this](https://sips.synthetix.io/sips/sip-80#skew-funding-rate)).
 
@@ -66,7 +66,7 @@ What should the functional form of those funding payments \\( \mathrm{FP}(t) \\)
 
 where we use \\( k \\) as a placeholder for a "constant" adjustable by governance. This constant should be set and adjusted based on the [risk to the system](note-4) the underlying feed adds.
 
-The *funding rate*\\( f(t) \\) imposed on each trader is the cost of holding that position, expressed in units of that trader's open interest. In other words, the funding rate is a source of return on each trader's position size. For the side \\( a \in \\{l, s\\}\\), the funding rate is defined to be
+The *funding rate*\\( f(t) \\) imposed on each user is the cost of holding that position, expressed in units of that user's open interest. In other words, the funding rate is a source of return on each user's position size. For the side \\( a \in \\{l, s\\}\\), the funding rate is defined to be
 
 \\[ {f_a}(t) = \frac{\mathrm{FP}(t)}{\mathrm{OI}\_a(t)}. \\]
 
@@ -87,15 +87,15 @@ These payments from the larger to the smaller open interest ultimately incentivi
 
 ### Case 1: OI Long < OI Short
 
-When \\( \mathrm{OI}\_{imb} < 0 \\), traders who want to earn yield on their ETH can 1x long ETH-OVL on Overlay, lock in the ETH value of their staked OVL ("synthetic ETH"), and get paid to take the long side of the ETH-OVL market through continuous funding. Thus, traders who prefer to denominate **in ETH terms** and wish to increase their ETH balance will compete for these funding payments until \\( \mathrm{OI}\_{imb} \to 0 \\).
+When \\( \mathrm{OI}\_{imb} < 0 \\), users who want to earn yield on their ETH can 1x long ETH-OVL on Overlay, lock in the ETH value of their staked OVL ("synthetic ETH"), and get paid to take the long side of the ETH-OVL market through continuous funding. Thus, users who prefer to denominate **in ETH terms** and wish to increase their ETH balance will compete for these funding payments until \\( \mathrm{OI}\_{imb} \to 0 \\).
 
 #### Portfolio A: High-Yield "Synthetic ETH"
 
-Assume as traders, we want to make yield on our ETH. We can take the traditional funding trade as an example, and execute a similar trade on the Overlay ETH-OVL market.
+Assume as users, we want to make yield on our ETH. We can take the traditional funding position as an example, and execute a similar position on the Overlay ETH-OVL market.
 
-We buy OVL with our ETH on the spot market. Take out a 1x long position on the Overlay ETH-OVL market to lock in the notional value of our staked OVL in ETH terms. Then, this long position gets paid the funding amount above as PnL. And we will rack up funding payments until we exit, or when enough other traders take the long side so funding dries up.
+We buy OVL with our ETH on the spot market. Take out a 1x long position on the Overlay ETH-OVL market to lock in the notional value of our staked OVL in ETH terms. Then, this long position gets paid the funding amount above as PnL. And we will rack up funding payments until we exit, or when enough other users take the long side so funding dries up.
 
-For argument's sake we ignore fees for now. Because we prefer ETH, we care about our cost, value, and PnL in ETH terms. The cost in ETH terms to enter the 1x long ETH-OVL trade on Overlay is simply the cost to buy \\( n \\) OVL on the spot market, at time \\(t_0\\).
+For argument's sake we ignore fees for now. Because we prefer ETH, we care about our cost, value, and PnL in ETH terms. The cost in ETH terms to enter the 1x long ETH-OVL position on Overlay is simply the cost to buy \\( n \\) OVL on the spot market, at time \\(t_0\\).
 
 \\[ C = V(0) = \frac{n}{P(0)} \\]
 
@@ -113,7 +113,7 @@ Thus, the profit/loss **in ETH terms** at time \\(t \\) will be given by \\(\mat
 
 \\[ \mathrm{PnL}(m) = \frac{n}{P(0)} \cdot \bigg[ \prod_{i=1}^m \bigg( 1 + f_l(i) \bigg) - 1  \bigg].\\]
 
-This is simply getting paid funding on top of our initial ETH balance of \\( n / P(0) \\) to go long the ETH-OVL feed (bearish OVL, bullish ETH). This is always profitable for the trader that prefers ETH, when imbalance is toward the OVL bull side: shorts outweigh longs on ETH-OVL. Rate of return \\( r_{l} \\) for this strategy on the initial ETH capital \\( V(0) \\) is
+This is simply getting paid funding on top of our initial ETH balance of \\( n / P(0) \\) to go long the ETH-OVL feed (bearish OVL, bullish ETH). This is always profitable for the user that prefers ETH, when imbalance is toward the OVL bull side: shorts outweigh longs on ETH-OVL. Rate of return \\( r_{l} \\) for this strategy on the initial ETH capital \\( V(0) \\) is
 
 \\[ r_l (m) = \prod_{i=1}^m \bigg( 1 + f_l(i) \bigg) - 1. \\]
 
@@ -122,17 +122,17 @@ This is simply getting paid funding on top of our initial ETH balance of \\( n /
 
 #### Summary
 
-When \\( \mathrm{OI}\_{imb} = \mathrm{OI}\_l - \mathrm{OI}\_s > 0 \\), traders who want to earn yield on their OVL can 1x short ETH-OVL on Overlay with half of their OVL position while selling the other half into ETH. Their aggregate "portfolio" will grow in OVL terms through continuous funding payments ("synthetic OVL"). Thus, traders who prefer to denominate **in OVL terms** and wish to increase their OVL balance will compete for these funding payments until \\( \mathrm{OI}\_{imb} \to 0 \\).
+When \\( \mathrm{OI}\_{imb} = \mathrm{OI}\_l - \mathrm{OI}\_s > 0 \\), users who want to earn yield on their OVL can 1x short ETH-OVL on Overlay with half of their OVL position while selling the other half into ETH. Their aggregate "portfolio" will grow in OVL terms through continuous funding payments ("synthetic OVL"). Thus, users who prefer to denominate **in OVL terms** and wish to increase their OVL balance will compete for these funding payments until \\( \mathrm{OI}\_{imb} \to 0 \\).
 
 #### The Setup
 
-Assume now that \\( \mathrm{OI}\_{imb} = \mathrm{OI}\_l - \mathrm{OI}\_s > 0 \\), so longs outweigh shorts. Traders who prefer to make yield on their OVL will compete to lock in funding payments.
+Assume now that \\( \mathrm{OI}\_{imb} = \mathrm{OI}\_l - \mathrm{OI}\_s > 0 \\), so longs outweigh shorts. Users who prefer to make yield on their OVL will compete to lock in funding payments.
 
 #### Portfolio B: High-Yield "Synthetic OVL"
 
-Again we make a relatively simple trade to lock in funding. If we have \\( n \\) OVL to start, we take out a 1x short position on the Overlay ETH-OVL market with \\( n / 2 \\) staked and swap \\( n / 2 \\) for ETH on the spot market. Because this trader prefers OVL, we care about our cost, value, and PnL in OVL terms.
+Again we make a relatively simple position to lock in funding. If we have \\( n \\) OVL to start, we take out a 1x short position on the Overlay ETH-OVL market with \\( n / 2 \\) staked and swap \\( n / 2 \\) for ETH on the spot market. Because this user prefers OVL, we care about our cost, value, and PnL in OVL terms.
 
-Cost to enter the trade **in OVL terms** is just the number of OVL:
+Cost to enter the position **in OVL terms** is just the number of OVL:
 
 \\[ C = V(0) = n \\]
 
@@ -152,7 +152,7 @@ Going through the same exercise as in the previous case with \\( P(t) = P(0) \cd
 
 \\[ \mathrm{PnL}(t) = \frac{n}{2} \cdot (1 - \epsilon) \cdot \bigg[ \prod_{i=1}^m \bigg( 1 + f_s (i) \bigg) - 1 \bigg] \\]
 
-which is simply getting paid funding on top of our initial OVL balance of to go short the ETH-OVL feed (bullish OVL, bearish ETH). This is profitable for the trader that prefers OVL, when \\( \epsilon < 1 \\) and imbalance is toward the OVL bear side: longs outweigh shorts on ETH-OVL. Rate of return \\( r_{s} \\) for this strategy on the initial OVL capital \\( V(0) \\) is
+which is simply getting paid funding on top of our initial OVL balance of to go short the ETH-OVL feed (bullish OVL, bearish ETH). This is profitable for the user that prefers OVL, when \\( \epsilon < 1 \\) and imbalance is toward the OVL bear side: longs outweigh shorts on ETH-OVL. Rate of return \\( r_{s} \\) for this strategy on the initial OVL capital \\( V(0) \\) is
 
 \\[ r_s (t) = \frac{1 - \epsilon}{2} \cdot \prod_{i=1}^m \bigg[ \bigg( 1 + f_s(i) \bigg) - 1 \bigg] \\]
 
@@ -160,11 +160,11 @@ which is still sensitive to changes in the ETH-OVL feed, but remains profitable 
 
 ## Magic ERC-20s
 
-What's even more interesting is these are simple trades that anyone should be able to participate in. Since portfolio A mimics holding spot ETH tokens and portfolio B mimics holding spot OVL, each with additional yield from funding payments, we can represent these portfolios as high-yield synthetic fungible tokens. What we're calling Magic ETH (portfolio A) and Magic OVL (portfolio B).
+What's even more interesting is these are simple positions that anyone should be able to participate in. Since portfolio A mimics holding spot ETH tokens and portfolio B mimics holding spot OVL, each with additional yield from funding payments, we can represent these portfolios as high-yield synthetic fungible tokens. What we're calling Magic ETH (portfolio A) and Magic OVL (portfolio B).
 
-Users would deposit ETH to the Magic ETH contract and OVL to the Magic OVL contract. Each magic contract would then perform the appropriate swaps and building of Overlay market positions necessary to replicate the portfolios above and issue [ERC-20](https://eips.ethereum.org/EIPS/eip-20) tokens as corresponding credits.  These are effectively tokenized basis trades that users can easily swap into or out of on spot AMMs as funding rates go against their respective side or provide liquidity for on spot exchanges specializing in like-asset pairs (e.g. Magic ETH & ETH pool).
+Users would deposit ETH to the Magic ETH contract and OVL to the Magic OVL contract. Each magic contract would then perform the appropriate swaps and building of Overlay market positions necessary to replicate the portfolios above and issue [ERC-20](https://eips.ethereum.org/EIPS/eip-20) tokens as corresponding credits.  These are effectively tokenized basis positions that users can easily swap into or out of on spot AMMs as funding rates go against their respective side or provide liquidity for on spot exchanges specializing in like-asset pairs (e.g. Magic ETH & ETH pool).
 
-Each Overlay market we offer that includes OVL as one of the currencies will have a similar dynamic. Another way to generate Magic OVL (portfolio B), and a new Magic X high-yield synthetic for the X-OVL market (portfolio A). Likely, our first markets would be ETH-OVL and DAI-OVL for Magic ETH, DAI, and OVL at launch. The additional liquidity generated from providing easy-to-access exposure to funding on Overlay markets could ultimately stabilize our system even more through larger amounts of capital interested in playing the basis trade.
+Each Overlay market we offer that includes OVL as one of the currencies will have a similar dynamic. Another way to generate Magic OVL (portfolio B), and a new Magic X high-yield synthetic for the X-OVL market (portfolio A). Likely, our first markets would be ETH-OVL and DAI-OVL for Magic ETH, DAI, and OVL at launch. The additional liquidity generated from providing easy-to-access exposure to funding on Overlay markets could ultimately stabilize our system even more through larger amounts of capital interested in playing the basis position.
 
 ### Strategies
 
@@ -174,7 +174,7 @@ We can code and propose strategies for [yearn vaults](https://github.com/iearn-f
 
 ## Setting \\( k \\)
 
-We will explore the required value of \\( k \\) in more depth in [risk to the system](note-4). However, for now we note that (assuming no trades are made) the next value of the imbalance, calculated after funding, satisfies the recurrence relation  \\( \mathrm{OI}\_{imb}(m+1) = \mathrm{OI}\_{imb}(m)(1 -2k)\\). This may easily be solved, yielding for the $$m$$th funding payment (where 0 means no funding has been made):
+We will explore the required value of \\( k \\) in more depth in [risk to the system](note-4). However, for now we note that (assuming no positions are made) the next value of the imbalance, calculated after funding, satisfies the recurrence relation  \\( \mathrm{OI}\_{imb}(m+1) = \mathrm{OI}\_{imb}(m)(1 -2k)\\). This may easily be solved, yielding for the $$m$$th funding payment (where 0 means no funding has been made):
 
 \\[ \mathrm{OI}\_{imb}(m) = \mathrm{OI}\_{imb}(0)\cdot \bigg(1 -2k\bigg)^m  \\]
 
@@ -197,4 +197,4 @@ then we can explictly solve for \\(k \\) as a function of \\( \ell, m\\). Below,
 
 ## Remaining Risk
 
-The risk of a OVL price death spiral still exists when incorporating funding payments, even with a profitable portfolio for case 2. If there is complete loss of faith in OVL and the price collapses while longs heavily outweigh shorts on the ETH-OVL feed, there may be few traders willing to earn yield in OVL and thus take the short side of the trade, even though funding payments would be extremely profitable in OVL terms. Longs on the inverse ETH-OVL market could ultimately still win in the short term, mint more OVL, then cash out that OVL, suppressing the value of OVL relative to ETH more and having even more longs on ETH-OVL win. It is a positive feedback loop that is difficult to mitigate without enforcing strict values for \\( k \\) and imposing caps. Even then, this scenario is still very much a risk for the Overlay system. We'll address [stopping the death spiral](note-7) in a separate note.
+The risk of a OVL price death spiral still exists when incorporating funding payments, even with a profitable portfolio for case 2. If there is complete loss of faith in OVL and the price collapses while longs heavily outweigh shorts on the ETH-OVL feed, there may be few users willing to earn yield in OVL and thus take the short side of the position, even though funding payments would be extremely profitable in OVL terms. Longs on the inverse ETH-OVL market could ultimately still win in the short term, mint more OVL, then cash out that OVL, suppressing the value of OVL relative to ETH more and having even more longs on ETH-OVL win. It is a positive feedback loop that is difficult to mitigate without enforcing strict values for \\( k \\) and imposing caps. Even then, this scenario is still very much a risk for the Overlay system. We'll address [stopping the death spiral](note-7) in a separate note.
