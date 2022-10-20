@@ -75,7 +75,7 @@ Using a 1 hour sliding window TWAP on an underlying spot pool having liquidity o
 Governance can and should set caps on the open interest such that it is not even possible to enter a position on the Overlay market with the necessary OVL collateral to execute such an attack.
 
 
-### Constructing the Trade
+### Constructing the Position
 
 The value reported by the sliding window TWAP oracle is what users will position on this specific type of Overlay market. Using the above as an attacker, we should be able to take a position on Overlay with max leverage, manipulate the spot price to our advantage, and cash out the Overlay position for a profit. Understanding the break-even cost of such an attack will guide us in what TWAP feeds are suitable for the system as well as what constraints we must place on our max leverage values in order to make the cost of such an attack unreasonable.
 
